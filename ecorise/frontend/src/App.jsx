@@ -1,0 +1,263 @@
+/* EcoRise — App shell: auth, routing, state, API integration */
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import './styles/global.css';
+
+import BottomNav from './components/BottomNav';
+import { Toast } from './components/UI';
+import { fireConfetti } from './components/Confetti';
+
+import Onboarding from './pages/Onboarding';
+import Home from './pages/Home';
+import { Feed, Leaderboard, Profile, Organizer } from './pages/Pages';
+import { LogAction, TrashSpotter } from './pages/Modals';
+
+import api from './utils/api';
+
+// Mock data for when backend is unavailable
+const MOCK_MEMBERS = [
+  { user_id: 'maya', name: 'Maya Chen', handle: '@mayagrows', points: 4820, avatar: 'https://i.pravatar.cc/200?img=47', streak: 12 },
+  { user_id: 'devon', name: 'Devon Park', handle: '@devonp', points: 4610, avatar: 'https://i.pravatar.cc/200?img=12', streak: 9 },
+  { user_id: 'aria', name: 'Aria Nasser', handle: '@aria.eco', points: 4390, avatar: 'https://i.pravatar.cc/200?img=45', streak: 7 },
+  { user_id: 'leo', name: 'Leo Martins', handle: '@leomar', points: 3980, avatar: 'https://i.pravatar.cc/200?img=15', streak: 5 },
+  { user_id: 'priya', name: 'Priya Rao', handle: '@priyar', points: 3740, avatar: 'https://i.pravatar.cc/200?img=32', streak: 4 },
+  { user_id: 'you', name: 'You', handle: '@you', points: 3610, avatar: 'https://i.pravatar.cc/200?img=68', streak: 6, isYou: true },
+  { user_id: 'sam', name: 'Sam Whitfield', handle: '@samw', points: 3480, avatar: 'https://i.pravatar.cc/200?img=13', streak: 3 },
+  { user_id: 'noor', name: 'Noor Haddad', handle: '@noorh', points: 3120, avatar: 'https://i.pravatar.cc/200?img=26', streak: 2 },
+  { user_id: 'kai', name: 'Kai Anderson', handle: '@kaia', points: 2980, avatar: 'https://i.pravatar.cc/200?img=33', streak: 8 },
+  { user_id: 'zoe', name: 'Zoe Bennett', handle: '@zoeb', points: 2740, avatar: 'https://i.pravatar.cc/200?img=44', streak: 1 },
+  { user_id: 'omar', name: 'Omar Reyes', handle: '@omarr', points: 2510, avatar: 'https://i.pravatar.cc/200?img=50', streak: 3 },
+  { user_id: 'tess', name: 'Tess Lindqvist', handle: '@tessl', points: 2280, avatar: 'https://i.pravatar.cc/200?img=20', streak: 2 },
+].map((m, i) => ({ ...m, rank: i + 1 }));
+
+const MOCK_POSTS = [
+  { id: 'p1', user_id: 'maya', user_name: 'Maya Chen', user_handle: '@mayagrows', user_avatar: 'https://i.pravatar.cc/200?img=47', action_type: 'Transport', action_desc: 'Biked to campus instead of driving', co2_saved: 2.4, points: 60, caption: 'Morning ride was unreal 🚲 beat my record. Who else is car-free this week? @devonp', like_count: 48, liked: false, comment_count: 6, created_at: new Date(Date.now() - 14 * 60000).toISOString() },
+  { id: 'p2', user_id: 'aria', user_name: 'Aria Nasser', user_handle: '@aria.eco', user_avatar: 'https://i.pravatar.cc/200?img=45', action_type: 'Waste', action_desc: 'Refilled 5 bottles at the hydration station', co2_saved: 0.9, points: 25, caption: 'Single-use is so last season 💧', like_count: 31, liked: true, comment_count: 3, created_at: new Date(Date.now() - 52 * 60000).toISOString() },
+  { id: 'p3', user_id: 'devon', user_name: 'Devon Park', user_handle: '@devonp', user_avatar: 'https://i.pravatar.cc/200?img=12', action_type: 'Food', action_desc: 'Composted this week\'s food scraps', co2_saved: 1.6, points: 40, caption: 'Dorm compost bin is officially thriving 🌱', like_count: 27, liked: false, comment_count: 4, created_at: new Date(Date.now() - 96 * 60000).toISOString() },
+  { id: 'p4', user_id: 'leo', user_name: 'Leo Martins', user_handle: '@leomar', user_avatar: 'https://i.pravatar.cc/200?img=15', action_type: 'Cleanup', action_desc: 'Picked up litter at Riverside Park', co2_saved: 0.5, points: 35, caption: 'Filled two bags before lunch. Severity was a solid 7/10 down there 🧤', like_count: 52, liked: false, comment_count: 9, created_at: new Date(Date.now() - 140 * 60000).toISOString() },
+];
+
+const MOCK_QUESTS = [
+  { id: 'q1', title: 'Two-Wheel Tuesday', description: 'Log a bike or walk commute', action_type: 'transportation', points_base: 60, goal: 1, progress: 1 },
+  { id: 'q2', title: 'Zero-Waste Lunch', description: 'Post a meal with no single-use plastic', action_type: 'waste', points_base: 40, goal: 1, progress: 0 },
+  { id: 'q3', title: 'Bottle Streak', description: 'Refill a reusable bottle 3 times', action_type: 'waste', points_base: 45, goal: 3, progress: 2 },
+  { id: 'q4', title: 'Spot the Trash', description: 'Report one litter hotspot near you', action_type: 'nature', points_base: 50, goal: 1, progress: 0 },
+  { id: 'q5', title: 'Bring a Friend', description: 'Invite someone to your leaderboard', action_type: 'community', points_base: 75, goal: 1, progress: 0 },
+];
+
+export default function App() {
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('ecorise_token'));
+  const [authed, setAuthed] = useState(false);
+
+  // App state
+  const [screen, setScreen] = useState('onboarding');
+  const [modal, setModal] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [bump, setBump] = useState(null);
+
+  // Data state
+  const [members, setMembers] = useState(MOCK_MEMBERS);
+  const [posts, setPosts] = useState(MOCK_POSTS);
+  const [quests, setQuests] = useState(MOCK_QUESTS);
+  const [leaderboard, setLeaderboard] = useState({ name: 'Greenfield High', prize: '$250 campus store + a tree planted', invite_code: 'GRNFLD-7K2', reset_interval: 'weekly' });
+  const [leaderboardId, setLeaderboardId] = useState(null);
+  const [podiumVariant, setPodiumVariant] = useState('stand');
+
+  const appRef = useRef(null);
+  const toastTimer = useRef(null);
+  const resetTarget = useRef(Date.now() + (3 * 86400000) + (14 * 3600000) + (22 * 60000)).current;
+
+  // ── Init: check auth on mount ──
+  useEffect(() => {
+    if (token) {
+      api.me().then(data => {
+        setUser(data.user);
+        setAuthed(true);
+        setScreen('home');
+        loadData();
+      }).catch(() => {
+        localStorage.removeItem('ecorise_token');
+        setToken(null);
+      });
+    }
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      // Try to load leaderboards
+      const boards = await api.listLeaderboards();
+      if (boards.leaderboards?.length > 0) {
+        const board = boards.leaderboards[0];
+        setLeaderboardId(board.id);
+        setLeaderboard(board);
+
+        const boardData = await api.getLeaderboard(board.id);
+        if (boardData.members?.length > 0) {
+          setMembers(boardData.members);
+        }
+      }
+
+      // Load posts
+      const postsData = await api.getPosts(leaderboardId);
+      if (postsData.posts?.length > 0) {
+        setPosts(postsData.posts);
+      }
+
+      // Load quests
+      const questsData = await api.getQuests();
+      if (questsData.quests?.length > 0) {
+        setQuests(questsData.quests);
+      }
+    } catch {
+      // Use mock data if backend unavailable
+    }
+  }, [leaderboardId]);
+
+  // ── Toast ──
+  const showToast = (msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  };
+
+  // ── Navigation ──
+  const go = (s) => { setScreen(s); setModal(null); };
+
+  // ── Points + confetti ──
+  const flashBump = (id) => { setBump(id); setTimeout(() => setBump(null), 700); };
+
+  const addPoints = (n) => {
+    setMembers(prev => {
+      const updated = prev.map(m => m.isYou ? { ...m, points: (m.points || 0) + n } : m);
+      updated.sort((a, b) => (b.points || 0) - (a.points || 0));
+      return updated.map((m, i) => ({ ...m, rank: i + 1 }));
+    });
+    flashBump('you');
+    if (appRef.current) fireConfetti(appRef.current, { count: 80, origin: { x: 0.5, y: 0.42 } });
+  };
+
+  // ── Auth callback ──
+  const onAuth = (userData, tokenStr) => {
+    setUser(userData);
+    setToken(tokenStr);
+    setAuthed(true);
+    setScreen('home');
+
+    // Mark the user in members
+    setMembers(prev => {
+      const exists = prev.find(m => m.isYou);
+      if (exists) {
+        return prev.map(m => m.isYou ? { ...m, name: userData.name, handle: userData.handle, avatar: userData.avatar, user_id: userData.id } : m);
+      }
+      return prev;
+    });
+
+    // Auto-create leaderboard if none
+    api.listLeaderboards().then(data => {
+      if (data.leaderboards?.length === 0) {
+        api.createLeaderboard({ name: 'My EcoRise Board', resetInterval: 'weekly', prize: '', includeSelf: true }).then(board => {
+          setLeaderboardId(board.id);
+          setLeaderboard(board);
+        }).catch(() => {});
+      } else {
+        setLeaderboardId(data.leaderboards[0].id);
+        setLeaderboard(data.leaderboards[0]);
+      }
+    }).catch(() => {});
+
+    loadData();
+  };
+
+  // ── Action complete ──
+  const onActionComplete = (data) => {
+    setModal(null);
+    const pts = data.points || 60;
+    addPoints(pts);
+    showToast(`+${pts} pts · ${data.aiResult?.specificAction || 'Eco action'}`);
+    loadData();
+  };
+
+  // ── Toggle like ──
+  const toggleLike = async (postId) => {
+    setPosts(f => f.map(p => p.id === postId ? { ...p, liked: !p.liked, like_count: (p.like_count || 0) + (p.liked ? -1 : 1) } : p));
+    try { await api.likePost(postId); } catch { }
+  };
+
+  // ── Report post ──
+  const reportPost = async (postId) => {
+    showToast('Post reported to moderators');
+    try { await api.reportPost(postId); loadData(); } catch { }
+  };
+
+  // ── Keep/resolve post ──
+  const keepPost = async (postId) => {
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, reported: 0 } : p));
+    showToast('Post kept');
+    try { await api.resolvePost(postId); loadData(); } catch { }
+  };
+
+  // ── Delete/remove post ──
+  const deletePost = async (postId) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    showToast('Post removed');
+    try { await api.deletePost(postId); loadData(); } catch { }
+  };
+
+  // ── Update leaderboard ──
+  const updateLeaderboard = async (data) => {
+    if (leaderboardId) {
+      try { await api.updateLeaderboard(leaderboardId, data); } catch { }
+    }
+    setLeaderboard(prev => ({ ...prev, ...data }));
+  };
+
+  // ── Logout ──
+  const logout = async () => {
+    try { await api.logout(); } catch { }
+    localStorage.removeItem('ecorise_token');
+    localStorage.removeItem('ecorise_onboarded');
+    setUser(null);
+    setToken(null);
+    setAuthed(false);
+    setScreen('onboarding');
+  };
+
+  // ── Context for child components ──
+  const ctx = {
+    user: user || { name: 'Eco Champion', handle: '@you', avatar: '' },
+    members, posts, quests, leaderboard, leaderboardId,
+    resetTarget, bump, podiumVariant,
+    go, showToast, openLog: () => setModal('log'), openTrash: () => setModal('trash'),
+    closeModal: () => setModal(null), toggleLike, reportPost, keepPost, deletePost, onActionComplete,
+    updateLeaderboard, logout,
+  };
+
+  const isOnboarding = screen === 'onboarding' || !authed;
+  const showNav = !isOnboarding && screen !== 'organizer';
+
+  const renderScreen = () => {
+    if (isOnboarding) return <Onboarding onAuth={onAuth} />;
+    switch (screen) {
+      case 'home': return <Home ctx={ctx} />;
+      case 'feed': return <Feed ctx={ctx} />;
+      case 'quests': return <Home ctx={ctx} />;
+      case 'leaderboard': return <Leaderboard ctx={ctx} />;
+      case 'profile': return <Profile ctx={ctx} />;
+      case 'organizer': return <Organizer ctx={ctx} />;
+      default: return <Home ctx={ctx} />;
+    }
+  };
+
+  return (
+    <div className="app" ref={appRef}>
+      <div className="scroll" key={screen}>
+        {renderScreen()}
+      </div>
+      {showNav && <BottomNav screen={screen} go={go} onFab={() => setModal('log')} />}
+      {modal === 'log' && <LogAction ctx={ctx} />}
+      {modal === 'trash' && <TrashSpotter ctx={ctx} />}
+      <Toast toast={toast} />
+    </div>
+  );
+}

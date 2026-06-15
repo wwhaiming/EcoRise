@@ -1,0 +1,53 @@
+/* ============================================================
+   EcoRise — Design Tokens
+   Ported from Claude Design spec: dark navy + neon accents
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap');
+
+:root {
+  /* ---- core surfaces ---- */
+  --navy-950: #101024;
+  --navy-900: #16162B;   /* app background */
+  --navy-800: #1C1C36;   /* card */
+  --navy-700: #232342;   /* raised card */
+  --navy-600: #2E2E54;   /* hover / inset */
+  --navy-500: #3C3C68;   /* border */
+
+  /* ---- accents ---- */
+  --green:  #00E676;
+  --green-2:#1AF08A;
+  --purple: #7C4DFF;
+  --purple-2:#9D7BFF;
+  --coral:  #FF6B6B;
+  --coral-2:#FF8A8A;
+  --blue:   #38BDF8;
+  --yellow: #FFD23F;
+
+  /* ---- podium metals ---- */
+  --gold:   #FFD23F;
+  --gold-d: #E0A92E;
+  --silver: #D2DCEC;
+  --silver-d:#9AAAC4;
+  --bronze: #E8965B;
+  --bronze-d:#C26E38;
+
+  /* ---- text ---- */
+  --text:    #FFFFFF;
+  --text-muted: #A6A6CE;
+  --text-dim:   #6E6E9A;
+
+  /* ---- glows ---- */
+  --glow-green:  0 0 0 rgba(0,230,118,.0), 0 8px 30px rgba(0,230,118,.35);
+  --glow-purple: 0 8px 30px rgba(124,77,255,.40);
+  --glow-coral:  0 8px 30px rgba(255,107,107,.38);
+
+  /* ---- type ---- */
+  --display: 'Nunito', system-ui, sans-serif;
+  --body: 'Nunito', system-ui, sans-serif;
+
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-xl: 34px;
+}
