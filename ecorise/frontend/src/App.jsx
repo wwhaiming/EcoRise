@@ -79,6 +79,8 @@ export default function App() {
       setUser(data.user);
       setAuthed(true);
       setScreen('home');
+      setMembers([]);
+      setPosts([]);
       loadData();
       consumePendingInvite();
     }).catch(() => { /* not signed in — show onboarding */ });
@@ -164,34 +166,26 @@ export default function App() {
   };
 
   // ── Auth callback ──
-  const onAuth = (userData) => {
+  const onAuth = async (userData) => {
     setUser(userData);
     setAuthed(true);
     setScreen('home');
+    // Clear demo seed immediately so a real user never sees fabricated standings.
+    setMembers([]);
+    setPosts([]);
 
-    // Mark the user in members
-    setMembers(prev => {
-      const exists = prev.find(m => m.isYou);
-      if (exists) {
-        return prev.map(m => m.isYou ? { ...m, name: userData.name, handle: userData.handle, avatar: userData.avatar, user_id: userData.id } : m);
+    // Resolve the user's board (create one if they have none) BEFORE loading data,
+    // so loadData() sees a real board instead of racing ahead of creation.
+    try {
+      const data = await api.listLeaderboards();
+      let board = data.leaderboards?.[0];
+      if (!board) {
+        board = await api.createLeaderboard({ name: 'My EcoRise Board', resetInterval: 'weekly', prize: '', includeSelf: true });
       }
-      return prev;
-    });
+      if (board) { setLeaderboardId(board.id); setLeaderboard(board); }
+    } catch { /* offline: stay empty rather than show fake data */ }
 
-    // Auto-create leaderboard if none
-    api.listLeaderboards().then(data => {
-      if (data.leaderboards?.length === 0) {
-        api.createLeaderboard({ name: 'My EcoRise Board', resetInterval: 'weekly', prize: '', includeSelf: true }).then(board => {
-          setLeaderboardId(board.id);
-          setLeaderboard(board);
-        }).catch(() => {});
-      } else {
-        setLeaderboardId(data.leaderboards[0].id);
-        setLeaderboard(data.leaderboards[0]);
-      }
-    }).catch(() => {});
-
-    loadData();
+    await loadData();
     consumePendingInvite();
   };
 

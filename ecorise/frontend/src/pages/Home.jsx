@@ -75,7 +75,7 @@ export default function Home({ ctx }) {
         <Avatar src={user.avatar} name={user.name} size={46} ring="var(--green)" />
         <div style={{ flex: 1 }}>
           <div className="dim" style={{ fontWeight: 700, fontSize: 13 }}>Good morning,</div>
-          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 18, lineHeight: 1 }}>Eco Champion 🌍</div>
+          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 18, lineHeight: 1 }}>{user.name || 'Eco Champion'} 🌍</div>
         </div>
         <div style={{ position: 'relative' }}>
           <button className="btn btn-secondary btn-sm" style={{ padding: 10, position: 'relative' }} aria-label="Notifications" aria-expanded={notifOpen}
