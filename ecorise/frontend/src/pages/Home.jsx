@@ -4,6 +4,38 @@ import Icon from '../components/Icon';
 import Avatar from '../components/Avatar';
 import { RankBadge, Streak, METAL } from '../components/UI';
 
+// Curated climate / CO2 facts (approximate, commonly-cited figures).
+const CLIMATE_FACTS = [
+  'Transportation is ~29% of U.S. greenhouse-gas emissions — the single largest source.',
+  'One tree absorbs roughly 21 kg of CO₂ per year.',
+  'Producing 1 kg of beef emits ~60 kg of CO₂ — about 10× a plant-based meal.',
+  'A reusable bottle can prevent ~150 single-use plastic bottles a year.',
+  'Biking 10 miles instead of driving saves about 4 kg of CO₂.',
+  'Food waste causes ~8% of global greenhouse-gas emissions.',
+  'Air-drying one load of laundry saves ~1 kg of CO₂ vs. a dryer.',
+  'LED bulbs use ~75% less energy and last ~25× longer than incandescent.',
+  'Recycling one aluminum can saves enough energy to run a TV for ~3 hours.',
+  'Skipping meat one day a week ~= taking your car off the road for a month each year.',
+];
+
+function ClimateFact() {
+  const [i, setI] = useState(() => Math.floor(Math.random() * CLIMATE_FACTS.length));
+  return (
+    <button onClick={() => setI((i + 1) % CLIMATE_FACTS.length)} aria-label="Show another climate fact"
+      style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: '1px solid rgba(0,230,118,.25)', borderRadius: 18,
+        padding: 16, background: 'radial-gradient(180px 80px at 90% -10%, rgba(0,230,118,.16), transparent), var(--navy-800)',
+        display: 'flex', gap: 13, alignItems: 'flex-start' }}>
+      <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: 'rgba(0,230,118,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name="leaf" size={22} color="var(--green)" />
+      </span>
+      <div style={{ flex: 1 }}>
+        <div className="eyebrow" style={{ color: 'var(--green)', marginBottom: 4 }}>Did you know? · tap for another</div>
+        <div className="muted" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: '#fff' }}>{CLIMATE_FACTS[i]}</div>
+      </div>
+    </button>
+  );
+}
+
 function QuestCard({ q, ctx }) {
   const done = q.progress >= q.goal;
   const prog = q.goal > 0 ? Math.min(100, (q.progress / q.goal) * 100) : 0;
@@ -122,6 +154,9 @@ export default function Home({ ctx }) {
           </div>
         </div>
       </div>
+
+      {/* climate fact */}
+      <div style={{ padding: '16px 16px 0' }}><ClimateFact /></div>
 
       {/* leaderboard widget */}
       <div style={{ padding: '18px 16px 0' }}>
