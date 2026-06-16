@@ -20,7 +20,6 @@ function PodiumCards({ top3, bump }) {
               background: `radial-gradient(120px 80px at 50% -10%, ${m.a}22, transparent), linear-gradient(180deg,var(--navy-700),var(--navy-800))`,
             }}>
               <div style={{ position: 'relative', display: 'inline-block', marginTop: first ? -34 : -28 }} className={bump === (p.user_id || p.id) ? 'pop-in' : ''}>
-                {first && <div style={{ position: 'absolute', top: -22, left: '50%', transform: 'translateX(-50%)', fontSize: 24 }}>👑</div>}
                 <Avatar src={p.avatar || p.img} name={p.name} size={first ? 70 : 56} ring={m.a} glow style={{ boxShadow: `0 0 22px ${m.glow}` }} />
               </div>
               <div style={{ marginTop: 8, fontFamily: 'var(--display)', fontWeight: 600, fontSize: first ? 15 : 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
@@ -48,7 +47,6 @@ function PodiumStand({ top3, bump }) {
         return (
           <div key={key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', animation: `risePodium .6s cubic-bezier(.2,.8,.2,1) ${i * .12}s both` }}>
             <div className={bump === (p.user_id || p.id) ? 'pop-in' : ''} style={{ position: 'relative', marginBottom: 10 }}>
-              {first && <div style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 26 }}>👑</div>}
               <Avatar src={p.avatar || p.img} name={p.name} size={first ? 64 : 52} ring={m.a} glow style={{ boxShadow: `0 0 22px ${m.glow}` }} />
             </div>
             <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 13, marginBottom: 2, maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name.split(' ')[0]}</div>

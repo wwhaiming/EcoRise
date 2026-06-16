@@ -5,11 +5,11 @@ import { LogoMark, Wordmark, Orbs } from '../components/Shared';
 import api from '../utils/api';
 
 const ONB_STEPS = [
-  { key: 'track', icon: 'camera', color: '#00E676',
+  { key: 'track', icon: 'camera', color: '#2BFF9C',
     title: 'Track your eco actions', sub: 'Snap a photo of your bike ride, reusable bottle or cleanup. Our AI does the math.' },
-  { key: 'earn', icon: 'trophy', color: '#FFD23F',
+  { key: 'earn', icon: 'trophy', color: '#FFD66B',
     title: 'Earn points on the leaderboard', sub: 'Every action you log earns points and climbs you up the ranks in real time.' },
-  { key: 'win', icon: 'gift', color: '#7C4DFF',
+  { key: 'win', icon: 'gift', color: '#8A6CFF',
     title: 'Compete & win prizes', sub: 'Battle your school or community. Top the board before the timer resets to win.' },
 ];
 

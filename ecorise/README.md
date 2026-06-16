@@ -12,11 +12,14 @@ EcoRise is a competitive environmental leaderboard app for schools and communiti
 
 | Feature | Description |
 |---------|-------------|
-| **AI Evidence Panel** | After **every** submission: which model decided, its confidence, the CO₂ math, the full point breakdown, and every anti-fraud gate the action cleared (or why it was rejected) — the AI's reasoning, made visible |
-| **AI Action Analysis** | Upload a photo → Claude AI detects the eco action, estimates CO₂ saved |
-| **Points Rubric Engine** | Comprehensive scoring across 5 categories (transport, waste, energy, food, nature) |
+| **AI Evidence Panel** | After **every** submission: which model decided, its confidence, the **grounded** CO₂ math (formula + cited source + uncertainty range), the full point breakdown, the deterministic tool pipeline that ran, and every anti-fraud gate cleared (or why it was rejected) — the AI's reasoning, made visible |
+| **AI Action Analysis** | Upload a photo → Claude **perceives** the action + measurable attributes; it never invents the impact |
+| **Grounded Carbon Engine** | Deterministic kg CO₂e from **published emission factors** (EPA GHG Hub, EPA WARM, OWID/Poore-Nemecek) with formula + uncertainty range — the LLM cannot fabricate the number ([`utils/carbonEngine.js`](backend/utils/carbonEngine.js)) |
+| **Measured Eval Gate** | The eco-action classifier is measured, not asserted: accuracy / FP / FN / adversarial-rejection / calibration ([`test/eco_eval/`](backend/test/eco_eval/), `npm run test:eval`) |
+| **Adversarial Fraud Screen** | A second vision pass flags photo-of-screen / stock / AI-generated images; high suspicion rejects, low suspicion halves points ([`utils/integrityGates.js`](backend/utils/integrityGates.js)) |
+| **Points Rubric Engine** | Comprehensive **server-side** scoring across 5 categories (transport, waste, energy, food, nature); the LLM cannot award points |
 | **Social Feed** | Instagram-style cards with likes, comments, @mentions, reporting |
-| **Daily Quests** | 5 AI-generated quests per day with 2× point multiplier |
+| **Personalized Daily Quests** | 5 quests/day generated from your **real last-30-day behavior** (targets neglected categories), 2× multiplier on completion |
 | **Leaderboard** | Animated podium (3 styles), real-time ranking, reset timers |
 | **Trash Spotter** | Report litter, AI rates severity 0-10, earn bonus points |
 | **Organizer Dashboard** | Create/manage leaderboards, moderation queue, invite links |

@@ -73,14 +73,24 @@ function processEcoAction(params) {
   const run = db.transaction((p) => {
     const ctx = getUserContext(p.userId, p.leaderboardId, p.isQuestCompletion);
 
+    // Grounded CO2 (from carbonEngine, passed by the route) drives scoring AND
+    // storage — never the model's advisory estimate.
+    const co2 = (p.co2Saved != null) ? (Number(p.co2Saved) || 0) : (p.aiResult.estimatedCO2Saved || 0);
+
     const result = calculatePoints({
       actionType: p.aiResult.actionType,
       specificAction: p.aiResult.specificAction,
       milesIfApplicable: p.miles,
-      co2Saved: p.aiResult.estimatedCO2Saved || 0,
+      co2Saved: co2,
       aiExtractedData: p.aiResult,
       userContext: ctx,
     });
+
+    // Adversarial-integrity multiplier: a "flagged" (low-suspicion) submission is
+    // accepted but earns reduced points. Full = 1, flagged = 0.5.
+    const integrityMultiplier = (p.integrityMultiplier != null) ? p.integrityMultiplier : 1;
+    const finalPoints = Math.round(result.points * integrityMultiplier);
+    if (integrityMultiplier < 1) result.bonuses.push({ label: 'Fraud-screen flag (reduced)', multiplier: integrityMultiplier });
 
     const postId = uuid();
     db.prepare(`
@@ -89,11 +99,11 @@ function processEcoAction(params) {
     `).run(
       postId, p.userId, p.leaderboardId || null, p.image || '', p.imageHash || null,
       p.aiResult.actionType, p.aiResult.specificAction,
-      p.aiResult.estimatedCO2Saved || 0, result.points,
+      co2, finalPoints,
       p.caption || '', JSON.stringify((p.taggedUserIds || []).slice(0, 3))
     );
 
-    awardPoints(p.userId, p.leaderboardId, result.points, { source: 'eco_action', sourceId: postId });
+    awardPoints(p.userId, p.leaderboardId, finalPoints, { source: 'eco_action', sourceId: postId });
 
     // Tagging notifies friends; it does NOT mint points for them (anti-inflation).
     const tagger = db.prepare('SELECT name FROM users WHERE id = ?').get(p.userId);
@@ -107,7 +117,7 @@ function processEcoAction(params) {
     checkAndAwardBadges(p.userId, p.leaderboardId);
 
     return {
-      postId, points: result.points, breakdown: result.breakdown,
+      postId, points: finalPoints, co2Saved: co2, breakdown: result.breakdown,
       explanation: result.explanation, multiplier: result.multiplier, bonuses: result.bonuses,
     };
   });

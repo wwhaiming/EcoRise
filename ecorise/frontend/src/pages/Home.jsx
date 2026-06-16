@@ -107,7 +107,7 @@ export default function Home({ ctx }) {
         <Avatar src={user.avatar} name={user.name} size={46} ring="var(--green)" />
         <div style={{ flex: 1 }}>
           <div className="dim" style={{ fontWeight: 700, fontSize: 13 }}>Good morning,</div>
-          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 18, lineHeight: 1 }}>{user.name || 'Eco Champion'} 🌍</div>
+          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 19, lineHeight: 1 }}>{user.name || 'Eco Champion'}</div>
         </div>
         <div style={{ position: 'relative' }}>
           <button className="btn btn-secondary btn-sm" style={{ padding: 10, position: 'relative' }} aria-label="Notifications" aria-expanded={notifOpen}
@@ -172,7 +172,6 @@ export default function Home({ ctx }) {
                 return (
                   <div key={p.user_id || i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', animation: `risePodium .5s cubic-bezier(.2,.8,.2,1) ${i * .1}s both` }}>
                     <div style={{ position: 'relative' }} className={bump === p.user_id ? 'pop-in' : ''}>
-                      {first && <div style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 18 }}>👑</div>}
                       <Avatar src={p.avatar} name={p.name} size={first ? 56 : 46} ring={m.a} glow style={{ boxShadow: `0 0 16px ${m.glow}` }} />
                       <span className="rankbadge" style={{ position: 'absolute', bottom: -6, right: -6, minWidth: 22, height: 22, fontSize: 12, background: `linear-gradient(180deg,${m.a},${m.b})`, color: m.ink, border: '2px solid var(--navy-800)' }}>{r}</span>
                     </div>

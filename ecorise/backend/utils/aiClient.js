@@ -19,11 +19,15 @@ function getClient() {
 
 // ── Mock responses for when API key is not set ──
 
+// Mock actions carry `attributes` (the measurable inputs the carbon engine needs)
+// just like the real model output, so the offline demo also produces a grounded,
+// cited CO2 number instead of the hardcoded estimate. estimatedCO2Saved is kept
+// only as an advisory label; it is never used for scoring.
 const MOCK_ECO_ACTIONS = [
-  { actionType: 'transportation', specificAction: 'Cycling commute', requiresFollowUp: true, followUpQuestion: 'How many miles did you bike?', estimatedCO2Saved: 2.4, environmentalImpactSummary: 'By choosing to bike instead of drive, you avoided approximately 2.4 kg of CO2 emissions. This is equivalent to keeping a 100-watt light bulb off for about 10 hours.', pointsCategory: { category: 'transportation', action: 'biking' } },
-  { actionType: 'waste', specificAction: 'Reusable bottle', requiresFollowUp: false, followUpQuestion: '', estimatedCO2Saved: 0.5, environmentalImpactSummary: 'Using a reusable bottle prevents single-use plastic waste. Each reusable bottle saves approximately 156 plastic bottles per year.', pointsCategory: { category: 'waste', action: 'reusable_bottle' } },
-  { actionType: 'food', specificAction: 'Plant-based meal', requiresFollowUp: false, followUpQuestion: '', estimatedCO2Saved: 1.8, environmentalImpactSummary: 'Choosing a plant-based meal saves about 1.8 kg of CO2 compared to a meat-based alternative. Plant-based diets use 75% less land and 54% less water.', pointsCategory: { category: 'food', action: 'plant_based_meal' } },
-  { actionType: 'transportation', specificAction: 'Public transit ride', requiresFollowUp: true, followUpQuestion: 'How many miles did you ride?', estimatedCO2Saved: 1.6, environmentalImpactSummary: 'Taking public transit instead of driving alone reduces per-person emissions by about 45%. Great choice for reducing your carbon footprint!', pointsCategory: { category: 'transportation', action: 'public_transit' } },
+  { actionType: 'transportation', specificAction: 'Cycling commute', requiresFollowUp: true, followUpQuestion: 'How many miles did you bike?', attributes: { distanceMiles: null, replacedMode: 'car' }, estimatedCO2Saved: 2.4, environmentalImpactSummary: 'Biking instead of driving avoids tailpipe emissions for the whole trip. We compute the exact figure from the EPA per-mile factor once you confirm the distance.', pointsCategory: { category: 'transportation', action: 'biking' } },
+  { actionType: 'waste', specificAction: 'Reusable bottle', requiresFollowUp: false, followUpQuestion: '', attributes: { displacedCount: 1, material: 'plastic' }, estimatedCO2Saved: 0.1, environmentalImpactSummary: 'Using a reusable bottle displaces single-use plastic. We credit only the bottle(s) actually avoided, using a PET-bottle production factor.', pointsCategory: { category: 'waste', action: 'reusable_bottle' } },
+  { actionType: 'food', specificAction: 'Plant-based meal', requiresFollowUp: false, followUpQuestion: '', attributes: { mealCategory: 'meat_replacement', servings: 1 }, estimatedCO2Saved: 2.5, environmentalImpactSummary: 'Replacing an average meat meal with a plant-based one cuts life-cycle emissions, per the Our World in Data / Poore & Nemecek dataset.', pointsCategory: { category: 'food', action: 'plant_based_meal' } },
+  { actionType: 'transportation', specificAction: 'Public transit ride', requiresFollowUp: true, followUpQuestion: 'How many miles did you ride?', attributes: { distanceMiles: null, replacedMode: 'car' }, estimatedCO2Saved: 1.6, environmentalImpactSummary: 'Taking transit instead of driving alone reduces per-person emissions. The exact avoided figure is computed from the EPA per-mile factor once you confirm the distance.', pointsCategory: { category: 'transportation', action: 'public_transit' } },
 ];
 
 const MOCK_QUESTS = [
@@ -40,7 +44,7 @@ const MOCK_QUESTS = [
 // can repoint it via ECO_MODEL without editing code (no scattered literals).
 const MODEL = process.env.ECO_MODEL || 'claude-sonnet-4-6';
 const ECO_MODEL = MODEL;
-const ECO_PROMPT_VERSION = '2026-06-15.gate-v1';
+const ECO_PROMPT_VERSION = '2026-06-16.carbon-v2';
 const ECO_CONFIDENCE_FLOOR = Number(process.env.ECO_CONFIDENCE_FLOOR || 0.5);
 
 async function analyzeEcoAction(imageBase64) {
@@ -56,7 +60,7 @@ async function analyzeEcoAction(imageBase64) {
     }
     return {
       isEcoAction: false, confidence: 0, actionType: 'other', specificAction: 'AI disabled',
-      requiresFollowUp: false, estimatedCO2Saved: 0,
+      requiresFollowUp: false, attributes: {}, estimatedCO2Saved: 0,
       environmentalImpactSummary: 'AI vision is disabled (no ANTHROPIC_API_KEY). Cannot verify this action.',
       isMock: true, provenance: { source: 'mock', model: 'mock', promptVersion: ECO_PROMPT_VERSION },
     };
@@ -81,8 +85,17 @@ async function analyzeEcoAction(imageBase64) {
             type: 'text',
             text: `You are EcoRise's eco-action analyzer. FIRST decide whether this photo genuinely shows a real eco-friendly action (biking/walking/transit, recycling/compost/reusable items, saving energy, a plant-based meal, litter cleanup, planting, etc.).
 Set isEcoAction=false for anything else (selfie, pet, random object, screenshot, meme, ordinary indoor scene, food that is not notably eco). Be strict; when unsure, isEcoAction=false.
+
+IMPORTANT: You do NOT estimate the CO2 saved. A separate deterministic carbon engine computes that from emission factors. Your job is to identify the action and extract the MEASURABLE ATTRIBUTES the engine needs. Put unknown numeric values as null and set requiresFollowUp=true with a followUpQuestion to collect them.
+
+"attributes" depends on actionType:
+- transportation: {"distanceMiles": number|null, "replacedMode": "car"|"transit"|"rideshare"|"unknown"}
+- food:           {"mealCategory": "beef_replacement"|"poultry_replacement"|"pork_replacement"|"meat_replacement"|"vegetarian"|"vegan"|"unknown", "servings": number}
+- waste:          {"displacedCount": number, "material": "plastic"|"aluminum"|"unknown"}
+- nature/energy/other: {} (leave empty; these are credited for community/habit, not CO2)
+
 Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
-{"isEcoAction": boolean, "confidence": number between 0 and 1, "actionType": "transportation|waste|energy|food|nature|other", "specificAction": string, "requiresFollowUp": boolean, "followUpQuestion": string, "estimatedCO2Saved": number_in_kg, "environmentalImpactSummary": string}`,
+{"isEcoAction": boolean, "confidence": number between 0 and 1, "actionType": "transportation|waste|energy|food|nature|other", "specificAction": string, "requiresFollowUp": boolean, "followUpQuestion": string, "attributes": object, "estimatedCO2Saved": number_in_kg_ADVISORY_ONLY, "environmentalImpactSummary": string}`,
           },
         ],
       }],
@@ -98,7 +111,8 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
       specificAction: String(json.specificAction || 'Eco action'),
       requiresFollowUp: !!json.requiresFollowUp,
       followUpQuestion: json.followUpQuestion || '',
-      estimatedCO2Saved: Math.max(0, Number(json.estimatedCO2Saved) || 0),
+      attributes: (json.attributes && typeof json.attributes === 'object' && !Array.isArray(json.attributes)) ? json.attributes : {},
+      estimatedCO2Saved: Math.max(0, Number(json.estimatedCO2Saved) || 0), // advisory label only; not used for scoring
       environmentalImpactSummary: json.environmentalImpactSummary || '',
       isMock: false,
       provenance: { source: 'claude', model: ECO_MODEL, promptVersion: ECO_PROMPT_VERSION, confidence },
@@ -108,7 +122,7 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
     // On failure, reject rather than fabricate an eco action (no false points).
     return {
       isEcoAction: false, confidence: 0, actionType: 'other', specificAction: 'Could not analyze',
-      requiresFollowUp: false, estimatedCO2Saved: 0,
+      requiresFollowUp: false, attributes: {}, estimatedCO2Saved: 0,
       environmentalImpactSummary: 'Could not analyze image — please try again.',
       isMock: true, error: err.message,
       provenance: { source: 'error', model: ECO_MODEL, promptVersion: ECO_PROMPT_VERSION },
@@ -118,12 +132,23 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
 
 // ── 2. Generate daily quests ──
 
-async function generateDailyQuests(userId) {
+// Accepts either a userId string (back-compat) or a context object built from the
+// user's real history: { userId, recentActions:[{actionType,count,lastDoneAt}],
+// weakSpots:[category], topCategory, streak }. The quests are personalized to push
+// the user toward neglected categories instead of being generic.
+async function generateDailyQuests(context = {}) {
+  const ctx = typeof context === 'string' ? { userId: context } : (context || {});
   const client = getClient();
 
   if (!client) {
-    return MOCK_QUESTS.map((q, i) => ({ ...q, id: `quest_${userId}_${i}` }));
+    return MOCK_QUESTS.map((q, i) => ({ ...q, id: `quest_${ctx.userId || 'u'}_${i}` }));
   }
+
+  const recent = Array.isArray(ctx.recentActions) ? ctx.recentActions : [];
+  const weak = Array.isArray(ctx.weakSpots) ? ctx.weakSpots : [];
+  const activity = recent.length
+    ? recent.map(r => `${r.actionType}=${r.count} in 30d`).join('; ')
+    : 'no logged actions yet (new user)';
 
   try {
     const response = await client.messages.create({
@@ -131,13 +156,25 @@ async function generateDailyQuests(userId) {
       max_tokens: 1024,
       messages: [{
         role: 'user',
-        content: `Generate 5 unique daily environmental quests for a user. Each quest should be specific and completable in a day. Format: [{title, description, actionType, targetDetails, pointsBase}]. Make them varied across transportation, waste, energy, food, and nature categories. Respond ONLY in JSON.`,
+        content: `Generate 5 personalized daily environmental quests as JSON: [{title, description, actionType, targetDetails, pointsBase}].
+User's last-30-day activity: ${activity}.
+Categories they have NOT done recently (prioritize): ${weak.length ? weak.join(', ') : 'none — keep variety'}.
+Most frequent category: ${ctx.topCategory || 'unknown'}.
+Rules:
+- At least 2 quests must target the neglected categories above.
+- At least 1 should build on their most frequent category.
+- Vary across transportation, waste, energy, food, nature.
+- Each quest must be completable in a day with a concrete, photo-verifiable targetDetails.
+- actionType must be one of: transportation, waste, energy, food, nature, community.
+- pointsBase is an integer 40-80.
+Respond ONLY in JSON (a top-level array).`,
       }],
     });
 
     const text = response.content[0].text;
     const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
-    return Array.isArray(json) ? json : json.quests || MOCK_QUESTS;
+    const quests = Array.isArray(json) ? json : (Array.isArray(json.quests) ? json.quests : MOCK_QUESTS);
+    return quests.length ? quests : MOCK_QUESTS;
   } catch (err) {
     console.error('AI generateDailyQuests error:', err.message);
     return MOCK_QUESTS;
@@ -306,4 +343,50 @@ Respond ONLY in JSON:
   }
 }
 
-module.exports = { analyzeEcoAction, generateDailyQuests, checkQuestMatch, rateTrashSeverity };
+// ── 5. Adversarial critique: catch photo-of-screen / stock / AI-generated fraud ──
+// A cheap second vision pass that defends submissions beyond the main prompt's
+// "be strict" instruction. Offline (no API key) it is SKIPPED and returns a benign
+// result, so the deterministic test path and offline demo are unaffected. It also
+// fails OPEN on error so a real user is never blocked by a flaky critique call.
+const ADVERSARIAL_MODEL = process.env.ADVERSARIAL_MODEL || MODEL;
+
+async function adversarialCritique(imageBase64) {
+  const client = getClient();
+  const benign = (reasoning) => ({
+    ran: false, suspicionLevel: 'none',
+    suspectScreen: false, suspectStock: false, suspectAIGenerated: false, reasoning,
+  });
+  if (!client || !imageBase64) return benign('Adversarial vision pass skipped (no API key).');
+
+  try {
+    let base64Data = imageBase64, mediaType = 'image/jpeg';
+    if (imageBase64.startsWith('data:')) {
+      const m = imageBase64.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (m) { mediaType = m[1]; base64Data = m[2]; }
+    }
+    const response = await client.messages.create({
+      model: ADVERSARIAL_MODEL,
+      max_tokens: 400,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+        { type: 'text', text: `You are EcoRise's fraud screen. Decide whether this is a genuine first-hand photo or a likely fake submitted to farm points. Flag if it looks like: a photo of a screen/monitor/another phone, a screenshot, a stock photo or watermarked image, or an AI-generated image. Be conservative: only set "high" when clearly fake. Respond ONLY in JSON: {"suspectScreen": boolean, "suspectStock": boolean, "suspectAIGenerated": boolean, "suspicionLevel": "none"|"low"|"high", "reasoning": string}` },
+      ] }],
+    });
+    const text = response.content[0].text;
+    const j = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    const level = ['none', 'low', 'high'].includes(j.suspicionLevel) ? j.suspicionLevel : 'none';
+    return {
+      ran: true,
+      suspectScreen: !!j.suspectScreen,
+      suspectStock: !!j.suspectStock,
+      suspectAIGenerated: !!j.suspectAIGenerated,
+      suspicionLevel: level,
+      reasoning: String(j.reasoning || ''),
+    };
+  } catch (err) {
+    console.error('AI adversarialCritique error:', err.message);
+    return benign('Adversarial pass errored; not enforced.');
+  }
+}
+
+module.exports = { analyzeEcoAction, generateDailyQuests, checkQuestMatch, rateTrashSeverity, adversarialCritique };

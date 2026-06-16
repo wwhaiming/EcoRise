@@ -5,8 +5,10 @@ const { getDb } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { upload, fileToBase64 } = require('../middleware/upload');
 const { aiRateLimit } = require('../middleware/rateLimit');
-const { analyzeEcoAction, checkQuestMatch } = require('../utils/aiClient');
+const { analyzeEcoAction, checkQuestMatch, adversarialCritique } = require('../utils/aiClient');
 const { processEcoAction } = require('../utils/pointsEngine');
+const { computeCarbon } = require('../utils/carbonEngine');
+const { evaluateAdversarial } = require('../utils/integrityGates');
 const { imageHash } = require('../utils/imageHash');
 const { body, pageParams } = require('../utils/validate');
 const analysisCache = require('../utils/analysisCache');
@@ -17,18 +19,38 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // The "AI evidence" a judge sees after every submission: which model decided,
 // how confident it was, and every integrity gate the action had to clear. This
 // is what makes the AI's reasoning visible instead of buried in the backend.
-function buildIntegrity(aiResult, { lbId }) {
+function buildIntegrity(aiResult, { lbId, carbon, adversarial } = {}) {
   const p = aiResult.provenance || {};
+  const grounded = !!(carbon && carbon.method && carbon.method !== 'none');
+  // adversarial.gate is 'passed' | 'flagged' | 'failed' | 'n/a' (from evaluateAdversarial).
+  const fraudGate = (adversarial && adversarial.gate) ? adversarial.gate : 'n/a';
   return {
     model: p.model || (aiResult.isMock ? 'demo (no model)' : 'claude'),
     source: p.source || (aiResult.isMock ? 'mock' : 'claude'),
     confidence: aiResult.confidence ?? 0,
     promptVersion: p.promptVersion || null,
+    // Grounded carbon evidence (formula + cited factors + uncertainty), or null.
+    carbon: carbon ? {
+      kgCO2e: carbon.kgCO2e, low: carbon.low, high: carbon.high,
+      method: carbon.method, formula: carbon.formula,
+      factors: carbon.factors, assumptions: carbon.assumptions,
+    } : null,
+    // The deterministic "tools" the system ran — the LLM only perceives; it never
+    // awards points or invents the CO2 figure.
+    toolCalls: [
+      { tool: 'classify_photo', detail: aiResult.isEcoAction ? `vision -> ${aiResult.actionType}` : 'vision -> rejected' },
+      { tool: 'duplicate_check', detail: 'image hash vs. last 24h' },
+      { tool: 'carbon_factor_lookup', detail: grounded ? `${carbon.method} (cited factor)` : 'no grounded factor' },
+      { tool: 'fraud_screen', detail: (adversarial && adversarial.ran) ? `suspicion: ${adversarial.suspicionLevel}` : 'skipped (offline)' },
+      { tool: 'server_score', detail: 'points computed server-side; LLM cannot award' },
+    ],
     checks: {
       photoRequired: 'passed',
       duplicateScreen: 'passed',
       membershipVerified: lbId ? 'passed' : 'n/a',
       aiVisionGate: aiResult.isEcoAction ? 'verified' : 'rejected',
+      carbonGrounded: grounded ? 'passed' : 'n/a',
+      fraudScreen: fraudGate,
       serverScored: 'passed',
     },
   };
@@ -71,20 +93,51 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
       aiResult = await analyzeEcoAction(image);
       analysisCache.set(req.userId, hash, aiResult);
     }
-    const integrity = buildIntegrity(aiResult, { lbId });
-
     if (aiResult.isEcoAction === false) {
       return res.json({
         success: false, accepted: false, reason: 'not_eco_action', points: 0,
         confidence: aiResult.confidence ?? 0,
         description: aiResult.environmentalImpactSummary || 'This photo does not look like an eco action.',
-        aiResult, integrity, aiRemaining: req.aiRemaining,
+        aiResult, integrity: buildIntegrity(aiResult, { lbId }), aiRemaining: req.aiRemaining,
       });
     }
 
     const miles = v.miles || 0;
     if (aiResult.requiresFollowUp && !miles) {
-      return res.json({ needsFollowUp: true, aiResult, integrity, followUpQuestion: aiResult.followUpQuestion });
+      return res.json({ needsFollowUp: true, aiResult, integrity: buildIntegrity(aiResult, { lbId }), followUpQuestion: aiResult.followUpQuestion });
+    }
+
+    // ── Commit path: perception passed; now run the deterministic tools ──
+    // 1) Grounded carbon: the model supplied attributes; we compute kg CO2e from
+    //    cited emission factors. User-entered miles override the model's distance.
+    const attrs = { ...(aiResult.attributes || {}) };
+    if (miles) attrs.distanceMiles = miles;
+    const carbon = computeCarbon(aiResult.actionType, attrs);
+
+    // 2) Adversarial fraud screen (skipped offline -> benign). Hard fakes are
+    //    rejected; low-suspicion submissions are accepted with reduced points.
+    // Cache the fraud-screen verdict by (userId, imageHash): a rejected submission
+    // writes no post row, so the 24h duplicate guard won't stop a re-POST — without
+    // this the paid second vision call (the cheapest to spam) re-runs every re-submit.
+    let critique = analysisCache.get(req.userId, `adv:${hash}`);
+    if (!critique) {
+      critique = await adversarialCritique(image);
+      analysisCache.set(req.userId, `adv:${hash}`, critique);
+    }
+    const verdict = evaluateAdversarial(critique);
+    const adversarial = { ran: critique.ran, suspicionLevel: critique.suspicionLevel, gate: verdict.gate };
+    const integrity = buildIntegrity(aiResult, { lbId, carbon, adversarial });
+
+    if (verdict.verdict === 'reject') {
+      // Keep BOTH the analysis and fraud-screen cached: a rejected image writes no
+      // post row (so the dup-guard can't block a re-POST), and the verdict is
+      // deterministic for the TTL — a re-submit reuses it for 0 extra model calls.
+      return res.json({
+        success: false, accepted: false, reason: 'suspected_fraud', points: 0,
+        confidence: aiResult.confidence ?? 0,
+        description: verdict.reason || 'This image was flagged by the fraud screen.',
+        aiResult, integrity, carbon, aiRemaining: req.aiRemaining,
+      });
     }
 
     // Parse + validate tags (max 3 real uuids that exist, never self).
@@ -96,28 +149,35 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     const activeQuests = db.prepare('SELECT * FROM quests WHERE user_id = ? AND date = ? AND completed = 0').all(req.userId, today);
     let questMatch = null;
     if (activeQuests.length > 0) questMatch = await checkQuestMatch(aiResult, activeQuests);
-    const isQuestCompletion = !!(questMatch && questMatch.matchedQuestId);
+    // Only credit a quest the model reports as actually COMPLETE *and* that is in this
+    // user's verified active list — never a partial, hallucinated, or foreign quest id.
+    const matchedQuest = (questMatch && questMatch.completed === true)
+      ? activeQuests.find(q => q.id === questMatch.matchedQuestId)
+      : null;
+    const isQuestCompletion = !!matchedQuest;
 
     const result = processEcoAction({
       userId: req.userId, leaderboardId: lbId, aiResult, miles, caption: v.caption,
       image, imageHash: hash, taggedUserIds, isQuestCompletion,
+      co2Saved: carbon.kgCO2e, integrityMultiplier: verdict.multiplier,
     });
 
     let questUpdate = null;
     if (isQuestCompletion) {
       db.prepare(`UPDATE quests SET progress = MIN(goal, progress + 1),
         completed = CASE WHEN progress + 1 >= goal THEN 1 ELSE 0 END,
-        awarded  = CASE WHEN progress + 1 >= goal THEN 1 ELSE awarded END WHERE id = ?`).run(questMatch.matchedQuestId);
+        awarded  = CASE WHEN progress + 1 >= goal THEN 1 ELSE awarded END WHERE id = ? AND user_id = ?`).run(matchedQuest.id, req.userId);
       questUpdate = questMatch;
     }
 
-    // Photo committed; drop the cached analysis so a fresh upload re-analyzes.
+    // Photo committed; drop the cached analysis + fraud-screen so a fresh upload re-analyzes.
     analysisCache.clear(req.userId, hash);
+    analysisCache.clear(req.userId, `adv:${hash}`);
 
     res.json({
       success: true, accepted: true, postId: result.postId, points: result.points,
       breakdown: result.breakdown, bonuses: result.bonuses, multiplier: result.multiplier,
-      explanation: result.explanation, co2Saved: aiResult.estimatedCO2Saved || 0,
+      explanation: result.explanation, co2Saved: result.co2Saved, carbon,
       aiResult, integrity, questUpdate, aiRemaining: req.aiRemaining,
     });
   } catch (err) {

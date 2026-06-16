@@ -1,53 +1,74 @@
 /* ============================================================
    EcoRise — Design Tokens
-   Ported from Claude Design spec: dark navy + neon accents
+   "Editorial Eco" — muted botanical palette, serif display,
+   restraint over glow. Variable NAMES kept stable so every
+   page inherits the look without code changes.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* ---- core surfaces ---- */
-  --navy-950: #101024;
-  --navy-900: #16162B;   /* app background */
-  --navy-800: #1C1C36;   /* card */
-  --navy-700: #232342;   /* raised card */
-  --navy-600: #2E2E54;   /* hover / inset */
-  --navy-500: #3C3C68;   /* border */
+  /* ---- core surfaces (warm charcoal-green, lifted off pure black) ---- */
+  --navy-950: #0A0F0D;
+  --navy-900: #0F1512;   /* app background */
+  --navy-800: #151D19;   /* card base */
+  --navy-700: #1B2420;   /* raised card */
+  --navy-600: #232E29;   /* hover / inset */
+  --navy-500: #34403A;   /* border */
 
-  /* ---- accents ---- */
-  --green:  #00E676;
-  --green-2:#1AF08A;
-  --purple: #7C4DFF;
-  --purple-2:#9D7BFF;
-  --coral:  #FF6B6B;
-  --coral-2:#FF8A8A;
-  --blue:   #38BDF8;
-  --yellow: #FFD23F;
+  /* glass tints — neutral, restrained (no neon edge) */
+  --glass:       rgba(27, 36, 32, 0.60);
+  --glass-strong:rgba(18, 26, 22, 0.80);
+  --glass-edge:  rgba(255, 255, 255, 0.10);
+  --glass-edge-soft: rgba(255, 255, 255, 0.05);
 
-  /* ---- podium metals ---- */
-  --gold:   #FFD23F;
-  --gold-d: #E0A92E;
-  --silver: #D2DCEC;
-  --silver-d:#9AAAC4;
-  --bronze: #E8965B;
-  --bronze-d:#C26E38;
+  /* ---- accents (desaturated, editorial) ---- */
+  --green:  #4FCB97;     /* eucalyptus, not neon */
+  --green-2:#74D9AE;
+  --green-d:#2E9E73;
+  --purple: #9588C9;     /* dusty lavender */
+  --purple-2:#B0A6DA;
+  --coral:  #E0856B;     /* terracotta / clay */
+  --coral-2:#ECA088;
+  --blue:   #6DB3BE;     /* muted teal */
+  --blue-2: #93C9D1;
+  --yellow: #E3C173;     /* honey ochre */
+  --lime:   #A8CE7A;     /* moss */
 
-  /* ---- text ---- */
-  --text:    #FFFFFF;
-  --text-muted: #A6A6CE;
-  --text-dim:   #6E6E9A;
+  /* ---- podium metals (warm, matte) ---- */
+  --gold:   #E3C173;
+  --gold-d: #C49A45;
+  --silver: #DDE6E2;
+  --silver-d:#98A8A0;
+  --bronze: #D69A6B;
+  --bronze-d:#B0703F;
 
-  /* ---- glows ---- */
-  --glow-green:  0 0 0 rgba(0,230,118,.0), 0 8px 30px rgba(0,230,118,.35);
-  --glow-purple: 0 8px 30px rgba(124,77,255,.40);
-  --glow-coral:  0 8px 30px rgba(255,107,107,.38);
+  /* ---- text (warm off-white, never pure #fff for body) ---- */
+  --text:       #ECF1ED;
+  --text-muted: #A6B5AC;
+  --text-dim:   #6E8077;
+
+  /* ---- shadows (soft + dark, NOT colored glows) ---- */
+  --glow-green:  0 12px 30px rgba(0,0,0,.42);
+  --glow-purple: 0 12px 30px rgba(0,0,0,.42);
+  --glow-coral:  0 12px 30px rgba(0,0,0,.42);
+  --glow-cyan:   0 12px 30px rgba(0,0,0,.42);
+
+  /* ---- ambient field (very subtle, warm) ---- */
+  --aurora-1: rgba(79, 203, 151, .10);
+  --aurora-2: rgba(149, 136, 201, .07);
+  --aurora-3: rgba(109, 179, 190, .06);
 
   /* ---- type ---- */
-  --display: 'Nunito', system-ui, sans-serif;
-  --body: 'Nunito', system-ui, sans-serif;
+  --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --body:    'Hanken Grotesk', system-ui, sans-serif;
 
-  --r-sm: 12px;
-  --r-md: 18px;
-  --r-lg: 26px;
-  --r-xl: 34px;
+  /* ---- radii (a touch tighter — less bubbly) ---- */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  /* fine film grain — texture reads as crafted, not generated */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }

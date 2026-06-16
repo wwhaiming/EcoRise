@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "seed": "node scripts/seedDemo.js",
-    "test": "node --test test/api.test.js"
+    "test": "node --test test/*.test.js",
+    "test:eval": "node test/eco_eval/runEval.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

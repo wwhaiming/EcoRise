@@ -15,6 +15,8 @@ const CHECK_LABELS = {
   duplicateScreen: 'Duplicate-photo screen',
   membershipVerified: 'Board membership verified',
   aiVisionGate: 'AI vision gate',
+  carbonGrounded: 'Carbon grounded in cited factors',
+  fraudScreen: 'Adversarial fraud screen',
   serverScored: 'Points scored server-side',
 };
 
@@ -51,6 +53,65 @@ function ConfidenceRing({ pct, accent }) {
   );
 }
 
+// Grounded carbon: shows the computed kg CO2e, the uncertainty range, the formula,
+// and the cited emission-factor source — the answer to "where did that number come from?"
+function CarbonCard({ carbon, accent }) {
+  if (!carbon) return null;
+  const grounded = carbon.method && carbon.method !== 'none';
+  const factor = (carbon.factors || [])[0];
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <div className="card" style={{ padding: 14, border: `1px solid ${accent}33` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="eyebrow" style={{ color: accent }}>Carbon math{grounded ? ' · grounded' : ''}</span>
+          {grounded
+            ? <span style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 18, color: accent }}>{carbon.kgCO2e} kg CO₂e</span>
+            : <span className="dim" style={{ fontSize: 12, fontWeight: 800 }}>not quantified</span>}
+        </div>
+        {grounded && (
+          <div className="dim" style={{ fontSize: 11.5, fontWeight: 700, marginTop: 2 }}>
+            range {carbon.low}–{carbon.high} kg · uncertainty shown on purpose
+          </div>
+        )}
+        {carbon.formula && (
+          <div className="muted" style={{ fontSize: 12.5, fontWeight: 600, marginTop: 8, fontFamily: 'var(--display)' }}>{carbon.formula}</div>
+        )}
+        {factor && (
+          <div style={{ fontSize: 11.5, fontWeight: 700, marginTop: 6 }}>
+            <span className="dim">Source: </span>
+            {factor.sourceUrl
+              ? <a href={factor.sourceUrl} target="_blank" rel="noreferrer" style={{ color: accent }}>{factor.source}{factor.sourceYear ? ` (${factor.sourceYear})` : ''}</a>
+              : <span>{factor.source}{factor.sourceYear ? ` (${factor.sourceYear})` : ''}</span>}
+          </div>
+        )}
+        {(carbon.assumptions || []).slice(0, 2).map((a, i) => (
+          <div key={i} className="dim" style={{ fontSize: 11, fontWeight: 600, marginTop: 4, lineHeight: 1.35 }}>• {a}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// The deterministic tools the backend ran — makes the "AI is one component in a
+// measured system, it doesn't award points itself" story visible to a judge.
+function ToolCalls({ tools, accent }) {
+  if (!Array.isArray(tools) || !tools.length) return null;
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <div className="eyebrow" style={{ color: 'var(--text-dim)', marginBottom: 4 }}>AI pipeline · tools run</div>
+      <div className="card" style={{ padding: '8px 12px' }}>
+        {tools.map((t, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12 }}>
+            <Icon name="bolt" size={12} color={accent} />
+            <span style={{ fontFamily: 'var(--display)', fontWeight: 700, color: '#fff' }}>{t.tool}</span>
+            <span className="dim" style={{ fontWeight: 600, flex: 1, minWidth: 0 }}>— {t.detail}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AIEvidence({ data, onClose }) {
   if (!data) return null;
   const accepted = !!data.accepted;
@@ -58,6 +119,7 @@ export default function AIEvidence({ data, onClose }) {
   const accent = accepted ? 'var(--green)' : 'var(--coral)';
   const integrity = data.integrity || {};
   const checks = integrity.checks || {};
+  const carbon = data.carbon || integrity.carbon || null;
   const confPct = Math.round(((integrity.confidence ?? data.confidence ?? 0)) * 100);
 
   const detectedTitle = isTrash
@@ -190,6 +252,10 @@ export default function AIEvidence({ data, onClose }) {
             </div>
           </div>
         )}
+
+        {/* grounded carbon math + the deterministic tool pipeline */}
+        {!isTrash && accepted && <CarbonCard carbon={carbon} accent={accent} />}
+        <ToolCalls tools={integrity.toolCalls} accent={accent} />
 
         {/* integrity checklist */}
         <div style={{ padding: '14px 16px 4px' }}>

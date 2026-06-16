@@ -77,6 +77,7 @@ function CommentSection({ postId, ctx }) {
 function FeedCard({ post, ctx }) {
   const [menu, setMenu] = useState(false);
   const [showC, setShowC] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
   const ago = (() => {
     if (!post.created_at) return '';
     const mins = Math.round((Date.now() - new Date(post.created_at).getTime()) / 60000);
@@ -100,17 +101,40 @@ function FeedCard({ post, ctx }) {
           </div>
         )}
       </div>
-      {/* photo / gradient placeholder */}
-      <div style={{ position: 'relative', height: 230, background: post.image?.startsWith('data:') ? `url(${post.image}) center/cover` : 'linear-gradient(135deg,#0e7a4f,#11b06f)', display: 'flex', alignItems: 'flex-end', padding: 14 }}>
-        {post.image?.startsWith('data:') && <img src={post.image} alt={post.action_desc || 'Eco action'} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,.45))' }} />
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <span className="chip" style={{ background: 'rgba(0,0,0,.45)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: 12 }}>
-            <Icon name="leaf" size={13} color="var(--green-2)" /> {post.action_type}
-          </span>
-          <PointsChip pts={post.points} />
-        </div>
-      </div>
+      {/* photo, or a designed action-typed gradient when there's no image */}
+      {(() => {
+        const hasPhoto = !imgErr && !!post.image && (post.image.startsWith('data:') || post.image.startsWith('http'));
+        const t = (post.action_type || '').toLowerCase();
+        const THEME = {
+          transport: { c: '#2BFF9C', c2: '#38E0F0', icon: 'bike' },
+          waste:     { c: '#38E0F0', c2: '#7CEDF8', icon: 'drop' },
+          food:      { c: '#B8FF5C', c2: '#2BFF9C', icon: 'leaf' },
+          cleanup:   { c: '#FF6F8B', c2: '#FFD66B', icon: 'trash' },
+          nature:    { c: '#2BFF9C', c2: '#B8FF5C', icon: 'leaf' },
+          energy:    { c: '#FFD66B', c2: '#FF9AAE', icon: 'bolt' },
+          community: { c: '#AD93FF', c2: '#38E0F0', icon: 'users' },
+        };
+        const key = Object.keys(THEME).find(k => t.includes(k)) || 'nature';
+        const th = THEME[key];
+        return (
+          <div style={{
+            position: 'relative', height: hasPhoto ? 230 : 168, overflow: 'hidden',
+            display: 'flex', alignItems: 'flex-end', padding: 14,
+            background: hasPhoto ? undefined
+              : `radial-gradient(130% 120% at 86% -12%, ${th.c}40, transparent 55%), radial-gradient(110% 110% at 0% 120%, ${th.c2}33, transparent 55%), linear-gradient(150deg, #0d2a1e, #0a1712)`,
+          }}>
+            {hasPhoto && <img src={post.image} alt={post.action_desc || 'Eco action'} onError={() => setImgErr(true)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+            {!hasPhoto && <Icon name={th.icon} size={158} color={th.c} strokeWidth={1.4} style={{ position: 'absolute', right: -16, bottom: -26, opacity: .16, transform: 'rotate(-8deg)' }} />}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 45%, rgba(0,0,0,.5))' }} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <span className="chip" style={{ background: 'rgba(0,0,0,.4)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: 12, boxShadow: `inset 0 0 0 1px ${th.c}55` }}>
+                <Icon name={th.icon} size={13} color={th.c} /> {post.action_type}
+              </span>
+              <PointsChip pts={post.points} />
+            </div>
+          </div>
+        );
+      })()}
       <div style={{ padding: '12px 14px 14px' }}>
         <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5, marginBottom: 6 }}>{post.action_desc}</div>
         {post.caption && <div className="muted" style={{ fontSize: 14, lineHeight: 1.45, fontWeight: 600 }}>{mention(post.caption)}</div>}
@@ -200,8 +224,8 @@ export function Leaderboard({ ctx }) {
           {rest.map((p, i) => (
             <div key={p.user_id} style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 16,
-              background: p.isYou ? 'linear-gradient(90deg, rgba(0,230,118,.16), rgba(0,230,118,.04))' : 'transparent',
-              boxShadow: p.isYou ? 'inset 0 0 0 1.5px rgba(0,230,118,.4)' : 'none',
+              background: p.isYou ? 'linear-gradient(90deg, rgba(43,255,156,.18), rgba(43,255,156,.04))' : 'transparent',
+              boxShadow: p.isYou ? 'inset 0 0 0 1.5px rgba(43,255,156,.45)' : 'none',
               borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none',
             }}>
               <RankBadge rank={p.rank} />

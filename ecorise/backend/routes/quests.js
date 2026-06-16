@@ -15,7 +15,17 @@ router.get('/', authMiddleware, async (req, res) => {
     let quests = db.prepare('SELECT * FROM quests WHERE user_id = ? AND date = ?').all(req.userId, today);
 
     if (quests.length === 0) {
-      const generated = await generateDailyQuests(req.userId);
+      // Personalize from the user's real last-30-day behavior: push them toward
+      // categories they have neglected, build on their strongest habit.
+      const recentActions = db.prepare(`
+        SELECT action_type AS actionType, COUNT(*) AS count, MAX(created_at) AS lastDoneAt
+        FROM posts WHERE user_id = ? AND created_at > datetime('now','-30 days')
+        GROUP BY action_type ORDER BY count DESC`).all(req.userId);
+      const ALL_CATS = ['transportation', 'waste', 'energy', 'food', 'nature'];
+      const done = new Set(recentActions.map(r => r.actionType));
+      const weakSpots = ALL_CATS.filter(c => !done.has(c));
+      const topCategory = recentActions[0]?.actionType || null;
+      const generated = await generateDailyQuests({ userId: req.userId, recentActions, weakSpots, topCategory });
       const insert = db.prepare(`
         INSERT INTO quests (id, user_id, title, description, action_type, target_details, points_base, goal, progress, date)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)

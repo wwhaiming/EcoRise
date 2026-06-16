@@ -11,6 +11,7 @@ process.env.NODE_ENV = 'test';
 delete process.env.ANTHROPIC_API_KEY;        // force mock / local model
 process.env.TRASH_PROB_THRESHOLD = '1.1';     // trash detector rejects everything (deterministic)
 process.env.MOCK_ECO_ALWAYS_PASS = 'true';    // let eco posts succeed so we can test points/ledger logic
+process.env.MOCK_TRASH_ALWAYS_PASS = 'false'; // hermetic: ignore any local .env that flips trash to demo-pass
 const DB = path.join(__dirname, 'test-' + process.pid + '.db');
 process.env.DATABASE_URL = DB;
 

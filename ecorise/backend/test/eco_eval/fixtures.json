@@ -1,0 +1,23 @@
+{
+  "_README": "ILLUSTRATIVE sample of recorded eco-action gate predictions so `npm run test:eval` runs offline. This is NOT a published benchmark and NOT live model output. Replace with a real labeled image set + manifest.json and run `--live` for a defensible number. Each case: expected/predicted isEcoAction, the labeled vs. predicted action type, an adversarial flag for decoys, and the model confidence.",
+  "cases": [
+    { "expected": true,  "predicted": true,  "expectedType": "transportation", "predictedType": "transportation", "adversarial": false, "confidence": 0.93, "note": "real bike commute" },
+    { "expected": true,  "predicted": true,  "expectedType": "transportation", "predictedType": "transportation", "adversarial": false, "confidence": 0.81, "note": "boarding a bus" },
+    { "expected": true,  "predicted": true,  "expectedType": "food",           "predictedType": "food",           "adversarial": false, "confidence": 0.78, "note": "plant-based plate" },
+    { "expected": true,  "predicted": true,  "expectedType": "food",           "predictedType": "food",           "adversarial": false, "confidence": 0.66, "note": "veg stir fry" },
+    { "expected": true,  "predicted": true,  "expectedType": "waste",          "predictedType": "waste",          "adversarial": false, "confidence": 0.72, "note": "refilling reusable bottle" },
+    { "expected": true,  "predicted": true,  "expectedType": "waste",          "predictedType": "waste",          "adversarial": false, "confidence": 0.69, "note": "recycling bin sort" },
+    { "expected": true,  "predicted": true,  "expectedType": "nature",         "predictedType": "nature",         "adversarial": false, "confidence": 0.84, "note": "litter cleanup bag" },
+    { "expected": true,  "predicted": false, "expectedType": "transportation", "predictedType": "other",          "adversarial": false, "confidence": 0.41, "note": "MISS: walking trip read as ambiguous" },
+
+    { "expected": false, "predicted": false, "expectedType": null,             "predictedType": "other",          "adversarial": false, "confidence": 0.08, "note": "selfie rejected" },
+    { "expected": false, "predicted": false, "expectedType": null,             "predictedType": "other",          "adversarial": false, "confidence": 0.12, "note": "pet rejected" },
+    { "expected": false, "predicted": false, "expectedType": null,             "predictedType": "other",          "adversarial": false, "confidence": 0.05, "note": "meme rejected" },
+    { "expected": false, "predicted": false, "expectedType": null,             "predictedType": "other",          "adversarial": false, "confidence": 0.22, "note": "ordinary indoor room rejected" },
+    { "expected": false, "predicted": true,  "expectedType": null,             "predictedType": "food",           "adversarial": false, "confidence": 0.58, "note": "FALSE POSITIVE: burger read as eco food" },
+
+    { "expected": false, "predicted": false, "expectedType": null,             "predictedType": "other",          "adversarial": true,  "confidence": 0.18, "note": "decoy: photo of a screen showing a bike — rejected" },
+    { "expected": false, "predicted": true,  "expectedType": null,             "predictedType": "transportation", "adversarial": true,  "confidence": 0.62, "note": "decoy: stock bike photo — NOT caught by the gate (caught later by fraud screen)" },
+    { "expected": false, "predicted": false, "expectedType": null,             "predictedType": "other",          "adversarial": true,  "confidence": 0.10, "note": "decoy: screenshot — rejected" }
+  ]
+}

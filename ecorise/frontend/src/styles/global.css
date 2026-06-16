@@ -1,5 +1,6 @@
 /* ============================================================
    EcoRise — Global Styles
+   "Editorial Eco"
    ============================================================ */
 
 @import './tokens.css';
@@ -18,10 +19,7 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* ----- font-variant tweak hooks ----- */
-[data-font="fredoka"] { --display: 'Fredoka', system-ui, sans-serif; }
-[data-font="nunito"]  { --display: 'Nunito', system-ui, sans-serif; }
-[data-font="baloo"]   { --display: 'Baloo 2', system-ui, sans-serif; }
+::selection { background: rgba(79,203,151,.26); color: #fff; }
 
 /* ============================================================
    App screen shell
@@ -30,44 +28,98 @@ html, body, #root {
   height: 100vh; width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  background:
-    radial-gradient(700px 420px at 50% -10%, rgba(124,77,255,.20), transparent 60%),
-    var(--navy-900);
+  background: var(--navy-900);
   display: flex; flex-direction: column;
   position: relative; overflow: hidden;
   font-family: var(--body);
+  isolation: isolate;
+}
+
+/* Ambient light — restrained, slow, no rave-gradient */
+.app::before {
+  content: '';
+  position: absolute; inset: -20%;
+  z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(42% 34% at 24% 6%,  var(--aurora-1), transparent 62%),
+    radial-gradient(46% 38% at 88% 14%, var(--aurora-2), transparent 64%),
+    radial-gradient(52% 42% at 50% 110%, var(--aurora-3), transparent 62%);
+  filter: blur(8px);
+  animation: auroraDrift 60s ease-in-out infinite alternate;
+}
+
+/* Film grain — a little more present; texture = crafted */
+.app::after {
+  content: '';
+  position: absolute; inset: 0;
+  z-index: -1; pointer-events: none;
+  background-image: var(--grain);
+  background-size: 170px 170px;
+  opacity: .06; mix-blend-mode: overlay;
+}
+
+@keyframes auroraDrift {
+  0%   { transform: translate3d(0,0,0); }
+  100% { transform: translate3d(-1.5%, 1%, 0); }
 }
 
 .scroll {
   flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 .scroll::-webkit-scrollbar { width: 0; height: 0; }
 
-/* fade-in on screen mount */
-@keyframes screenIn { from { transform: translateY(10px); } to { transform: none; } }
-.screen-in { animation: screenIn .34s cubic-bezier(.2,.7,.3,1) both; }
+/* fade-in on screen mount — gentle, no bounce */
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.screen-in { animation: screenIn .5s cubic-bezier(.22,.61,.36,1) both; }
+.screen-in > * { animation: screenIn .55s cubic-bezier(.22,.61,.36,1) both; }
+.screen-in > *:nth-child(1) { animation-delay: .03s; }
+.screen-in > *:nth-child(2) { animation-delay: .08s; }
+.screen-in > *:nth-child(3) { animation-delay: .13s; }
+.screen-in > *:nth-child(4) { animation-delay: .18s; }
+.screen-in > *:nth-child(5) { animation-delay: .23s; }
+.screen-in > *:nth-child(6) { animation-delay: .28s; }
+.screen-in > *:nth-child(7) { animation-delay: .33s; }
 
 /* ============================================================
-   Display headings
+   Display headings — Fraunces, editorial serif
    ============================================================ */
-.h-hero { font-family: var(--display); font-weight: 700; letter-spacing: -.5px; line-height: 1.0; }
-.h1 { font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: -.4px; margin: 0; }
-.h2 { font-family: var(--display); font-weight: 600; font-size: 21px; letter-spacing: -.2px; margin: 0; }
-.eyebrow { font-family: var(--body); font-weight: 800; font-size: 12px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-dim); }
+.h-hero { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; letter-spacing: -1px; line-height: 1.02; }
+.h1 { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; font-size: 30px; letter-spacing: -.6px; margin: 0; line-height: 1.06; }
+.h2 { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; font-size: 22px; letter-spacing: -.3px; margin: 0; }
+.eyebrow {
+  font-family: var(--body); font-weight: 700; font-size: 11px; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--text-dim);
+}
+
+/* tabular numerics for stats/counters */
+.tnum { font-variant-numeric: tabular-nums; }
 
 /* utilities */
 .row { display: flex; align-items: center; }
 .muted { color: var(--text-muted); }
 .dim { color: var(--text-dim); }
 
-/* Responsive scaling for larger screens */
+/* restrained gradient ink for the rare hero accent */
+.ink-green {
+  background: linear-gradient(100deg, var(--green-2), var(--green));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Responsive: float the device as a quiet slab on desktop */
 @media (min-width: 768px) {
+  body { background: var(--navy-950); }
   .app {
-    border-radius: 32px;
+    border-radius: 34px;
     height: 92vh;
-    max-height: 900px;
-    box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+    max-height: 920px;
+    box-shadow:
+      0 40px 100px rgba(0,0,0,.6),
+      0 0 0 1px rgba(255,255,255,.05);
     margin-top: 4vh;
   }
 }

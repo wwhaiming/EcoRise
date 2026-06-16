@@ -111,13 +111,13 @@ export function LogoMark({ size = 64 }) {
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
       <defs>
         <linearGradient id="lgM" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#1AF08A" /><stop offset="1" stopColor="#00C766" />
+          <stop stopColor="#67FFBE" /><stop offset="1" stopColor="#00C46E" />
         </linearGradient>
       </defs>
-      <rect x="4" y="4" width="56" height="56" rx="18" fill="#13132A" stroke="rgba(0,230,118,.35)" strokeWidth="1.5" />
+      <rect x="4" y="4" width="56" height="56" rx="18" fill="#0B1813" stroke="rgba(43,255,156,.4)" strokeWidth="1.5" />
       <path d="M20 44c0-15 10-23 24-24-1 15-9 23-24 24Z" fill="url(#lgM)" />
       <path d="M20 44c3.5-8 8.5-12 15-15" stroke="#06281A" strokeWidth="2.4" strokeLinecap="round" opacity=".55" />
-      <path d="M40 16l2.4 6.6L49 25l-6.6 2.4L40 34l-2.4-6.6L31 25l6.6-2.4L40 16Z" fill="#FFD23F" />
+      <path d="M40 16l2.4 6.6L49 25l-6.6 2.4L40 34l-2.4-6.6L31 25l6.6-2.4L40 16Z" fill="#FFD66B" />
     </svg>
   );
 }
@@ -135,9 +135,10 @@ export function Wordmark({ size = 26, color = '#fff' }) {
 export function Orbs() {
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-      <div className="floaty" style={{ position: 'absolute', top: -40, left: -50, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle,#7C4DFF,transparent 70%)', opacity: .5, filter: 'blur(8px)' }} />
-      <div className="floaty" style={{ position: 'absolute', bottom: 40, right: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle,#00E676,transparent 70%)', opacity: .35, filter: 'blur(8px)', animationDelay: '1.2s' }} />
-      <div className="floaty" style={{ position: 'absolute', top: '38%', right: -30, width: 130, height: 130, borderRadius: '50%', background: 'radial-gradient(circle,#FF6B6B,transparent 70%)', opacity: .3, filter: 'blur(6px)', animationDelay: '.6s' }} />
+      <div className="floaty" style={{ position: 'absolute', top: -60, left: -70, width: 270, height: 270, borderRadius: '50%', background: 'radial-gradient(circle,#8A6CFF,transparent 68%)', opacity: .5, filter: 'blur(28px)' }} />
+      <div className="floaty" style={{ position: 'absolute', bottom: 10, right: -80, width: 290, height: 290, borderRadius: '50%', background: 'radial-gradient(circle,#2BFF9C,transparent 68%)', opacity: .42, filter: 'blur(32px)', animationDelay: '1.2s' }} />
+      <div className="floaty" style={{ position: 'absolute', top: '32%', right: -40, width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle,#38E0F0,transparent 70%)', opacity: .34, filter: 'blur(24px)', animationDelay: '.6s' }} />
+      <div className="floaty" style={{ position: 'absolute', top: '62%', left: -50, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,#B8FF5C,transparent 72%)', opacity: .22, filter: 'blur(26px)', animationDelay: '2s' }} />
     </div>
   );
 }
