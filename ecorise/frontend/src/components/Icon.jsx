@@ -35,6 +35,8 @@ const ICONS = {
   star:  'M12 3.5l2.5 5.6 6.1.6-4.6 4 1.4 6-5.4-3.2L6.6 19.7l1.4-6-4.6-4 6.1-.6L12 3.5Z',
   arrowR:'M5 12h14M13 6l6 6-6 6',
   bolt:  'M13 3 4 14h6l-1 7 9-11h-6l1-7Z',
+  folder:'M3 7a1 1 0 0 1 1-1h4.5l2 2H20a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z',
+  image: 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M9.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z',
 };
 
 export default function Icon({ name, size = 24, color = 'currentColor', strokeWidth = 2, fill = false, style }) {

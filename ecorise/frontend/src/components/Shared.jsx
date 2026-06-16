@@ -1,6 +1,55 @@
 /* EcoRise — Sheet, UploadFrame, LogoMark, Wordmark, Orbs, ResetTimer */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Icon from './Icon';
+
+// ── Photo source picker (native iOS-style: Take Photo / Library / Files) ──
+// On iOS each <input> opens the matching native sheet; on desktop it opens the
+// file dialog. capture="environment" jumps straight to the camera on mobile.
+function PhotoRow({ icon, label, sub, accent, onClick }) {
+  return (
+    <button onClick={onClick} className="card" style={{
+      display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', border: 'none',
+    }}>
+      <span style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: `${accent}1f`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={icon} size={22} color={accent} />
+      </span>
+      <span style={{ flex: 1 }}>
+        <span style={{ display: 'block', fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16, color: '#fff' }}>{label}</span>
+        <span className="dim" style={{ fontSize: 12.5, fontWeight: 700 }}>{sub}</span>
+      </span>
+      <Icon name="chevR" size={18} color="var(--text-dim)" />
+    </button>
+  );
+}
+
+export function PhotoSources({ open, onClose, onFile, accent = 'var(--green)' }) {
+  const camRef = useRef(null), libRef = useRef(null), fileRef = useRef(null);
+  if (!open) return null;
+
+  const handle = (e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; onClose(); };
+  const pick = (ref) => ref.current && ref.current.click();
+
+  return (
+    <>
+      <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handle} />
+      <input ref={libRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handle} />
+      <input ref={fileRef} type="file" accept="image/*,.heic,.heif" style={{ display: 'none' }} onChange={handle} />
+      <div className="scrim" style={{ zIndex: 90 }} onClick={onClose} />
+      <div className="screen-in" style={{
+        position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 95,
+        display: 'grid', gap: 8, padding: 10, borderRadius: 22,
+        background: 'linear-gradient(180deg,var(--navy-800),var(--navy-900))', border: `1px solid ${accent}33`,
+        boxShadow: '0 -16px 50px rgba(0,0,0,.6)',
+      }}>
+        <div className="eyebrow" style={{ color: accent, padding: '6px 8px 2px' }}>Add a photo</div>
+        <PhotoRow accent={accent} icon="camera" label="Take Photo" sub="Use your camera" onClick={() => pick(camRef)} />
+        <PhotoRow accent={accent} icon="image"  label="Photo Library" sub="Pick an existing photo" onClick={() => pick(libRef)} />
+        <PhotoRow accent={accent} icon="folder" label="Choose File" sub="Browse files / iCloud Drive" onClick={() => pick(fileRef)} />
+        <button className="btn btn-secondary btn-block" style={{ marginTop: 2 }} onClick={onClose}>Cancel</button>
+      </div>
+    </>
+  );
+}
 
 // ── Sheet (modal overlay) ──
 export function Sheet({ title, children, onClose, accent = 'var(--green)' }) {
