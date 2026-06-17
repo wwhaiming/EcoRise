@@ -11,10 +11,67 @@ try {
 
 // Locally-trained offline trash detector (datasets/train_trash_detector.py -> ONNX).
 const localTrashModel = require('./localTrashModel');
+// Single robust JSON parser for every model response (fences/prose/trailing commas).
+const { extractJson } = require('./jsonExtract');
 
+// Returns an Anthropic client, OR a Gemini adapter that mimics the same
+// `client.messages.create(...) -> { content: [{ text }] }` shape, so every
+// call site below works unchanged regardless of provider. Anthropic wins if
+// both keys are set; otherwise Gemini (free tier) is used if its key is set.
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY || !Anthropic) return null;
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  if (process.env.ANTHROPIC_API_KEY && Anthropic) {
+    return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+    return geminiClient();
+  }
+  return null;
+}
+
+// Google Gemini adapter (free tier). No SDK needed — uses global fetch.
+// Translates the Anthropic-style request into Gemini's generateContent format
+// and returns the Anthropic-style response shape the rest of this file expects.
+function geminiClient() {
+  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  return {
+    messages: {
+      async create(opts) {
+        const content = opts && opts.messages && opts.messages[0] && opts.messages[0].content;
+        const parts = [];
+        if (typeof content === 'string') {
+          parts.push({ text: content });
+        } else if (Array.isArray(content)) {
+          for (const block of content) {
+            if (block.type === 'text') {
+              parts.push({ text: block.text });
+            } else if (block.type === 'image' && block.source && block.source.type === 'base64') {
+              parts.push({ inline_data: { mime_type: block.source.media_type || 'image/jpeg', data: block.source.data } });
+            }
+          }
+        }
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const genCfg = { maxOutputTokens: (opts && opts.max_tokens) || 1024, temperature: 0.2, responseMimeType: 'application/json' };
+        // 2.5/3 "thinking" models spend output budget on reasoning, truncating JSON.
+        // Disable it so the whole budget goes to the answer.
+        if (/2\.5|gemini-3|flash-latest|pro-latest/.test(model)) genCfg.thinkingConfig = { thinkingBudget: 0 };
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: genCfg }),
+        });
+        if (!resp.ok) {
+          const body = await resp.text().catch(() => '');
+          throw new Error(`Gemini API ${resp.status}: ${String(body).slice(0, 300)}`);
+        }
+        const data = await resp.json();
+        const text = ((data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [])
+          .map(p => p.text || '').join('').trim();
+        if (!text) throw new Error('Gemini API returned empty content');
+        return { content: [{ text }] };
+      },
+    },
+  };
 }
 
 // ── Mock responses for when API key is not set ──
@@ -102,7 +159,7 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
     });
 
     const text = response.content[0].text;
-    const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    const json = extractJson(text);
     const confidence = Math.max(0, Math.min(1, Number(json.confidence ?? 0)));
     return {
       isEcoAction: json.isEcoAction === true && confidence >= ECO_CONFIDENCE_FLOOR,
@@ -172,7 +229,7 @@ Respond ONLY in JSON (a top-level array).`,
     });
 
     const text = response.content[0].text;
-    const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    const json = extractJson(text);
     const quests = Array.isArray(json) ? json : (Array.isArray(json.quests) ? json.quests : MOCK_QUESTS);
     return quests.length ? quests : MOCK_QUESTS;
   } catch (err) {
@@ -210,7 +267,7 @@ async function checkQuestMatch(action, quests) {
     });
 
     const text = response.content[0].text;
-    return JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    return extractJson(text);
   } catch (err) {
     console.error('AI checkQuestMatch error:', err.message);
     return { matchedQuestId: null, progressPercent: 0, completed: false };
@@ -319,7 +376,7 @@ Respond ONLY in JSON:
     });
 
     const text = response.content[0].text;
-    const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    const json = extractJson(text);
 
     // Normalize + enforce the gate server-side (never trust the raw score alone).
     const score = Math.max(0, Math.min(10, Number(json.score) || 0));
@@ -373,7 +430,7 @@ async function adversarialCritique(imageBase64) {
       ] }],
     });
     const text = response.content[0].text;
-    const j = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    const j = extractJson(text);
     const level = ['none', 'low', 'high'].includes(j.suspicionLevel) ? j.suspicionLevel : 'none';
     return {
       ran: true,

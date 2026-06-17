@@ -46,7 +46,10 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🌱 EcoRise API running on http://localhost:${PORT}`);
-    console.log(`   AI mode: ${process.env.ANTHROPIC_API_KEY ? 'LIVE (Claude)' : 'MOCK / local model'}`);
+    const aiMode = process.env.ANTHROPIC_API_KEY ? 'LIVE (Claude)'
+      : (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? `LIVE (Gemini ${process.env.GEMINI_MODEL || 'gemini-2.0-flash'})`
+      : 'MOCK / local model';
+    console.log(`   AI mode: ${aiMode}`);
   });
   const interval = setInterval(() => {
     try { runDueResets(getDb()); } catch (e) { console.error('reset job error:', e.message); }

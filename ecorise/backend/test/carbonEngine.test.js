@@ -56,9 +56,9 @@ test('meal: beef/poultry/average and conservative unknown', () => {
   assert.equal(estimatePlantBasedMeal({ mealCategory: 'poultry_replacement' }).kgCO2e, 1.5);
   assert.equal(estimatePlantBasedMeal({ mealCategory: 'meat_replacement' }).kgCO2e, 2.5);
   const unknown = estimatePlantBasedMeal({ mealCategory: 'vegan' });
-  assert.equal(unknown.kgCO2e, 1.0);    // conservative central
+  assert.equal(unknown.kgCO2e, 0);      // baseline unknown -> no CO2 claimed (honest, not a 1.0 guess)
   assert.equal(unknown.low, 0);         // a salad that replaced nothing earns nothing
-  assert.equal(unknown.high, 4.0);
+  assert.equal(unknown.high, 4.0);      // upper bound = one average meat meal displaced
 });
 
 test('meal: servings scale and are clamped', () => {

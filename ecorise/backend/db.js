@@ -177,6 +177,7 @@ function migrate() {
     ['leaderboards', 'season', 'INTEGER DEFAULT 1'],
     ['leaderboard_members', 'role', "TEXT DEFAULT 'member'"],
     ['posts', 'image_hash', 'TEXT'],
+    ['posts', 'phash', 'TEXT'],
     ['trash_reports', 'image_hash', 'TEXT'],
     ['quests', 'awarded', 'INTEGER DEFAULT 0'],
     ['notifications', 'link', "TEXT DEFAULT ''"],

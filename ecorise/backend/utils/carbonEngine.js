@@ -151,20 +151,21 @@ function estimatePlantBasedMeal({ mealCategory = 'unknown', servings = 1 } = {})
   else if (mealCategory === 'poultry_replacement' || mealCategory === 'pork_replacement') f = EMISSION_FACTORS.meal_poultry_replaced;
   else if (mealCategory === 'meat_replacement' || mealCategory === 'average_meat') f = EMISSION_FACTORS.meal_meat_replaced;
   else {
-    // "vegan"/"vegetarian" with no stated baseline: a salad that replaced nothing
-    // meaty earns no carbon credit. Credit conservatively against an average meat
-    // meal only as an upper bound, central held low.
+    // "vegan"/"vegetarian" with no stated baseline: we do NOT invent a CO2 number.
+    // A plant meal that displaced an unknown baseline gets a central estimate of 0
+    // (no claimed saving) with the upper bound left at an average meat meal, so the
+    // range still shows the upside without asserting a figure the data can't support.
     const m = EMISSION_FACTORS.meal_meat_replaced;
     return {
-      kgCO2e: round(1.0 * n),
+      kgCO2e: 0,
       low: 0,
       high: round(m.high * n),
       method: 'meal_substitution',
-      formula: `${n} serving(s) × ~1.0 kg CO2e (conservative; baseline meal unknown)`,
+      formula: `baseline meal unknown — no CO2 claimed (central 0; up to ${round(m.high * n)} kg if it replaced meat)`,
       factors: [cite(m)],
       assumptions: [
-        'Baseline (replaced) meal is unknown — credited conservatively.',
-        'A plant meal that did not replace a meat meal earns little to no carbon credit.',
+        'Baseline (replaced) meal is unknown — no CO2 saving is claimed (central = 0).',
+        'A plant meal that did not replace a meat meal earns no carbon credit; the upper bound reflects the best case only.',
       ],
     };
   }

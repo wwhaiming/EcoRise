@@ -8,7 +8,7 @@
  *
  * Modes:
  *   node test/eco_eval/runEval.js          # fixtures (offline; recorded predictions)
- *   node test/eco_eval/runEval.js --live   # live: needs ANTHROPIC_API_KEY + images in manifest.json
+ *   node test/eco_eval/runEval.js --live   # live: needs ANTHROPIC_API_KEY or GEMINI_API_KEY + images in manifest.json
  *
  * The fixtures are a small ILLUSTRATIVE sample of recorded predictions so the
  * harness runs in CI without a key or image corpus. For a real result, drop a
@@ -16,6 +16,9 @@
  */
 const fs = require('fs');
 const path = require('path');
+// Load the same .env the server uses (one level above backend) so a single key in
+// ecorise/.env powers the live eval — ANTHROPIC_API_KEY or GEMINI_API_KEY/GOOGLE_API_KEY.
+try { require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') }); } catch (_) { /* dotenv optional */ }
 const { computeMetrics, formatReport } = require('../../utils/evalMetrics');
 
 const DIR = __dirname;
@@ -27,8 +30,9 @@ function fromFixtures() {
 }
 
 async function fromLive() {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('--live requires ANTHROPIC_API_KEY; falling back to fixtures.\n');
+  const hasKey = process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!hasKey) {
+    console.error('--live requires ANTHROPIC_API_KEY or GEMINI_API_KEY/GOOGLE_API_KEY; falling back to fixtures.\n');
     return fromFixtures();
   }
   const { analyzeEcoAction } = require('../../utils/aiClient');

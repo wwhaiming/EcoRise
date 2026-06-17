@@ -94,10 +94,10 @@ function processEcoAction(params) {
 
     const postId = uuid();
     db.prepare(`
-      INSERT INTO posts (id, user_id, leaderboard_id, image, image_hash, action_type, action_desc, co2_saved, points, caption, tags)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO posts (id, user_id, leaderboard_id, image, image_hash, phash, action_type, action_desc, co2_saved, points, caption, tags)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      postId, p.userId, p.leaderboardId || null, p.image || '', p.imageHash || null,
+      postId, p.userId, p.leaderboardId || null, p.image || '', p.imageHash || null, p.phash || null,
       p.aiResult.actionType, p.aiResult.specificAction,
       co2, finalPoints,
       p.caption || '', JSON.stringify((p.taggedUserIds || []).slice(0, 3))

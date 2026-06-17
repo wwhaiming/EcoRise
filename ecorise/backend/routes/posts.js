@@ -9,7 +9,7 @@ const { analyzeEcoAction, checkQuestMatch, adversarialCritique } = require('../u
 const { processEcoAction } = require('../utils/pointsEngine');
 const { computeCarbon } = require('../utils/carbonEngine');
 const { evaluateAdversarial } = require('../utils/integrityGates');
-const { imageHash } = require('../utils/imageHash');
+const { imageHash, perceptualHash, hammingDistance } = require('../utils/imageHash');
 const { body, pageParams } = require('../utils/validate');
 const analysisCache = require('../utils/analysisCache');
 
@@ -39,7 +39,7 @@ function buildIntegrity(aiResult, { lbId, carbon, adversarial } = {}) {
     // awards points or invents the CO2 figure.
     toolCalls: [
       { tool: 'classify_photo', detail: aiResult.isEcoAction ? `vision -> ${aiResult.actionType}` : 'vision -> rejected' },
-      { tool: 'duplicate_check', detail: 'image hash vs. last 24h' },
+      { tool: 'duplicate_check', detail: 'exact + perceptual (aHash) vs. recent uploads' },
       { tool: 'carbon_factor_lookup', detail: grounded ? `${carbon.method} (cited factor)` : 'no grounded factor' },
       { tool: 'fraud_screen', detail: (adversarial && adversarial.ran) ? `suspicion: ${adversarial.suspicionLevel}` : 'skipped (offline)' },
       { tool: 'server_score', detail: 'points computed server-side; LLM cannot award' },
@@ -84,6 +84,20 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     const hash = imageHash(image);
     const dup = db.prepare("SELECT id FROM posts WHERE user_id = ? AND image_hash = ? AND created_at > datetime('now','-1 day')").get(req.userId, hash);
     if (dup) return res.status(409).json({ error: 'You already logged this photo recently.', reason: 'duplicate', accepted: false, points: 0 });
+
+    // Near-duplicate (non-LLM) screen: the same photo re-saved / re-compressed /
+    // lightly cropped has a near-identical perceptual hash even when its bytes (and
+    // thus image_hash) differ. Reject very-close matches from this user in the last
+    // 2 days so one photo can't be re-farmed for points. Fails open: tiny or
+    // undecodable images get a null phash and skip this check entirely.
+    const NEAR_DUP_BITS = 4; // out of 64; <=4 differing bits == essentially the same shot
+    const phash = await perceptualHash(image);
+    if (phash) {
+      const recent = db.prepare("SELECT phash FROM posts WHERE user_id = ? AND phash IS NOT NULL AND created_at > datetime('now','-2 day')").all(req.userId);
+      if (recent.some(r => hammingDistance(phash, r.phash) <= NEAR_DUP_BITS)) {
+        return res.status(409).json({ error: 'This looks like a near-duplicate of a photo you logged recently.', reason: 'near_duplicate', accepted: false, points: 0 });
+      }
+    }
 
     // Reuse the verified analysis if this same photo was just analyzed (e.g. the
     // follow-up "how many miles?" round-trip) — never re-run the model or trust a
@@ -158,7 +172,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
 
     const result = processEcoAction({
       userId: req.userId, leaderboardId: lbId, aiResult, miles, caption: v.caption,
-      image, imageHash: hash, taggedUserIds, isQuestCompletion,
+      image, imageHash: hash, phash, taggedUserIds, isQuestCompletion,
       co2Saved: carbon.kgCO2e, integrityMultiplier: verdict.multiplier,
     });
 

@@ -9,6 +9,11 @@ const fs = require('fs');
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-' + 'x'.repeat(40);
 process.env.NODE_ENV = 'test';
 delete process.env.ANTHROPIC_API_KEY;        // force mock / local model
+// Hermetic: server.js loads ../.env, which may hold a live GEMINI_API_KEY. Pin these
+// to '' BEFORE requiring the app — dotenv never overrides an already-set var, so an
+// empty (falsy) value keeps getClient() on the mock path and off the live network.
+process.env.GEMINI_API_KEY = '';
+process.env.GOOGLE_API_KEY = '';
 process.env.TRASH_PROB_THRESHOLD = '1.1';     // trash detector rejects everything (deterministic)
 process.env.MOCK_ECO_ALWAYS_PASS = 'true';    // let eco posts succeed so we can test points/ledger logic
 process.env.MOCK_TRASH_ALWAYS_PASS = 'false'; // hermetic: ignore any local .env that flips trash to demo-pass
