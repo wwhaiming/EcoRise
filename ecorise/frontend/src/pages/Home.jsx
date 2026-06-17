@@ -158,6 +158,24 @@ export default function Home({ ctx }) {
       {/* climate fact */}
       <div style={{ padding: '16px 16px 0' }}><ClimateFact /></div>
 
+      {/* AI Eco Coach entry */}
+      <div style={{ padding: '16px 16px 0' }}>
+        <button onClick={() => go('coach')} aria-label="Open the AI Eco Coach"
+          style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: '1px solid rgba(0,230,118,.3)', borderRadius: 18,
+            padding: 16, background: 'radial-gradient(180px 90px at 88% -20%, rgba(0,230,118,.2), transparent), linear-gradient(180deg,var(--navy-700),var(--navy-800))',
+            display: 'flex', gap: 13, alignItems: 'center' }}>
+          <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, background: 'rgba(0,230,118,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="sparkle" size={24} color="var(--green)" />
+          </span>
+          <div style={{ flex: 1 }}>
+            <div className="eyebrow" style={{ color: 'var(--green)', marginBottom: 3 }}>AI Eco Coach · new</div>
+            <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 16, color: '#fff' }}>Ask the Eco Coach</div>
+            <div className="dim" style={{ fontSize: 12.5, fontWeight: 700, marginTop: 2 }}>Cited questions · learn why your actions matter</div>
+          </div>
+          <span className="dim" style={{ fontSize: 20, fontWeight: 800 }}>→</span>
+        </button>
+      </div>
+
       {/* leaderboard widget */}
       <div style={{ padding: '18px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>

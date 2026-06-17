@@ -12,6 +12,7 @@ import Quests from './pages/Quests';
 import { Feed, Leaderboard, Profile, Organizer } from './pages/Pages';
 import { LogAction, TrashSpotter } from './pages/Modals';
 import AIEvidence from './components/AIEvidence';
+import Coach from './pages/Coach';
 
 import api from './utils/api';
 
@@ -284,6 +285,7 @@ export default function App() {
       case 'quests': return <Quests ctx={ctx} />;
       case 'leaderboard': return <Leaderboard ctx={ctx} />;
       case 'profile': return <Profile ctx={ctx} />;
+      case 'coach': return <Coach ctx={ctx} />;
       case 'organizer': return <Organizer ctx={ctx} />;
       default: return <Home ctx={ctx} />;
     }

@@ -201,6 +201,59 @@ function initTables() {
       created_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (source_id) REFERENCES eco_sources(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS coach_questions (
+      id TEXT PRIMARY KEY,
+      topic TEXT NOT NULL,
+      difficulty INTEGER DEFAULT 2,
+      kind TEXT NOT NULL,                  -- mcq | short
+      prompt TEXT NOT NULL,
+      choices TEXT DEFAULT '[]',
+      correct TEXT NOT NULL,
+      explanation TEXT NOT NULL,
+      source_ids TEXT NOT NULL,            -- JSON array of eco_source_chunks.id
+      learning_objective TEXT DEFAULT '',
+      faithfulness REAL DEFAULT 0,
+      approved INTEGER DEFAULT 0,
+      is_mock INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS coach_answers (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      question_id TEXT NOT NULL,
+      answer TEXT NOT NULL,
+      correct INTEGER NOT NULL,
+      points INTEGER DEFAULT 0,
+      ms_to_answer INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, question_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (question_id) REFERENCES coach_questions(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS coach_daily_tips (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      body TEXT NOT NULL,
+      source_ids TEXT NOT NULL DEFAULT '[]',
+      deliver_date TEXT NOT NULL,
+      topic TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS coach_user_prefs (
+      user_id TEXT PRIMARY KEY,
+      topics TEXT DEFAULT '[]',
+      grade_level TEXT DEFAULT '',
+      cadence INTEGER DEFAULT 1,
+      quiet_start INTEGER,
+      quiet_end INTEGER,
+      opted_in INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `);
 }
 
@@ -235,8 +288,11 @@ function createIndexes() {
     CREATE INDEX IF NOT EXISTS idx_ledger_user   ON point_events(user_id, created_at);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_source ON point_events(source, source_id) WHERE source_id IS NOT NULL;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_seasons_unique ON leaderboard_seasons(leaderboard_id, season);
-    CREATE INDEX IF NOT EXISTS idx_chunks_source  ON eco_source_chunks(source_id);
-    CREATE INDEX IF NOT EXISTS idx_sources_status ON eco_sources(status, course_id);
+    CREATE INDEX IF NOT EXISTS idx_chunks_source   ON eco_source_chunks(source_id);
+    CREATE INDEX IF NOT EXISTS idx_sources_status  ON eco_sources(status, course_id);
+    CREATE INDEX IF NOT EXISTS idx_cquestions_topic ON coach_questions(topic, difficulty, approved);
+    CREATE INDEX IF NOT EXISTS idx_canswers_user   ON coach_answers(user_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_ctips_date      ON coach_daily_tips(user_id, deliver_date);
   `);
 }
 

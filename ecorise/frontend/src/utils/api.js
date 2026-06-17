@@ -62,6 +62,14 @@ export const api = {
   updateUser: (id, body) => apiFetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   getNotifications: (id) => apiFetch(`/api/users/${id}/notifications`),
   readNotifications: (id) => apiFetch(`/api/users/${id}/notifications/read`, { method: 'POST' }),
+
+  // AI Eco Coach (gated behind COACH_ENABLED on the server)
+  coachStatus: () => apiFetch('/api/coach/status'),
+  coachQuestion: (topic) => apiFetch(`/api/coach/question${topic ? `?topic=${encodeURIComponent(topic)}` : ''}`),
+  coachAnswer: (id, body) => apiFetch(`/api/coach/question/${id}/answer`, { method: 'POST', body: JSON.stringify(body) }),
+  coachGuidance: () => apiFetch('/api/coach/guidance'),
+  coachTip: () => apiFetch('/api/coach/tip'),
+  coachPreferences: (body) => apiFetch('/api/coach/preferences', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export default api;

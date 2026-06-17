@@ -9,7 +9,8 @@
     "seed": "node scripts/seedDemo.js",
     "seed:coach": "node scripts/seedCoachCorpus.js",
     "test": "node --test test/*.test.js",
-    "test:eval": "node test/eco_eval/runEval.js"
+    "test:eval": "node test/eco_eval/runEval.js",
+    "test:coach-eval": "node test/coach_eval/runEval.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

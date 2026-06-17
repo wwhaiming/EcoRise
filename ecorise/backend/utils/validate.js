@@ -46,6 +46,19 @@ const schemas = {
     handle: z.string().trim().regex(/^@?[a-zA-Z0-9_]{1,20}$/).optional(),
     avatar: z.string().max(2_000_000).optional(),
   }),
+  coachAnswer: z.object({
+    answer: z.string().trim().min(1).max(300),
+    msToAnswer: z.coerce.number().int().min(0).max(3_600_000).optional(),
+    leaderboardId: z.string().uuid().optional(),
+  }),
+  coachPrefs: z.object({
+    topics: z.array(z.string().trim().max(40)).max(12).optional(),
+    gradeLevel: z.string().trim().max(40).optional(),
+    cadence: z.coerce.number().int().min(0).max(3).optional(),
+    quietStart: z.coerce.number().int().min(0).max(23).optional(),
+    quietEnd: z.coerce.number().int().min(0).max(23).optional(),
+    optedIn: z.boolean().optional(),
+  }),
 };
 
 // Express middleware factory for body validation.

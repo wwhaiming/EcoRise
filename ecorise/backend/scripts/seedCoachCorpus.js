@@ -1,16 +1,17 @@
-/* EcoRise — AI Eco Coach demo corpus seeder (Phase 0).
+/* EcoRise — AI Eco Coach demo corpus seeder (Phase 0-1).
  *
  *   node scripts/seedCoachCorpus.js     (or: npm run seed:coach)
  *
- * Inserts a tiny, APPROVED, source-cited corpus so the Coach demo has trustworthy
- * material to retrieve from without ingesting real papers during a sprint. Chunks
- * carry no embeddings yet (Phase 1 adds them); this only proves the source/chunk
- * pipeline and gives the seeded demo deterministic, reset-able content.
+ * Inserts a tiny, APPROVED, source-cited corpus and embeds its chunks so the Coach
+ * can retrieve from trustworthy material without ingesting real papers during a
+ * sprint. Embeddings use Gemini text-embedding-004 if a key is present, else a
+ * deterministic offline vector (see utils/coachEmbed.js).
  *
  * Safe + idempotent: it only ever deletes and rebuilds rows whose provenance is
  * 'synthetic_demo', so it can never clobber real uploaded sources.
  */
 const { v4: uuid } = require('uuid');
+const { ingestSourceChunks } = require('../utils/coachRetrieval');
 
 // Short, factually-general passages tied to EcoRise's real action categories.
 const SOURCES = [
@@ -38,8 +39,8 @@ const SOURCES = [
   },
 ];
 
-function seedCoachCorpus(db) {
-  return db.transaction(() => {
+async function seedCoachCorpus(db) {
+  const result = db.transaction(() => {
     // Reset ONLY the synthetic demo corpus (never real uploaded sources).
     const demo = db.prepare("SELECT id FROM eco_sources WHERE provenance = 'synthetic_demo'").all();
     const delChunks = db.prepare('DELETE FROM eco_source_chunks WHERE source_id = ?');
@@ -52,19 +53,24 @@ function seedCoachCorpus(db) {
     const insChunk = db.prepare(`INSERT INTO eco_source_chunks
       (id, source_id, ord, text, token_count, topic_tags) VALUES (?, ?, ?, ?, ?, ?)`);
 
-    let sources = 0, chunks = 0;
+    const sourceIds = [];
+    let chunks = 0;
     for (const s of SOURCES) {
       const sid = uuid();
       insSrc.run(sid, s.title, s.institution, s.license, s.pubYear, JSON.stringify(s.topicTags));
-      sources++;
+      sourceIds.push(sid);
       s.chunks.forEach((text, i) => {
-        // Rough token estimate (~1.3 tokens/word) until real tokenization in Phase 1.
         insChunk.run(uuid(), sid, i, text, Math.round(text.split(/\s+/).length * 1.3), JSON.stringify(s.topicTags));
         chunks++;
       });
     }
-    return { sources, chunks };
+    return { sources: sourceIds.length, chunks, sourceIds };
   })();
+
+  // Embed outside the write transaction (embed() may be async/network).
+  let embedded = 0;
+  for (const sid of result.sourceIds) embedded += await ingestSourceChunks(db, sid);
+  return { sources: result.sources, chunks: result.chunks, embedded };
 }
 
 module.exports = { seedCoachCorpus };
@@ -72,13 +78,12 @@ module.exports = { seedCoachCorpus };
 if (require.main === module) {
   require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
   const { getDb } = require('../db');
-  try {
-    const r = seedCoachCorpus(getDb());
-    console.log(`\n📚 Coach demo corpus seeded: ${r.sources} approved sources, ${r.chunks} chunks.`);
-    console.log('   (embeddings are added in Phase 1; enable the feature with COACH_ENABLED=true)\n');
-    process.exit(0);
-  } catch (err) {
+  (async () => {
+    const r = await seedCoachCorpus(getDb());
+    console.log(`\n📚 Coach demo corpus seeded: ${r.sources} approved sources, ${r.chunks} chunks, ${r.embedded} embedded.`);
+    console.log('   (enable the feature with COACH_ENABLED=true)\n');
+  })().then(() => process.exit(0)).catch((err) => {
     console.error('Coach corpus seed failed:', err.message);
     process.exit(1);
-  }
+  });
 }
