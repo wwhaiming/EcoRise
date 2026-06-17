@@ -74,6 +74,16 @@ function geminiClient() {
   };
 }
 
+// Effective provider + model actually used for a call, for honest provenance.
+// getClient() may return the Gemini adapter (which ignores the requested model and
+// always uses GEMINI_MODEL), so stamping the Anthropic-defaulted constant would
+// mislabel a Gemini-graded submission. Mirrors getClient()'s provider precedence.
+function providerStamp(requestedModel) {
+  if (process.env.ANTHROPIC_API_KEY && Anthropic) return { source: 'claude', model: requestedModel };
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) return { source: 'gemini', model: process.env.GEMINI_MODEL || 'gemini-2.0-flash' };
+  return { source: 'mock', model: 'mock' };
+}
+
 // ── Mock responses for when API key is not set ──
 
 // Mock actions carry `attributes` (the measurable inputs the carbon engine needs)
@@ -161,6 +171,7 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
     const text = response.content[0].text;
     const json = extractJson(text);
     const confidence = Math.max(0, Math.min(1, Number(json.confidence ?? 0)));
+    const stamp = providerStamp(ECO_MODEL);
     return {
       isEcoAction: json.isEcoAction === true && confidence >= ECO_CONFIDENCE_FLOOR,
       confidence,
@@ -172,7 +183,7 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
       estimatedCO2Saved: Math.max(0, Number(json.estimatedCO2Saved) || 0), // advisory label only; not used for scoring
       environmentalImpactSummary: json.environmentalImpactSummary || '',
       isMock: false,
-      provenance: { source: 'claude', model: ECO_MODEL, promptVersion: ECO_PROMPT_VERSION, confidence },
+      provenance: { source: stamp.source, model: stamp.model, promptVersion: ECO_PROMPT_VERSION, confidence },
     };
   } catch (err) {
     console.error('AI analyzeEcoAction error:', err.message);
@@ -384,6 +395,7 @@ Respond ONLY in JSON:
     const confidence = Math.max(0, Math.min(1, Number(json.confidence ?? 0)));
     const isTrash = json.isTrash === true && score > 0 && confidence >= TRASH_CONFIDENCE_FLOOR;
 
+    const stamp = providerStamp(MODEL);
     return {
       isTrash,
       confidence,
@@ -391,8 +403,8 @@ Respond ONLY in JSON:
       description: json.description || (isTrash ? 'Litter detected.' : 'No litter detected in this image.'),
       estimatedItems: json.estimatedItems || '0',
       isMock: false,
-      source: 'claude',
-      model: MODEL,
+      source: stamp.source,
+      model: stamp.model,
     };
   } catch (err) {
     console.error('AI rateTrashSeverity error:', err.message);

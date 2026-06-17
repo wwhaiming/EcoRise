@@ -265,6 +265,7 @@ function migrate() {
     ['posts', 'image_hash', 'TEXT'],
     ['posts', 'phash', 'TEXT'],
     ['trash_reports', 'image_hash', 'TEXT'],
+    ['trash_reports', 'phash', 'TEXT'],
     ['quests', 'awarded', 'INTEGER DEFAULT 0'],
     ['notifications', 'link', "TEXT DEFAULT ''"],
   ];

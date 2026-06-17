@@ -5,9 +5,10 @@ const { getDb } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { upload, fileToBase64 } = require('../middleware/upload');
 const { aiRateLimit } = require('../middleware/rateLimit');
-const { rateTrashSeverity } = require('../utils/aiClient');
+const { rateTrashSeverity, adversarialCritique } = require('../utils/aiClient');
 const { awardPoints } = require('../utils/pointsEngine');
-const { imageHash } = require('../utils/imageHash');
+const { evaluateAdversarial } = require('../utils/integrityGates');
+const { imageHash, perceptualHash, hammingDistance } = require('../utils/imageHash');
 const { body } = require('../utils/validate');
 
 const router = express.Router();
@@ -33,6 +34,19 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
     const dup = db.prepare("SELECT id FROM trash_reports WHERE user_id = ? AND image_hash = ? AND created_at > datetime('now','-1 day')").get(req.userId, hash);
     if (dup) return res.status(409).json({ error: 'You already reported this photo recently.', reason: 'duplicate', accepted: false, points: 0 });
 
+    // Near-duplicate (non-LLM) screen, same as the eco route: a re-saved / re-compressed
+    // / lightly-cropped copy has a near-identical perceptual hash even when its bytes
+    // (image_hash) differ. Scan the user's recent posts (eco + trash both write phash)
+    // so one photo can't be re-farmed across either surface. Fails open on a null phash.
+    const NEAR_DUP_BITS = 4;
+    const phash = await perceptualHash(image);
+    if (phash) {
+      const recent = db.prepare("SELECT phash FROM posts WHERE user_id = ? AND phash IS NOT NULL AND created_at > datetime('now','-2 day') ORDER BY created_at DESC LIMIT 200").all(req.userId);
+      if (recent.some(r => hammingDistance(phash, r.phash) <= NEAR_DUP_BITS)) {
+        return res.status(409).json({ error: 'This looks like a near-duplicate of a photo you reported recently.', reason: 'near_duplicate', accepted: false, points: 0 });
+      }
+    }
+
     const severity = await rateTrashSeverity(image);
     const integrity = {
       model: severity.model || (severity.source === 'local-cnn' ? 'local-cnn (trained in-repo)' : 'claude'),
@@ -43,6 +57,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
         duplicateScreen: 'passed',
         membershipVerified: leaderboardId ? 'passed' : 'n/a',
         aiVisionGate: severity.isTrash ? 'verified' : 'rejected',
+        fraudScreen: 'n/a',
         serverScored: 'passed',
       },
     };
@@ -56,7 +71,22 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
       });
     }
 
-    const points = 35 + severity.score * 5;
+    // Trash confirmed -> adversarial fraud screen (skipped offline -> benign), mirroring
+    // the eco route: high suspicion rejects, low suspicion halves points.
+    const critique = await adversarialCritique(image);
+    const verdict = evaluateAdversarial(critique);
+    integrity.checks.fraudScreen = verdict.gate;
+    if (verdict.verdict === 'reject') {
+      return res.json({
+        success: false, accepted: false, reason: 'suspected_fraud', isTrash: true,
+        severity: 0, points: 0, confidence: severity.confidence ?? 0,
+        description: verdict.reason || 'This image was flagged by the fraud screen.',
+        integrity, aiRemaining: req.aiRemaining,
+      });
+    }
+
+    const basePoints = 35 + severity.score * 5;
+    const points = Math.round(basePoints * verdict.multiplier);
     const id = uuid();
     const postId = uuid();
     // The dup check above runs BEFORE the awaited AI call, so two concurrent reports
@@ -66,12 +96,12 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
     const result = db.transaction(() => {
       const dupNow = db.prepare("SELECT id FROM trash_reports WHERE user_id = ? AND image_hash = ? AND created_at > datetime('now','-1 day')").get(req.userId, hash);
       if (dupNow) return { duplicate: true };
-      db.prepare(`INSERT INTO trash_reports (id, user_id, leaderboard_id, image, image_hash, severity, description, estimated_items, location, points)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(id, req.userId, leaderboardId || null, image, hash, severity.score, severity.description, severity.estimatedItems || '', location || '', points);
-      db.prepare(`INSERT INTO posts (id, user_id, leaderboard_id, image, image_hash, action_type, action_desc, co2_saved, points, caption)
-        VALUES (?, ?, ?, ?, ?, 'nature', 'Trash report', 0.5, ?, ?)`)
-        .run(postId, req.userId, leaderboardId || null, image, hash, points, `Trash spotted${location ? ' at ' + location : ''} — severity ${severity.score}/10`);
+      db.prepare(`INSERT INTO trash_reports (id, user_id, leaderboard_id, image, image_hash, phash, severity, description, estimated_items, location, points)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(id, req.userId, leaderboardId || null, image, hash, phash || null, severity.score, severity.description, severity.estimatedItems || '', location || '', points);
+      db.prepare(`INSERT INTO posts (id, user_id, leaderboard_id, image, image_hash, phash, action_type, action_desc, co2_saved, points, caption)
+        VALUES (?, ?, ?, ?, ?, ?, 'nature', 'Trash report', 0.5, ?, ?)`)
+        .run(postId, req.userId, leaderboardId || null, image, hash, phash || null, points, `Trash spotted${location ? ' at ' + location : ''} — severity ${severity.score}/10`);
       awardPoints(req.userId, leaderboardId, points, { source: 'trash', sourceId: id });
       return { duplicate: false };
     })();
@@ -86,6 +116,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
       breakdown: [
         { label: 'Cleanup report', points: 35 },
         { label: `Severity ${severity.score}/10 × 5`, points: severity.score * 5 },
+        ...(verdict.multiplier < 1 ? [{ label: `Fraud-screen flag (× ${verdict.multiplier})`, points: points - basePoints }] : []),
       ],
       integrity, aiRemaining: req.aiRemaining,
     });

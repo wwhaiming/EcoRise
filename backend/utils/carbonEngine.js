@@ -74,11 +74,11 @@ const EMISSION_FACTORS = {
   // Production footprint of one single-use PET bottle that was displaced.
   single_use_bottle: {
     id: 'single-use-pet-bottle',
-    factorName: 'Single-use PET bottle (production)',
+    factorName: 'Single-use PET bottle (containers & packaging)',
     value: 0.083, low: 0.050, high: 0.120, unit: 'kg CO2e / bottle',
-    source: 'PET bottle life-cycle assessment (production stage)',
-    sourceUrl: 'https://ourworldindata.org/environmental-impacts-of-food',
-    sourceYear: 2021,
+    source: 'EPA WARM — containers & packaging (PET)',
+    sourceUrl: 'https://www.epa.gov/warm',
+    sourceYear: 2025,
   },
 };
 

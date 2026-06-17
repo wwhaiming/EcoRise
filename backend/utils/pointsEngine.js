@@ -11,6 +11,17 @@ function recordLedger(db, { userId, leaderboardId, source, sourceId, points }) {
   ).run(uuid(), userId, leaderboardId || null, source, sourceId || null, points);
 }
 
+// The consecutive-day streak this member will have AFTER acting today. Shared by
+// getUserContext (so scoring sees the resulting streak) and awardPoints (so the
+// stored value matches) — fixes the off-by-one where the 7-day bonus only landed
+// on the 8th consecutive day.
+function nextStreak(member, today, yesterday) {
+  if (!member) return 1;
+  if (member.last_action_date === today) return member.streak || 0; // already counted today
+  if (member.last_action_date === yesterday) return (member.streak || 0) + 1;
+  return 1;
+}
+
 /**
  * Award points to a leaderboard member, atomically, and write a ledger event.
  * Idempotent per (source, source_id): a repeated award for the same source is a
@@ -31,10 +42,7 @@ function awardPoints(userId, leaderboardId, points, opts = {}) {
 
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  let newStreak = member.streak;
-  if (member.last_action_date === today) { /* same day */ }
-  else if (member.last_action_date === yesterday) newStreak++;
-  else newStreak = 1;
+  const newStreak = nextStreak(member, today, yesterday);
 
   const apply = db.transaction(() => {
     db.prepare(
@@ -46,21 +54,24 @@ function awardPoints(userId, leaderboardId, points, opts = {}) {
   return { applied: true, pointsAwarded: points };
 }
 
-function getUserContext(userId, leaderboardId, isQuestCompletion = false) {
+function getUserContext(userId, leaderboardId, isQuestCompletion = false, taggedFriends = []) {
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const todayPosts = db.prepare(
     'SELECT COUNT(*) as count FROM posts WHERE user_id = ? AND date(created_at) = ?'
   ).get(userId, today);
   const isFirstActionToday = (todayPosts?.count || 0) === 0;
+  // Prospective streak (the value this action will produce), so the >=7 bonus in
+  // the rubric fires on the real 7th day. awardPoints persists the same value.
   let streak = 0;
   if (leaderboardId) {
     const member = db.prepare(
-      'SELECT streak FROM leaderboard_members WHERE leaderboard_id = ? AND user_id = ?'
+      'SELECT streak, last_action_date FROM leaderboard_members WHERE leaderboard_id = ? AND user_id = ?'
     ).get(leaderboardId, userId);
-    streak = member?.streak || 0;
+    if (member) streak = nextStreak(member, today, yesterday);
   }
-  return { isFirstActionToday, streak, isQuestCompletion: !!isQuestCompletion, taggedFriends: [] };
+  return { isFirstActionToday, streak, isQuestCompletion: !!isQuestCompletion, taggedFriends: (taggedFriends || []).slice(0, 3) };
 }
 
 /**
@@ -71,7 +82,7 @@ function getUserContext(userId, leaderboardId, isQuestCompletion = false) {
 function processEcoAction(params) {
   const db = getDb();
   const run = db.transaction((p) => {
-    const ctx = getUserContext(p.userId, p.leaderboardId, p.isQuestCompletion);
+    const ctx = getUserContext(p.userId, p.leaderboardId, p.isQuestCompletion, p.taggedUserIds || []);
 
     // Grounded CO2 (from carbonEngine, passed by the route) drives scoring AND
     // storage — never the model's advisory estimate.
