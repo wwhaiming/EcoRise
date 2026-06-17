@@ -1,0 +1,21 @@
+{
+  "_README": "Labeled eval set for the LIVE eco-action gate run (node test/eco_eval/runEval.js --live, needs ANTHROPIC_API_KEY). Add images under ./images and one entry per image here. Aim for >=200 across positive / negative / adversarial for a credible number; even 150 is enough for a hackathon if reported honestly. imagePath is relative to this folder. expectedActionType is only needed for positives. adversarialTag marks decoys that SHOULD be rejected.",
+  "cases": [
+    { "imagePath": "images/positive/bike_commute_01.jpg",     "expectedIsEcoAction": true,  "expectedActionType": "transportation" },
+    { "imagePath": "images/positive/transit_ride_01.jpg",     "expectedIsEcoAction": true,  "expectedActionType": "transportation" },
+    { "imagePath": "images/positive/plant_meal_01.jpg",       "expectedIsEcoAction": true,  "expectedActionType": "food" },
+    { "imagePath": "images/positive/reusable_bottle_01.jpg",  "expectedIsEcoAction": true,  "expectedActionType": "waste" },
+    { "imagePath": "images/positive/litter_cleanup_01.jpg",   "expectedIsEcoAction": true,  "expectedActionType": "nature" },
+
+    { "imagePath": "images/negative/selfie_01.jpg",           "expectedIsEcoAction": false },
+    { "imagePath": "images/negative/pet_01.jpg",              "expectedIsEcoAction": false },
+    { "imagePath": "images/negative/meme_01.jpg",             "expectedIsEcoAction": false },
+    { "imagePath": "images/negative/burger_01.jpg",           "expectedIsEcoAction": false },
+
+    { "imagePath": "images/adversarial/screen_of_bike_01.jpg", "expectedIsEcoAction": false, "adversarialTag": "photo_of_screen" },
+    { "imagePath": "images/adversarial/stock_bike_01.jpg",     "expectedIsEcoAction": false, "adversarialTag": "stock_photo" },
+    { "imagePath": "images/adversarial/screenshot_01.jpg",     "expectedIsEcoAction": false, "adversarialTag": "screenshot" },
+    { "imagePath": "images/adversarial/ai_generated_01.jpg",   "expectedIsEcoAction": false, "adversarialTag": "ai_generated" }
+  ]
+}
+

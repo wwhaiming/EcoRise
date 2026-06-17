@@ -1,0 +1,197 @@
+/* ============================================================
+   GeoRise — Component Styles
+   "Editorial Eco" — restrained, matte, crafted.
+   Class + keyframe names stable (consumed across pages).
+   ============================================================ */
+
+/* ============================================================
+   Buttons — crisp grotesque labels, no sheen, no neon halo
+   ============================================================ */
+.btn {
+  font-family: var(--body); font-weight: 700; font-size: 16px;
+  letter-spacing: 0;
+  border: none; border-radius: 9999px; cursor: pointer;
+  padding: 14px 24px; display: inline-flex; align-items: center; justify-content: center;
+  gap: 9px; position: relative;
+  transition: transform .14s cubic-bezier(.2,.7,.3,1), box-shadow .2s, filter .2s, background .2s;
+  user-select: none; white-space: nowrap; text-decoration: none;
+}
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn-block { width: 100%; }
+
+.btn-primary {
+  color: #F7FAF5;
+  /* Both stops clear 4.5:1 against the near-white label; the old --green-2 top
+     stop (#75B77B) was only ~2.3:1 across the upper half of the pill. */
+  background: linear-gradient(180deg, var(--green), var(--green-d));
+  box-shadow: 0 10px 22px rgba(30,91,57,.22), inset 0 1px 0 rgba(255,255,255,.45);
+}
+.btn-primary:hover { filter: brightness(1.03); }
+
+.btn-secondary {
+  color: var(--text);
+  background: rgba(255,255,255,.78);
+  box-shadow: inset 0 0 0 1px var(--navy-500);
+}
+.btn-secondary:hover { box-shadow: inset 0 0 0 1px rgba(45,91,57,.30); color: var(--green-d); }
+
+.btn-purple {
+  color: #F7FAF5; background: linear-gradient(180deg, var(--green-2), var(--green-d));
+  box-shadow: 0 10px 22px rgba(30,91,57,.20), inset 0 1px 0 rgba(255,255,255,.28);
+}
+.btn-danger {
+  color: #fff; background: linear-gradient(180deg, var(--coral-2), var(--coral));
+  box-shadow: 0 10px 22px rgba(111,77,52,.18), inset 0 1px 0 rgba(255,255,255,.2);
+}
+.btn-ghost { color: var(--text-muted); background: transparent; box-shadow: none; }
+.btn-ghost:hover { color: var(--green-d); }
+
+.btn-sm { padding: 9px 15px; font-size: 14px; }
+.btn-lg { padding: 16px 28px; font-size: 17px; }
+
+/* ============================================================
+   Cards — matte glass, neutral edge, quiet shadow
+   ============================================================ */
+.card {
+  position: relative;
+  background: linear-gradient(180deg, var(--glass), var(--glass-strong));
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--glass-edge-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.70),
+    0 16px 30px -20px rgba(30,91,57,.30);
+  transition: transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .25s, border-color .2s;
+}
+.card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.64), transparent 24%);
+}
+button.card { cursor: pointer; }
+button.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(45,91,57,.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 20px 34px -20px rgba(30,91,57,.34);
+}
+.card-glow {
+  border: 1px solid rgba(46,125,79,.20);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 16px 30px -18px rgba(30,91,57,.28);
+}
+
+/* ============================================================
+   Points chip
+   ============================================================ */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--body); font-weight: 700; font-size: 13px; letter-spacing: 0;
+  padding: 5px 11px; border-radius: 9999px; white-space: nowrap;
+}
+.chip-green { color: #F7FAF5; background: linear-gradient(180deg, var(--green), var(--green-d)); }
+.chip-purple{ color: var(--green-d); background: rgba(117,183,123,.14); box-shadow: inset 0 0 0 1px rgba(46,125,79,.22); }
+.chip-2x { color: #2a1f06; background: linear-gradient(180deg, #EBD08C, var(--yellow)); }
+.chip-dim { color: var(--text-muted); background: rgba(30,91,57,.07); }
+
+/* ============================================================
+   Rank badge
+   ============================================================ */
+.rankbadge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 30px; padding: 0 8px; border-radius: 9999px;
+  font-family: var(--body); font-weight: 800; font-size: 13.5px;
+}
+
+/* ============================================================
+   Bottom nav (quiet glass)
+   ============================================================ */
+.nav {
+  display: flex; align-items: stretch; justify-content: space-around;
+  padding: 13px 10px calc(15px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(247,250,245,.96));
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(45,91,57,.12);
+  position: relative; z-index: 30;
+}
+.nav-item {
+  flex: 1; background: none; border: none; cursor: pointer; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  color: var(--text-dim); font-family: var(--body); font-weight: 700; font-size: 10.5px;
+  letter-spacing: .2px; padding: 4px 0; transition: color .2s;
+}
+.nav-item svg { width: 23px; height: 23px; transition: transform .2s; }
+.nav-item.active { color: var(--green); }
+.nav-item.active svg { transform: translateY(-1px); }
+.nav-item.active::before {
+  content: ''; position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 2px; border-radius: 9999px; background: var(--green);
+}
+
+/* ============================================================
+   Animations (names referenced across components)
+   ============================================================ */
+@keyframes pulseGreen {
+  0%,100% { box-shadow: 0 10px 24px rgba(30,91,57,.20); }
+  50%     { box-shadow: 0 14px 30px rgba(30,91,57,.28); }
+}
+.pulse-green { animation: pulseGreen 3.2s ease-in-out infinite; }
+
+@keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.floaty { animation: floaty 5.4s ease-in-out infinite; }
+
+@keyframes popIn { 0% { transform: scale(.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.pop-in { animation: popIn .45s cubic-bezier(.2,.7,.36,1) both; }
+
+@keyframes risePodium { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes countFlash { 0% { color: var(--green); transform: scale(1.12); } 100% { color: inherit; transform: scale(1); } }
+.count-flash { animation: countFlash .5s ease-out; }
+
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes scanline { 0% { top: 12%; } 50% { top: 84%; } 100% { top: 12%; } }
+
+/* sheet / modal */
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.scrim {
+  position: absolute; inset: 0; z-index: 40;
+  background: rgba(24,50,38,.20);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  animation: fadeIn .22s both;
+}
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 50;
+  background: linear-gradient(180deg, #FFFFFF, var(--navy-900));
+  border-top-left-radius: var(--r-xl); border-top-right-radius: var(--r-xl);
+  border-top: 1px solid rgba(45,91,57,.14);
+  box-shadow: 0 -18px 50px rgba(30,91,57,.20);
+  animation: sheetUp .36s cubic-bezier(.2,.8,.2,1) both;
+  max-height: 92%; display: flex; flex-direction: column;
+}
+.sheet-grip { width: 42px; height: 5px; border-radius: 9999px; background: rgba(30,91,57,.18); margin: 12px auto 4px; flex-shrink: 0; }
+
+/* progress bar — solid, matte, no shimmer */
+.bar {
+  height: 8px; border-radius: 9999px; overflow: hidden;
+  background: rgba(30,91,57,.10);
+}
+.bar > i {
+  display: block; height: 100%; border-radius: 9999px;
+  background: linear-gradient(90deg, var(--green-d), var(--green));
+  transition: width .8s cubic-bezier(.2,.8,.2,1);
+}
+
+/* form fields */
+input, textarea, select { font-family: var(--body); }
+.field {
+  width: 100%;
+  background: rgba(255,255,255,.78);
+  border: 1.5px solid var(--navy-500);
+  border-radius: var(--r-md); color: var(--text); font-size: 16px; font-weight: 600;
+  padding: 13px 15px; outline: none; transition: border-color .18s, box-shadow .18s;
+}
+.field:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(46,125,79,.14); }
+.field::placeholder { color: var(--text-dim); }
+
+@keyframes slideScreen {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.slide-screen { animation: slideScreen .42s cubic-bezier(.22,.61,.36,1) both; }

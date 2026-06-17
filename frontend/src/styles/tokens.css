@@ -1,0 +1,75 @@
+/* ============================================================
+   GeoRise — Design Tokens
+   "Botanical Ledger" — white paper, moss greens, ink text.
+   Variable names stay stable so older components inherit the
+   lighter color system without structural rewrites.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ---- core surfaces: kept old variable names for compatibility ---- */
+  --navy-950: #DDE8DE;   /* desktop surround */
+  --navy-900: #F7FAF5;   /* app background */
+  --navy-800: #FFFFFF;   /* card base */
+  --navy-700: #F1F7EF;   /* raised card */
+  --navy-600: #E5EEE3;   /* hover / inset */
+  --navy-500: #C9D8CA;   /* border */
+
+  /* paper tints */
+  --glass:       rgba(255, 255, 255, 0.86);
+  --glass-strong:rgba(247, 250, 245, 0.95);
+  --glass-edge:  rgba(45, 91, 57, 0.14);
+  --glass-edge-soft: rgba(45, 91, 57, 0.10);
+
+  /* ---- accents: green primary, warm neutrals secondary ---- */
+  --green:  #2E7D4F;
+  --green-2:#75B77B;
+  --green-d:#1E5B39;
+  --purple: #6F8F72;     /* repurposed as soft sage */
+  --purple-2:#9DB99D;
+  --coral:  #B66F4D;     /* clay for destructive/warning only */
+  --coral-2:#D39A7D;
+  --coral-d:#8C5035;     /* darker clay — passes contrast for small text on paper */
+  --blue:   #5D8F86;     /* muted water green */
+  --blue-2: #8FB8B0;
+  --yellow: #C6A35A;     /* seed-gold */
+  --lime:   #AFCB85;     /* moss */
+
+  /* ---- podium metals (warm, matte) ---- */
+  --gold:   #E3C173;
+  --gold-d: #C49A45;
+  --silver: #DDE6E2;
+  --silver-d:#98A8A0;
+  --bronze: #D69A6B;
+  --bronze-d:#B0703F;
+
+  /* ---- text (deep ink on light paper) ---- */
+  --text:       #183226;
+  --text-muted: #526B5C;
+  --text-dim:   #5E7268;   /* darkened from #7B8E82 -> ~4.6:1 on paper for small text (WCAG 1.4.3) */
+
+  /* ---- shadows (soft + dark, NOT colored glows) ---- */
+  --glow-green:  0 16px 34px rgba(30,91,57,.14);
+  --glow-purple: 0 16px 34px rgba(30,91,57,.12);
+  --glow-coral:  0 16px 34px rgba(111,77,52,.14);
+  --glow-cyan:   0 16px 34px rgba(47,91,85,.12);
+
+  /* ---- ambient field (very subtle, warm) ---- */
+  --aurora-1: rgba(117, 183, 123, .20);
+  --aurora-2: rgba(198, 163, 90, .12);
+  --aurora-3: rgba(93, 143, 134, .12);
+
+  /* ---- type ---- */
+  --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --body:    'Hanken Grotesk', system-ui, sans-serif;
+
+  /* ---- radii (a touch tighter — less bubbly) ---- */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  /* fine film grain — texture reads as crafted, not generated */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}

@@ -1,0 +1,147 @@
+/* ============================================================
+   GeoRise — Global Styles
+   "Botanical Ledger"
+   ============================================================ */
+
+@import './tokens.css';
+@import './components.css';
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* Keyboard focus ring (WCAG 2.4.7). :focus-visible shows the ring only for
+   keyboard / assistive-tech navigation, never for pointer taps, so the mobile
+   tap-flash stays suppressed. */
+:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; border-radius: inherit; }
+:focus:not(:focus-visible) { outline: none; }
+.btn:focus-visible, .nav-item:focus-visible, button.card:focus-visible {
+  outline: none; box-shadow: 0 0 0 3px rgba(46,125,79,.34);
+}
+
+html, body, #root {
+  margin: 0; padding: 0;
+  font-family: var(--body);
+  background: #DDE8DE;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  height: 100%;
+  overflow: hidden;
+}
+
+::selection { background: rgba(46,125,79,.20); color: var(--text); }
+
+/* ============================================================
+   App screen shell
+   ============================================================ */
+.app {
+  height: 100vh; width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--navy-900);
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  font-family: var(--body);
+  isolation: isolate;
+  border-left: 1px solid rgba(45,91,57,.10);
+  border-right: 1px solid rgba(45,91,57,.10);
+}
+
+/* Ambient light — restrained, slow, no rave-gradient */
+.app::before {
+  content: '';
+  position: absolute; inset: -20%;
+  z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(42% 34% at 24% 6%,  var(--aurora-1), transparent 62%),
+    radial-gradient(46% 38% at 88% 14%, var(--aurora-2), transparent 64%),
+    radial-gradient(52% 42% at 50% 110%, var(--aurora-3), transparent 62%),
+    linear-gradient(180deg, #fbfdf9, #f1f7ef);
+  filter: none;
+  animation: auroraDrift 70s ease-in-out infinite alternate;
+}
+
+/* Film grain — a little more present; texture = crafted */
+.app::after {
+  content: '';
+  position: absolute; inset: 0;
+  z-index: -1; pointer-events: none;
+  background-image: var(--grain);
+  background-size: 170px 170px;
+  opacity: .045; mix-blend-mode: multiply;
+}
+
+@keyframes auroraDrift {
+  0%   { transform: translate3d(0,0,0); }
+  100% { transform: translate3d(-1.5%, 1%, 0); }
+}
+
+.scroll {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+/* slide-in on screen mount — gentle, no bounce */
+@keyframes screenIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: none; }
+}
+.screen-in { animation: screenIn .5s cubic-bezier(.22,.61,.36,1) both; }
+.screen-in > * { animation: screenIn .55s cubic-bezier(.22,.61,.36,1) both; }
+.screen-in > *:nth-child(1) { animation-delay: .03s; }
+.screen-in > *:nth-child(2) { animation-delay: .08s; }
+.screen-in > *:nth-child(3) { animation-delay: .13s; }
+.screen-in > *:nth-child(4) { animation-delay: .18s; }
+.screen-in > *:nth-child(5) { animation-delay: .23s; }
+.screen-in > *:nth-child(6) { animation-delay: .28s; }
+.screen-in > *:nth-child(7) { animation-delay: .33s; }
+
+/* ============================================================
+   Display headings — Fraunces, editorial serif
+   ============================================================ */
+.h-hero { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; letter-spacing: 0; line-height: 1.02; }
+.h1 { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; font-size: 30px; letter-spacing: 0; margin: 0; line-height: 1.06; }
+.h2 { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; font-size: 22px; letter-spacing: 0; margin: 0; }
+.eyebrow {
+  font-family: var(--body); font-weight: 700; font-size: 11px; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--text-dim);
+}
+
+/* tabular numerics for stats/counters */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* utilities */
+.row { display: flex; align-items: center; }
+.muted { color: var(--text-muted); }
+.dim { color: var(--text-dim); }
+
+/* restrained gradient ink for the rare hero accent */
+.ink-green {
+  background: linear-gradient(100deg, var(--green-2), var(--green));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Responsive: float the device as a quiet slab on desktop */
+@media (min-width: 768px) {
+  body { background: var(--navy-950); }
+  .app {
+    border-radius: 34px;
+    height: 92vh;
+    max-height: 920px;
+    box-shadow:
+      0 40px 100px rgba(30,91,57,.20),
+      0 0 0 1px rgba(45,91,57,.12);
+    margin-top: 4vh;
+  }
+}
+
+/* Accessibility: respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
