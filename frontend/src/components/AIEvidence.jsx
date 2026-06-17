@@ -138,9 +138,9 @@ export default function AIEvidence({ data, onClose }) {
   return (
     <>
       <div className="scrim" onClick={onClose} style={{ zIndex: 60 }} />
-      <div className="screen-in" style={{
-        position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', zIndex: 70,
-        width: 'min(92%, 420px)', maxHeight: '88%', overflowY: 'auto',
+      <div style={{
+        position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', zIndex: 70,
+        width: 'min(92vw, 420px)', maxHeight: '88vh', overflowY: 'auto',
         background: 'linear-gradient(180deg,var(--navy-800),var(--navy-900))', borderRadius: 26,
         border: `1px solid ${accent}33`, boxShadow: '0 24px 70px rgba(30,91,57,.24)',
       }}>
@@ -197,7 +197,7 @@ export default function AIEvidence({ data, onClose }) {
         {isDemo && (
           <div style={{ padding: '0 16px' }}>
             <div className="dim" style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.4 }}>
-              Demo mode — AI vision disabled (no API key); confidence not measured. Set <code>ANTHROPIC_API_KEY</code> for real scoring.
+              Demo mode — AI vision disabled (no API key); confidence not measured. Set <code>OPENAI_API_KEY</code> for real scoring.
             </div>
           </div>
         )}

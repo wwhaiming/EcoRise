@@ -11,6 +11,7 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-' + 'x'.repeat(4
 process.env.NODE_ENV = 'test';
 process.env.GEMINI_API_KEY = '';
 process.env.GOOGLE_API_KEY = '';
+process.env.OPENAI_API_KEY = '';  // hermetic: offline lexical embeddings + mock generation even if ../.env holds a live key
 delete process.env.ANTHROPIC_API_KEY;
 const DB = path.join(__dirname, 'coacheval-' + process.pid + '.db');
 process.env.DATABASE_URL = DB;

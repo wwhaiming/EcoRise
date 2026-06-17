@@ -8,12 +8,12 @@
     "dev": "node server.js",
     "seed": "node scripts/seedDemo.js",
     "seed:coach": "node scripts/seedCoachCorpus.js",
+    "seed:research": "node scripts/ingestResearchCorpus.js",
     "test": "node --test test/*.test.js",
     "test:eval": "node test/eco_eval/runEval.js",
     "test:coach-eval": "node test/coach_eval/runEval.js"
   },
   "dependencies": {
-    "openai": "^6.43.0",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.8.2",
     "cookie-parser": "^1.4.7",
@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "onnxruntime-node": "^1.26.0",
+    "openai": "^6.44.0",
     "uuid": "^11.1.0",
     "zod": "^4.4.3"
   },
@@ -32,4 +33,3 @@
     "supertest": "^7.2.2"
   }
 }
-

@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '../components/Icon';
+import ResearchLibrary from '../components/ResearchLibrary';
 import api from '../utils/api';
 
 function nowMs() {
@@ -163,7 +164,7 @@ function CoachCommandCenter({ footprint, openLog }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 14 }}>
           <Metric label="Local proof" value={footprint.verified} sub="verified actions" />
           <Metric label="Impact logged" value={`${footprint.totalCo2.toFixed(1)}kg`} sub="CO2e saved" />
-          <Metric label="AI gap" value={footprint.actionGap} sub="needs focus" />
+          <Metric label="Top category" value={footprint.strongest.category} sub="leading" />
         </div>
 
         <div style={{ marginTop: 14, padding: 13, borderRadius: 16, background: 'rgba(46,125,79,.08)', border: '1px solid rgba(46,125,79,.13)' }}>
@@ -372,6 +373,8 @@ export default function Coach({ ctx }) {
               </div>
             </div>
           )}
+
+          <ResearchLibrary showToast={showToast} />
 
           <div style={{ padding: '16px 16px 0' }}>
             <div className="card" style={{ padding: 15, border: '1px solid rgba(182,111,77,.22)' }}>

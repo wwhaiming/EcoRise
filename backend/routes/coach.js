@@ -16,7 +16,7 @@ const { body } = require('../utils/validate');
 const { retrieve, ingestSourceChunks } = require('../utils/coachRetrieval');
 const { gate, coverage, deterministicFaithfulness, SIM_FLOOR } = require('../utils/coachFaithfulness');
 const { computeGrant } = require('../utils/coachScoring');
-const { generateCoachQuestion, generateCoachGuidance } = require('../utils/aiClient');
+const { generateCoachQuestion, generateCoachGuidance, answerFromSources, summarizePaper, paperVisual } = require('../utils/aiClient');
 const { awardPoints } = require('../utils/pointsEngine');
 
 const router = express.Router();
@@ -230,6 +230,98 @@ router.post('/preferences', authMiddleware, body('coachPrefs'), (req, res) => {
   const db = getDb();
   upsertPrefs(db, req.userId, req.valid);
   res.json({ success: true, preferences: getPrefs(db, req.userId) });
+});
+
+// ── Research library (1000-paper corpus) ──
+const RESEARCH_PROVENANCE = 'research_dataset';
+// Memoize per-paper summary/visual (deterministic-ish, paid model calls) for the
+// process lifetime so re-opening a paper card doesn't re-bill the model.
+const _paperCache = new Map(); // `${kind}:${sourceId}` -> result
+
+// Ask a free-form question; the answer is pulled out of the most relevant papers.
+router.get('/ask', authMiddleware, async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (q.length < 4) return res.status(400).json({ error: 'Ask a question (at least 4 characters).' });
+    const db = getDb();
+    const chunks = await retrieve(db, q, { k: 6 });
+    if (!chunks.length) return res.status(503).json({ error: 'No approved learning sources yet', reason: 'no_corpus' });
+    const draft = await answerFromSources(q, chunks);
+    if (!draft || draft.refusal) {
+      return res.json({ answer: null, reason: draft && draft.refusal ? 'no_answer_in_corpus' : 'empty',
+        message: 'The research corpus does not contain a grounded answer to that. Try rephrasing toward an environmental topic.' });
+    }
+    const ids = new Set(chunks.map(c => c.id));
+    const used = Array.isArray(draft.usedSourceIds) ? draft.usedSourceIds.filter(id => ids.has(id)) : [];
+    // Fall back to the top retrieved chunk if the model cited nothing valid, so the
+    // answer is always shown WITH its source (never an uncited claim).
+    const citeIds = used.length ? used : [chunks[0].id];
+    res.json({ answer: String(draft.answer || ''), isMock: !!draft.isMock, sources: snippetsForChunks(db, citeIds) });
+  } catch (err) {
+    console.error('coach /ask error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Browse / search the ingested research papers.
+router.get('/papers', authMiddleware, (req, res) => {
+  const db = getDb();
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const topic = String(req.query.topic || '').trim().slice(0, 30);
+  const limit = Math.max(1, Math.min(50, parseInt(req.query.limit, 10) || 20));
+  const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+  const where = ["status = 'approved'", 'provenance = ?'];
+  const params = [RESEARCH_PROVENANCE];
+  if (q) { where.push('title LIKE ?'); params.push(`%${q}%`); }
+  if (topic) { where.push('topic_tags LIKE ?'); params.push(`%"${topic}"%`); }
+  const sql = `FROM eco_sources WHERE ${where.join(' AND ')}`;
+  const total = db.prepare(`SELECT COUNT(*) c ${sql}`).get(...params).c;
+  const rows = db.prepare(`SELECT id, title, authors, institution, url, pub_year, topic_tags
+    ${sql} ORDER BY pub_year DESC, title ASC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+  res.json({
+    total, limit, offset,
+    papers: rows.map(r => ({ id: r.id, title: r.title, authors: r.authors, year: r.pub_year,
+      venue: r.institution, url: r.url, topic: safeTags(r.topic_tags)[0] || '' })),
+  });
+});
+
+function loadPaper(db, id) {
+  const src = db.prepare("SELECT id, title FROM eco_sources WHERE id = ? AND provenance = ?").get(id, RESEARCH_PROVENANCE);
+  if (!src) return null;
+  const chunk = db.prepare('SELECT text FROM eco_source_chunks WHERE source_id = ? ORDER BY ord LIMIT 1').get(id);
+  return { title: src.title, abstract: chunk ? chunk.text : src.title };
+}
+
+// AI plain-language summary of one paper.
+router.get('/papers/:id/summary', authMiddleware, async (req, res) => {
+  try {
+    const key = `summary:${req.params.id}`;
+    if (_paperCache.has(key)) return res.json({ summary: _paperCache.get(key) });
+    const paper = loadPaper(getDb(), req.params.id);
+    if (!paper) return res.status(404).json({ error: 'Paper not found' });
+    const summary = await summarizePaper(paper);
+    _paperCache.set(key, summary);
+    res.json({ summary });
+  } catch (err) {
+    console.error('coach /summary error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// AI structured infographic for one paper (frontend renders it as a clean visual).
+router.get('/papers/:id/visual', authMiddleware, async (req, res) => {
+  try {
+    const key = `visual:${req.params.id}`;
+    if (_paperCache.has(key)) return res.json({ visual: _paperCache.get(key) });
+    const paper = loadPaper(getDb(), req.params.id);
+    if (!paper) return res.status(404).json({ error: 'Paper not found' });
+    const visual = await paperVisual(paper);
+    _paperCache.set(key, visual);
+    res.json({ visual });
+  } catch (err) {
+    console.error('coach /visual error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ── helpers ──

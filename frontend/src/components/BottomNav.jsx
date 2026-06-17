@@ -1,5 +1,4 @@
 /* GeoRise — Bottom navigation bar with FAB */
-import { Fragment } from 'react';
 import Icon from './Icon';
 
 const NAV = [
@@ -10,10 +9,28 @@ const NAV = [
   { key: 'profile', label: 'Profile', icon: 'user' },
 ];
 
+// Two balanced halves around the centered FAB: 2 tabs left, 3 tabs right.
+const LEFT = NAV.slice(0, 2);
+const RIGHT = NAV.slice(2);
+
 export default function BottomNav({ screen, go, onFab }) {
+  const renderItem = (n) => (
+    <button
+      key={n.key}
+      type="button"
+      aria-label={n.ariaLabel || n.label}
+      aria-current={screen === n.key ? 'page' : undefined}
+      className={`nav-item ${screen === n.key ? 'active' : ''}`}
+      onClick={() => go(n.key)}
+    >
+      <Icon name={n.icon} size={24} color={screen === n.key ? 'var(--green)' : 'var(--text-dim)'} />
+      {n.label}
+    </button>
+  );
+
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
-      {/* FAB */}
+      {/* FAB — centered over the nav slot */}
       <button type="button" onClick={onFab} className="pulse-green" aria-label="Log an eco action" style={{
         position: 'absolute', top: -30, left: '50%', transform: 'translateX(-50%)', zIndex: 40,
         width: 64, height: 64, borderRadius: '50%', border: '3px solid var(--navy-900)', cursor: 'pointer',
@@ -24,15 +41,9 @@ export default function BottomNav({ screen, go, onFab }) {
         <Icon name="plus" size={30} color="#fff" strokeWidth={3} />
       </button>
       <div className="nav">
-        {NAV.map((n, i) => (
-          <Fragment key={n.key}>
-            {i === 2 && <div style={{ width: 56, flexShrink: 0 }} />}
-            <button type="button" aria-label={n.ariaLabel || n.label} aria-current={screen === n.key ? 'page' : undefined} className={`nav-item ${screen === n.key ? 'active' : ''}`} onClick={() => go(n.key)}>
-              <Icon name={n.icon} size={24} color={screen === n.key ? 'var(--green)' : 'var(--text-dim)'} />
-              {n.label}
-            </button>
-          </Fragment>
-        ))}
+        <div className="nav-group">{LEFT.map(renderItem)}</div>
+        <div className="nav-slot" aria-hidden="true" />
+        <div className="nav-group">{RIGHT.map(renderItem)}</div>
       </div>
     </div>
   );

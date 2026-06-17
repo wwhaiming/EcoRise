@@ -14,6 +14,7 @@ delete process.env.ANTHROPIC_API_KEY;        // force mock / local model
 // empty (falsy) value keeps getClient() on the mock path and off the live network.
 process.env.GEMINI_API_KEY = '';
 process.env.GOOGLE_API_KEY = '';
+process.env.OPENAI_API_KEY = '';              // same: keep eco/trash vision + embeddings on the mock path
 process.env.TRASH_PROB_THRESHOLD = '1.1';     // trash detector rejects everything (deterministic)
 process.env.MOCK_ECO_ALWAYS_PASS = 'true';    // let eco posts succeed so we can test points/ledger logic
 process.env.MOCK_TRASH_ALWAYS_PASS = 'false'; // hermetic: ignore any local .env that flips trash to demo-pass

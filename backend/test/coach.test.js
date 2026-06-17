@@ -13,6 +13,7 @@ process.env.NODE_ENV = 'test';
 delete process.env.ANTHROPIC_API_KEY;
 process.env.GEMINI_API_KEY = '';
 process.env.GOOGLE_API_KEY = '';
+process.env.OPENAI_API_KEY = '';  // hermetic: keep getClient()/embeddings on the offline mock path even if ../.env holds a live key
 const DB = path.join(__dirname, 'coach-' + process.pid + '.db');
 process.env.DATABASE_URL = DB;
 

@@ -73,6 +73,13 @@ export const api = {
   coachGuidance: () => apiFetch('/api/coach/guidance'),
   coachTip: () => apiFetch('/api/coach/tip'),
   coachPreferences: (body) => apiFetch('/api/coach/preferences', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Research library (1000-paper corpus)
+  coachAsk: (q) => apiFetch(`/api/coach/ask?q=${encodeURIComponent(q)}`),
+  coachPapers: ({ q = '', topic = '', limit = 20, offset = 0 } = {}) =>
+    apiFetch(`/api/coach/papers?q=${encodeURIComponent(q)}&topic=${encodeURIComponent(topic)}&limit=${limit}&offset=${offset}`),
+  coachPaperSummary: (id) => apiFetch(`/api/coach/papers/${id}/summary`),
+  coachPaperVisual: (id) => apiFetch(`/api/coach/papers/${id}/visual`),
 };
 
 export default api;
