@@ -8,7 +8,7 @@ const fs = require('fs');
 // Test env MUST be set before requiring the app/auth (which enforce JWT_SECRET).
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-' + 'x'.repeat(40);
 process.env.NODE_ENV = 'test';
-delete process.env.ANTHROPIC_API_KEY;        // force mock / local model
+delete process.env.OPENAI_API_KEY;        // force mock / local model
 process.env.TRASH_PROB_THRESHOLD = '1.1';     // trash detector rejects everything (deterministic)
 process.env.MOCK_ECO_ALWAYS_PASS = 'true';    // let eco posts succeed so we can test points/ledger logic
 const DB = path.join(__dirname, 'test-' + process.pid + '.db');

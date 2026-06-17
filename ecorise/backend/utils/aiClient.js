@@ -1,20 +1,20 @@
-/* EcoRise — AI Client (Anthropic Claude API)
- * Falls back to mock responses when ANTHROPIC_API_KEY is not set.
+/* EcoRise — AI Client (OpenAI API)
+ * Falls back to mock responses when OPENAI_API_KEY is not set.
  */
 
-let Anthropic;
+let OpenAI;
 try {
-  Anthropic = require('@anthropic-ai/sdk');
+  OpenAI = require('openai');
 } catch (_) {
-  Anthropic = null;
+  OpenAI = null;
 }
 
 // Locally-trained offline trash detector (datasets/train_trash_detector.py -> ONNX).
 const localTrashModel = require('./localTrashModel');
 
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY || !Anthropic) return null;
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  if (!process.env.OPENAI_API_KEY || !OpenAI) return null;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
 // ── Mock responses for when API key is not set ──
@@ -36,7 +36,7 @@ const MOCK_QUESTS = [
 
 // ── 1. Analyze eco action image ──
 
-const ECO_MODEL = 'claude-sonnet-4-6';
+const ECO_MODEL = 'gpt-4o-mini';
 const ECO_PROMPT_VERSION = '2026-06-15.gate-v1';
 const ECO_CONFIDENCE_FLOOR = Number(process.env.ECO_CONFIDENCE_FLOOR || 0.5);
 
@@ -54,7 +54,7 @@ async function analyzeEcoAction(imageBase64) {
     return {
       isEcoAction: false, confidence: 0, actionType: 'other', specificAction: 'AI disabled',
       requiresFollowUp: false, estimatedCO2Saved: 0,
-      environmentalImpactSummary: 'AI vision is disabled (no ANTHROPIC_API_KEY). Cannot verify this action.',
+      environmentalImpactSummary: 'AI vision is disabled (no OPENAI_API_KEY). Cannot verify this action.',
       isMock: true, provenance: { source: 'mock', model: 'mock', promptVersion: ECO_PROMPT_VERSION },
     };
   }
@@ -67,13 +67,12 @@ async function analyzeEcoAction(imageBase64) {
       if (m) { mediaType = m[1]; base64Data = m[2]; }
     }
 
-    const response = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: ECO_MODEL,
       max_tokens: 1024,
       messages: [{
         role: 'user',
         content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
           {
             type: 'text',
             text: `You are EcoRise's eco-action analyzer. FIRST decide whether this photo genuinely shows a real eco-friendly action (biking/walking/transit, recycling/compost/reusable items, saving energy, a plant-based meal, litter cleanup, planting, etc.).
@@ -81,11 +80,18 @@ Set isEcoAction=false for anything else (selfie, pet, random object, screenshot,
 Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
 {"isEcoAction": boolean, "confidence": number between 0 and 1, "actionType": "transportation|waste|energy|food|nature|other", "specificAction": string, "requiresFollowUp": boolean, "followUpQuestion": string, "estimatedCO2Saved": number_in_kg, "environmentalImpactSummary": string}`,
           },
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageBase64.startsWith('data:') ? imageBase64 : `data:${mediaType};base64,${base64Data}`,
+            },
+          },
         ],
       }],
+      response_format: { type: "json_object" }
     });
 
-    const text = response.content[0].text;
+    const text = response.choices[0].message.content;
     const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     const confidence = Math.max(0, Math.min(1, Number(json.confidence ?? 0)));
     return {
@@ -98,7 +104,7 @@ Only if isEcoAction=true, fill the rest. Respond ONLY in JSON:
       estimatedCO2Saved: Math.max(0, Number(json.estimatedCO2Saved) || 0),
       environmentalImpactSummary: json.environmentalImpactSummary || '',
       isMock: false,
-      provenance: { source: 'claude', model: ECO_MODEL, promptVersion: ECO_PROMPT_VERSION, confidence },
+      provenance: { source: 'openai', model: ECO_MODEL, promptVersion: ECO_PROMPT_VERSION, confidence },
     };
   } catch (err) {
     console.error('AI analyzeEcoAction error:', err.message);
@@ -123,16 +129,17 @@ async function generateDailyQuests(userId) {
   }
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 1024,
       messages: [{
         role: 'user',
         content: `Generate 5 unique daily environmental quests for a user. Each quest should be specific and completable in a day. Format: [{title, description, actionType, targetDetails, pointsBase}]. Make them varied across transportation, waste, energy, food, and nature categories. Respond ONLY in JSON.`,
       }],
+      response_format: { type: "json_object" }
     });
 
-    const text = response.content[0].text;
+    const text = response.choices[0].message.content;
     const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     return Array.isArray(json) ? json : json.quests || MOCK_QUESTS;
   } catch (err) {
@@ -160,16 +167,17 @@ async function checkQuestMatch(action, quests) {
   }
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 512,
       messages: [{
         role: 'user',
         content: `Does this action "${action.specificAction}" (type: ${action.actionType}) complete or progress any of these quests: ${JSON.stringify(quests.map(q => ({ id: q.id, title: q.title, targetDetails: q.targetDetails })))}? Respond with: {matchedQuestId, progressPercent, completed}. Respond ONLY in JSON.`,
       }],
+      response_format: { type: "json_object" }
     });
 
-    const text = response.content[0].text;
+    const text = response.choices[0].message.content;
     return JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
   } catch (err) {
     console.error('AI checkQuestMatch error:', err.message);
@@ -226,7 +234,7 @@ async function rateTrashSeverity(imageBase64) {
       isTrash: false,
       confidence: 0,
       score: 0,
-      description: 'AI vision is disabled (no ANTHROPIC_API_KEY). Cannot verify trash — set the key for real detection.',
+      description: 'AI vision is disabled (no OPENAI_API_KEY). Cannot verify trash — set the key for real detection.',
       estimatedItems: '0',
       isMock: true,
     };
@@ -243,16 +251,12 @@ async function rateTrashSeverity(imageBase64) {
       }
     }
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 512,
       messages: [{
         role: 'user',
         content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64Data },
-          },
           {
             type: 'text',
             text: `You are EcoRise's litter detector. FIRST decide whether this photo genuinely shows litter, trash, or dumped waste in a real outdoor or public setting.
@@ -269,11 +273,18 @@ Only if isTrash=true, rate severity 0-10:
 Respond ONLY in JSON:
 {"isTrash": boolean, "confidence": number between 0 and 1, "score": number 0-10, "description": string, "estimatedItems": string}`,
           },
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageBase64.startsWith('data:') ? imageBase64 : `data:${mediaType};base64,${base64Data}`
+            }
+          }
         ],
       }],
+      response_format: { type: "json_object" }
     });
 
-    const text = response.content[0].text;
+    const text = response.choices[0].message.content;
     const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
 
     // Normalize + enforce the gate server-side (never trust the raw score alone).

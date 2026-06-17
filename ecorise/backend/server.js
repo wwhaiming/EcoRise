@@ -46,7 +46,7 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🌱 EcoRise API running on http://localhost:${PORT}`);
-    console.log(`   AI mode: ${process.env.ANTHROPIC_API_KEY ? 'LIVE (Claude)' : 'MOCK / local model'}`);
+    console.log(`   AI mode: ${process.env.OPENAI_API_KEY ? 'LIVE (GPT-4o-mini)' : 'MOCK / local model'}`);
   });
   const interval = setInterval(() => {
     try { runDueResets(getDb()); } catch (e) { console.error('reset job error:', e.message); }
