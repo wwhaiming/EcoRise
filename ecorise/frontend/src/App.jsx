@@ -9,6 +9,7 @@ import { fireConfetti } from './components/Confetti';
 import Onboarding from './pages/Onboarding';
 import Home from './pages/Home';
 import { Feed, Leaderboard, Profile, Organizer } from './pages/Pages';
+import SetupBoard from './pages/SetupBoard';
 import { LogAction, TrashSpotter } from './pages/Modals';
 
 import api from './utils/api';
@@ -71,42 +72,59 @@ export default function App() {
 
   const appRef = useRef(null);
   const toastTimer = useRef(null);
-  const resetTarget = useRef(Date.now() + (3 * 86400000) + (14 * 3600000) + (22 * 60000)).current;
+  const resetTarget = leaderboard?.next_reset
+    ? new Date(leaderboard.next_reset).getTime()
+    : Date.now() + (3 * 86400000) + (14 * 3600000) + (22 * 60000);
 
   // ── Init: check session (cookie) on mount ──
   useEffect(() => {
-    api.me().then(data => {
+    api.me().then(async (data) => {
       setUser(data.user);
       setAuthed(true);
-      setScreen('home');
       setMembers([]);
       setPosts([]);
-      loadData();
-      consumePendingInvite();
+      if (PENDING_INVITE) {
+        await consumePendingInvite();
+      } else {
+        await loadData();
+      }
     }).catch(() => { /* not signed in — show onboarding */ });
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (boardIdOverride) => {
     try {
       // Try to load leaderboards
       const boards = await api.listLeaderboards();
-      let activeBoardId = leaderboardId;
+      let activeBoardId = boardIdOverride || leaderboardId;
       if (boards.leaderboards?.length > 0) {
-        const board = boards.leaderboards[0];
+        let board = boards.leaderboards.find(b => b.id === activeBoardId);
+        if (!board) {
+          board = boards.leaderboards[0];
+        }
         activeBoardId = board.id;
         setLeaderboardId(board.id);
         setLeaderboard(board);
+        setScreen('home');
 
         const boardData = await api.getLeaderboard(board.id);
         if (boardData.members?.length > 0) {
           setMembers(boardData.members);
         }
+      } else {
+        setScreen('setup');
+        return false;
       }
 
       // Load posts for the active board (use the resolved id, not stale state)
-      const postsData = await api.getPosts(activeBoardId);
-      if (postsData.posts?.length > 0) {
-        setPosts(postsData.posts);
+      if (activeBoardId) {
+        const postsData = await api.getPosts(activeBoardId);
+        if (postsData.posts?.length > 0) {
+          setPosts(postsData.posts);
+        } else {
+          setPosts([]);
+        }
+      } else {
+        setPosts([]);
       }
 
       // Load quests
@@ -126,13 +144,25 @@ export default function App() {
     }
   }, [leaderboardId]);
 
+  const joinBoardByCode = useCallback(async (code) => {
+    const r = await api.joinLeaderboard(null, code);
+    showToast(`Joined ${r.name || 'the leaderboard'}!`);
+    await loadData(r.leaderboardId);
+    return r;
+  }, [loadData]);
+
   const consumePendingInvite = useCallback(() => {
-    if (!PENDING_INVITE) return;
-    api.joinLeaderboard(null, PENDING_INVITE).then(r => {
+    if (!PENDING_INVITE) return Promise.resolve(null);
+    return api.joinLeaderboard(null, PENDING_INVITE).then(async (r) => {
       window.history.replaceState({}, '', '/');
       showToast(`Joined ${r.name || 'the leaderboard'}!`);
-      loadData();
-    }).catch(() => { window.history.replaceState({}, '', '/'); });
+      setScreen('home');
+      await loadData(r.leaderboardId);
+      return r;
+    }).catch(() => {
+      window.history.replaceState({}, '', '/');
+      return null;
+    });
   }, [loadData]);
 
   const markNotificationsRead = useCallback(async () => {
@@ -169,24 +199,14 @@ export default function App() {
   const onAuth = async (userData) => {
     setUser(userData);
     setAuthed(true);
-    setScreen('home');
-    // Clear demo seed immediately so a real user never sees fabricated standings.
     setMembers([]);
     setPosts([]);
 
-    // Resolve the user's board (create one if they have none) BEFORE loading data,
-    // so loadData() sees a real board instead of racing ahead of creation.
-    try {
-      const data = await api.listLeaderboards();
-      let board = data.leaderboards?.[0];
-      if (!board) {
-        board = await api.createLeaderboard({ name: 'My EcoRise Board', resetInterval: 'weekly', prize: '', includeSelf: true });
-      }
-      if (board) { setLeaderboardId(board.id); setLeaderboard(board); }
-    } catch { /* offline: stay empty rather than show fake data */ }
-
-    await loadData();
-    consumePendingInvite();
+    if (PENDING_INVITE) {
+      await consumePendingInvite();
+    } else {
+      await loadData();
+    }
   };
 
   // ── Action complete ──
@@ -259,16 +279,17 @@ export default function App() {
     resetTarget, bump, podiumVariant,
     go, showToast, openLog: () => setModal('log'), openTrash: () => setModal('trash'),
     closeModal: () => setModal(null), toggleLike, reportPost, keepPost, deletePost, onActionComplete,
-    updateLeaderboard, logout,
+    updateLeaderboard, logout, joinBoardByCode,
     notifications, unreadCount, markNotificationsRead,
   };
 
   const isOnboarding = screen === 'onboarding' || !authed;
-  const showNav = !isOnboarding && screen !== 'organizer';
+  const showNav = !isOnboarding && screen !== 'organizer' && screen !== 'setup';
 
   const renderScreen = () => {
     if (isOnboarding) return <Onboarding onAuth={onAuth} />;
     switch (screen) {
+      case 'setup': return <SetupBoard ctx={ctx} onComplete={() => go('home')} />;
       case 'home': return <Home ctx={ctx} />;
       case 'feed': return <Feed ctx={ctx} />;
       case 'quests': return <Home ctx={ctx} />;

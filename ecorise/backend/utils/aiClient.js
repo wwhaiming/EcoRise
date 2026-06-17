@@ -307,4 +307,177 @@ Respond ONLY in JSON:
   }
 }
 
-module.exports = { analyzeEcoAction, generateDailyQuests, checkQuestMatch, rateTrashSeverity };
+const CHAT_SYSTEM_PROMPT = `You are EcoRise's friendly, conversational AI Assistant.
+A user has uploaded a photo to log an eco-friendly action (biking/walking/transit, recycling/compost/reusable items, saving energy, a plant-based meal, litter cleanup, planting, etc.).
+Your job is to chat with them to:
+1. Verify if the action in the photo is actually eco-friendly.
+2. Gather any missing details if needed (for transportation actions, ask for distance/miles; for others, ask for specific actions if unclear).
+3. Be friendly, encouraging, and conversational.
+4. Keep the conversation short: usually 1-3 turns.
+
+IMPORTANT: You MUST respond ONLY in JSON format on every turn:
+{
+  "message": "Your conversational response to the user. Ask questions or wrap up and congratulate them.",
+  "isComplete": boolean,
+  "actionType": "transportation|waste|energy|food|nature|none",
+  "specificAction": "Short description of the verified action",
+  "estimatedCO2Saved": number,
+  "points": number,
+  "miles": number (for transportation actions, the estimated or user-reported distance in miles; set to 0 or omit otherwise)
+}`;
+
+function simulateMockChat(messages) {
+  const userMessages = messages.filter(m => m.role === 'user');
+  if (userMessages.length <= 1) {
+    return {
+      message: "Hey! I see your photo. It looks like you're doing something green! What eco-friendly action are you taking here? (e.g., did you bike/walk/transit somewhere, or reuse a bottle?)",
+      isComplete: false,
+      actionType: 'none',
+      specificAction: '',
+      estimatedCO2Saved: 0,
+      points: 0,
+      miles: 0
+    };
+  }
+
+  const lastUserText = userMessages[userMessages.length - 1].content.toLowerCase();
+  const isTransport = lastUserText.includes('bike') || lastUserText.includes('cycle') || lastUserText.includes('walk') || lastUserText.includes('run') || lastUserText.includes('transit') || lastUserText.includes('bus') || lastUserText.includes('train');
+  
+  if (isTransport) {
+    const milesMatch = lastUserText.match(/(\d+(\.\d+)?)/);
+    const miles = milesMatch ? parseFloat(milesMatch[1]) : 5;
+    const co2 = +(miles * 0.4).toFixed(1);
+    const points = Math.min(40, Math.max(15, Math.round(15 + miles * 0.8 + co2 * 2)));
+    
+    let activity = 'Green transit';
+    if (lastUserText.includes('bike') || lastUserText.includes('cycle')) activity = 'Biking commute';
+    else if (lastUserText.includes('walk') || lastUserText.includes('run')) activity = 'Walking commute';
+    else if (lastUserText.includes('bus') || lastUserText.includes('train') || lastUserText.includes('transit')) activity = 'Public transit ride';
+
+    return {
+      message: `That's amazing! Choosing ${activity} for ${miles} miles is a fantastic way to cut down carbon emissions. This saves about ${co2} kg of CO2 and earns you ${points} points. Ready to log this action?`,
+      isComplete: true,
+      actionType: 'transportation',
+      specificAction: activity,
+      estimatedCO2Saved: co2,
+      points: points,
+      miles: miles
+    };
+  }
+
+  const isWaste = lastUserText.includes('bottle') || lastUserText.includes('bag') || lastUserText.includes('refill') || lastUserText.includes('recycle') || lastUserText.includes('compost') || lastUserText.includes('litter') || lastUserText.includes('cleanup');
+  if (isWaste) {
+    return {
+      message: "Great job! Reducing waste by recycling, composting, or using reusable items helps save resource consumption. This saves about 0.5 kg of CO2 and earns you 20 points! Ready to log?",
+      isComplete: true,
+      actionType: 'waste',
+      specificAction: lastUserText.includes('compost') ? 'Composting waste' : lastUserText.includes('cleanup') || lastUserText.includes('litter') ? 'Litter cleanup' : 'Waste reduction',
+      estimatedCO2Saved: 0.5,
+      points: 20,
+      miles: 0
+    };
+  }
+
+  const isFood = lastUserText.includes('meal') || lastUserText.includes('vegan') || lastUserText.includes('vegetarian') || lastUserText.includes('plant') || lastUserText.includes('eat');
+  if (isFood) {
+    return {
+      message: "Delicious! Eating plant-based meals significantly lowers water usage and agricultural greenhouse gases. This saves about 1.8 kg of CO2 and earns you 25 points! Ready to log?",
+      isComplete: true,
+      actionType: 'food',
+      specificAction: 'Plant-based meal',
+      estimatedCO2Saved: 1.8,
+      points: 25,
+      miles: 0
+    };
+  }
+
+  return {
+    message: "Thank you for explaining! That definitely counts as a positive step for our planet. I've logged this action under waste/energy/nature and awarded you 15 points. Ready to submit?",
+    isComplete: true,
+    actionType: 'nature',
+    specificAction: 'Eco action',
+    estimatedCO2Saved: 0.3,
+    points: 15,
+    miles: 0
+  };
+}
+
+async function chatEcoAction(messages, imageBase64) {
+  const client = getClient();
+  
+  if (!client) {
+    return simulateMockChat(messages);
+  }
+
+  try {
+    let base64Data = imageBase64;
+    let mediaType = 'image/jpeg';
+    if (imageBase64 && imageBase64.startsWith('data:')) {
+      const m = imageBase64.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (m) { mediaType = m[1]; base64Data = m[2]; }
+    }
+
+    const apiMessages = [
+      { role: 'system', content: CHAT_SYSTEM_PROMPT }
+    ];
+
+    let imageIncluded = false;
+    for (const msg of messages) {
+      if (msg.role === 'user' && !imageIncluded && imageBase64) {
+        apiMessages.push({
+          role: 'user',
+          content: [
+            { type: 'text', text: msg.content || 'Here is the photo of my eco action.' },
+            { type: 'image_url', image_url: { url: imageBase64.startsWith('data:') ? imageBase64 : `data:${mediaType};base64,${base64Data}` } }
+          ]
+        });
+        imageIncluded = true;
+      } else {
+        apiMessages.push({ role: msg.role, content: msg.content });
+      }
+    }
+
+    if (apiMessages.length === 1 && imageBase64) {
+      apiMessages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Analyze this photo of my eco-friendly action.' },
+          { type: 'image_url', image_url: { url: imageBase64.startsWith('data:') ? imageBase64 : `data:${mediaType};base64,${base64Data}` } }
+        ]
+      });
+    }
+
+    const response = await client.chat.completions.create({
+      model: ECO_MODEL,
+      max_tokens: 1024,
+      messages: apiMessages,
+      response_format: { type: "json_object" }
+    });
+
+    const text = response.choices[0].message.content;
+    const json = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+    return {
+      message: String(json.message || 'I see.'),
+      isComplete: !!json.isComplete,
+      actionType: String(json.actionType || 'none'),
+      specificAction: String(json.specificAction || ''),
+      estimatedCO2Saved: Math.max(0, Number(json.estimatedCO2Saved) || 0),
+      points: Math.max(0, Number(json.points) || 0),
+      miles: Math.max(0, Number(json.miles) || 0)
+    };
+  } catch (err) {
+    console.error('AI chatEcoAction error:', err.message);
+    return {
+      message: 'Oh no, I encountered an issue analyzing your request. Could you explain what you are doing in this photo?',
+      isComplete: false,
+      actionType: 'none',
+      specificAction: '',
+      estimatedCO2Saved: 0,
+      points: 0,
+      miles: 0,
+      error: err.message
+    };
+  }
+}
+
+module.exports = { analyzeEcoAction, generateDailyQuests, checkQuestMatch, rateTrashSeverity, chatEcoAction };

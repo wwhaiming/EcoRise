@@ -16,6 +16,7 @@ process.env.DATABASE_URL = DB;
 
 const request = require('supertest');
 const app = require('../server');
+delete process.env.OPENAI_API_KEY; // Force mock mode even after server.js loads dotenv
 const { getDb } = require('../db');
 const { signToken } = require('../middleware/auth');
 
@@ -239,4 +240,26 @@ test('ledger is idempotent per source (no double-credit on replay)', async () =>
   assert.equal(r2.applied, false, 'replayed award for same source must be a no-op');
   const pts = getDb().prepare('SELECT points FROM leaderboard_members WHERE leaderboard_id=? AND user_id=?').get(board.id, a.id).points;
   assert.equal(pts, 50, 'points credited exactly once');
+});
+
+test('conversational AI: start chat', async () => {
+  const a = await newUser('Chat1');
+  const r = await request(app).post('/api/posts/chat').set(...auth(a.token)).send({ image: png(101), messages: [] });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.chatResult.isComplete, false, 'Initial turn is not complete');
+  assert.ok(r.body.chatResult.message.includes('What eco-friendly action'));
+});
+
+test('conversational AI: complete chat with transport details', async () => {
+  const a = await newUser('Chat2');
+  const messages = [
+    { role: 'user', content: 'Analyze this photo of my eco-friendly action.' },
+    { role: 'assistant', content: 'What eco-friendly action are you taking?' },
+    { role: 'user', content: 'I biked 5 miles.' }
+  ];
+  const r = await request(app).post('/api/posts/chat').set(...auth(a.token)).send({ image: png(102), messages });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.chatResult.isComplete, true, 'Chat should complete when details are provided');
+  assert.equal(r.body.chatResult.actionType, 'transportation');
+  assert.ok(r.body.chatResult.points > 0);
 });

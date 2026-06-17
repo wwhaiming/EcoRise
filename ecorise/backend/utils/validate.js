@@ -34,6 +34,13 @@ const schemas = {
     actionType: z.enum(['transportation', 'transport', 'waste', 'energy', 'food', 'nature', 'cleanup', 'community']).optional(),
     actionDesc: z.string().trim().max(120).optional(),
   }),
+  chatPost: z.object({
+    image: z.string().startsWith('data:image/').max(9_000_000).optional(),
+    messages: z.array(z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string().max(2000),
+    })),
+  }),
   comment: z.object({ text: z.string().trim().min(1).max(500) }),
   trash: z.object({
     image: z.string().startsWith('data:image/').max(9_000_000).optional(),

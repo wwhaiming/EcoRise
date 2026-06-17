@@ -165,8 +165,26 @@ export function Leaderboard({ ctx }) {
   const top3 = members.slice(0, 3);
   const rest = members.slice(3);
 
+  const [joinCode, setJoinCode] = useState('');
+  const [joining, setJoining] = useState(false);
+
+  const handleJoin = async (e) => {
+    e?.preventDefault();
+    const code = joinCode.trim().toUpperCase();
+    if (!code) return;
+    setJoining(true);
+    try {
+      await ctx.joinBoardByCode(code);
+      setJoinCode('');
+    } catch (err) {
+      ctx.showToast(err.message || 'Could not join');
+    } finally {
+      setJoining(false);
+    }
+  };
+
   return (
-    <div className="screen-in" style={{ paddingBottom: 24 }}>
+    <div className="screen-in" style={{ paddingBottom: 110 }}>
       <div style={{ padding: '18px 18px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div className="eyebrow" style={{ color: 'var(--green)' }}>{leaderboard?.name || 'EcoRise'}</div>
@@ -196,34 +214,50 @@ export function Leaderboard({ ctx }) {
           </div>
         )}
 
-        <div className="card" style={{ padding: 6 }}>
-          {rest.map((p, i) => (
-            <div key={p.user_id} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 16,
-              background: p.isYou ? 'linear-gradient(90deg, rgba(0,230,118,.16), rgba(0,230,118,.04))' : 'transparent',
-              boxShadow: p.isYou ? 'inset 0 0 0 1.5px rgba(0,230,118,.4)' : 'none',
-              borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none',
-            }}>
-              <RankBadge rank={p.rank} />
-              <Avatar src={p.avatar} name={p.name} size={42} ring={p.isYou ? 'var(--green)' : undefined} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                  {p.isYou && <span className="chip chip-green" style={{ padding: '2px 8px', fontSize: 11 }}>YOU</span>}
+        {rest.length > 0 && (
+          <div className="card" style={{ padding: 6 }}>
+            {rest.map((p, i) => (
+              <div key={p.user_id} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 16,
+                background: p.isYou ? 'linear-gradient(90deg, rgba(0,230,118,.16), rgba(0,230,118,.04))' : 'transparent',
+                boxShadow: p.isYou ? 'inset 0 0 0 1.5px rgba(0,230,118,.4)' : 'none',
+                borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none',
+              }}>
+                <RankBadge rank={p.rank} />
+                <Avatar src={p.avatar} name={p.name} size={42} ring={p.isYou ? 'var(--green)' : undefined} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                    {p.isYou && <span className="chip chip-green" style={{ padding: '2px 8px', fontSize: 11 }}>YOU</span>}
+                  </div>
+                  <Streak n={p.streak || 0} size={12} />
                 </div>
-                <Streak n={p.streak || 0} size={12} />
+                <div style={{ textAlign: 'right' }}>
+                  <div className={bump === p.user_id ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>{(p.points || 0).toLocaleString()}</div>
+                  <div className="dim" style={{ fontSize: 10, fontWeight: 800, letterSpacing: .5 }}>PTS</div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className={bump === p.user_id ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>{(p.points || 0).toLocaleString()}</div>
-                <div className="dim" style={{ fontSize: 10, fontWeight: 800, letterSpacing: .5 }}>PTS</div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         <button className="btn btn-purple btn-block" onClick={() => copyInvite(leaderboard?.invite_code, ctx)}>
           <Icon name="share" size={19} color="#fff" /> Invite friends
         </button>
+
+        <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <input
+            className="field"
+            placeholder="Enter invite code to join board"
+            value={joinCode}
+            onChange={e => setJoinCode(e.target.value)}
+            style={{ flex: 1 }}
+            required
+          />
+          <button className="btn btn-primary" type="submit" disabled={joining} style={{ padding: '0 18px' }}>
+            {joining ? 'Joining...' : 'Join'}
+          </button>
+        </form>
       </div>
     </div>
   );

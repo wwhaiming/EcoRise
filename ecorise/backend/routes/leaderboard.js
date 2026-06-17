@@ -34,7 +34,7 @@ router.post('/', authMiddleware, body('createLeaderboard'), (req, res) => {
       // governs whether they are ranked among competitors (role marks them).
       db.prepare("INSERT INTO leaderboard_members (leaderboard_id, user_id, role) VALUES (?, ?, 'organizer')").run(id, req.userId);
     })();
-    res.json({ id, name, inviteCode, nextReset });
+    res.json({ id, name, inviteCode, invite_code: inviteCode, nextReset });
   } catch (err) {
     console.error('Create leaderboard error:', err);
     res.status(500).json({ error: 'Internal server error' });

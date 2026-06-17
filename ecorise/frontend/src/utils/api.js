@@ -41,6 +41,8 @@ export const api = {
 
   // Posts
   createPost: (body) => apiFetch('/api/posts', { method: 'POST', body: JSON.stringify(body) }),
+  analyzePost: (body) => apiFetch('/api/posts/analyze', { method: 'POST', body: JSON.stringify(body) }),
+  chatPost: (body) => apiFetch('/api/posts/chat', { method: 'POST', body: JSON.stringify(body) }),
   getPosts: (leaderboardId) => apiFetch(`/api/posts${leaderboardId ? `?leaderboardId=${leaderboardId}` : ''}`),
   likePost: (id) => apiFetch(`/api/posts/${id}/like`, { method: 'POST' }),
   commentPost: (id, text) => apiFetch(`/api/posts/${id}/comment`, { method: 'POST', body: JSON.stringify({ text }) }),

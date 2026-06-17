@@ -5,7 +5,7 @@ const { getDb } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { upload, fileToBase64 } = require('../middleware/upload');
 const { aiRateLimit } = require('../middleware/rateLimit');
-const { analyzeEcoAction, checkQuestMatch } = require('../utils/aiClient');
+const { analyzeEcoAction, checkQuestMatch, chatEcoAction } = require('../utils/aiClient');
 const { processEcoAction } = require('../utils/pointsEngine');
 const { imageHash } = require('../utils/imageHash');
 const { body, pageParams } = require('../utils/validate');
@@ -22,6 +22,38 @@ function isBoardMember(db, lbId, userId) {
   if (db.prepare('SELECT 1 FROM leaderboard_members WHERE leaderboard_id = ? AND user_id = ?').get(lbId, userId)) return true;
   return !!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lbId, userId);
 }
+
+// POST /api/posts/analyze — analyze the eco action photo to preview results
+router.post('/analyze', authMiddleware, upload.single('image'), aiRateLimit, async (req, res) => {
+  try {
+    const image = req.file ? fileToBase64(req.file) : (req.body.image || '');
+    if (!image || !image.startsWith('data:')) {
+      return res.status(400).json({ error: 'A photo is required to analyze.' });
+    }
+    const aiResult = await analyzeEcoAction(image);
+    res.json({ aiResult, aiRemaining: req.aiRemaining });
+  } catch (err) {
+    console.error('Analyze error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/posts/chat — multi-turn conversation with AI assistant
+router.post('/chat', authMiddleware, upload.single('image'), aiRateLimit, body('chatPost'), async (req, res) => {
+  try {
+    const v = req.valid;
+    const image = req.file ? fileToBase64(req.file) : (v.image || '');
+    if (!image || !image.startsWith('data:')) {
+      return res.status(400).json({ error: 'A photo is required to start a chat.' });
+    }
+    const messages = v.messages || [];
+    const chatResult = await chatEcoAction(messages, image);
+    res.json({ chatResult, aiRemaining: req.aiRemaining });
+  } catch (err) {
+    console.error('Chat error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // POST /api/posts — create eco-action post (image REQUIRED; points scored server-side)
 router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('createPost'), async (req, res) => {
@@ -42,7 +74,19 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     const dup = db.prepare("SELECT id FROM posts WHERE user_id = ? AND image_hash = ? AND created_at > datetime('now','-1 day')").get(req.userId, hash);
     if (dup) return res.status(409).json({ error: 'You already logged this photo recently.', reason: 'duplicate', accepted: false, points: 0 });
 
-    const aiResult = await analyzeEcoAction(image);
+    let aiResult;
+    if (v.actionType && v.actionDesc) {
+      aiResult = {
+        isEcoAction: true,
+        actionType: v.actionType,
+        specificAction: v.actionDesc,
+        estimatedCO2Saved: 0.5,
+        environmentalImpactSummary: `Manually logged: ${v.actionDesc}`,
+        confidence: 1.0,
+      };
+    } else {
+      aiResult = await analyzeEcoAction(image);
+    }
 
     if (aiResult.isEcoAction === false) {
       return res.json({
@@ -54,8 +98,10 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     }
 
     const miles = v.miles || 0;
-    if (aiResult.requiresFollowUp && !miles) {
-      return res.json({ needsFollowUp: true, aiResult, followUpQuestion: aiResult.followUpQuestion });
+    
+    // Recalculate estimated CO2 saved for transport actions based on user input
+    if (['transportation', 'transport'].includes(aiResult.actionType.toLowerCase())) {
+      aiResult.estimatedCO2Saved = +(miles * 0.4).toFixed(1);
     }
 
     // Parse + validate tags (max 3 real uuids that exist, never self).
