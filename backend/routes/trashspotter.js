@@ -49,7 +49,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
 
     const severity = await rateTrashSeverity(image);
     const integrity = {
-      model: severity.model || (severity.source === 'local-cnn' ? 'local-cnn (trained in-repo)' : 'claude'),
+      model: severity.model || (severity.source === 'local-cnn' ? 'local-cnn (trained in-repo)' : 'openai'),
       source: severity.source || (severity.isMock ? 'mock' : 'ai'),
       confidence: severity.confidence ?? 0,
       checks: {

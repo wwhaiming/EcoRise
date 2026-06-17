@@ -57,8 +57,7 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🌱 GeoRise API running on http://localhost:${PORT}`);
-    const aiMode = process.env.ANTHROPIC_API_KEY ? 'LIVE (Claude)'
-      : (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? `LIVE (Gemini ${process.env.GEMINI_MODEL || 'gemini-2.0-flash'})`
+    const aiMode = process.env.OPENAI_API_KEY ? `LIVE (OpenAI ${process.env.ECO_MODEL || 'gpt-4o-mini'})`
       : 'MOCK / local model';
     console.log(`   AI mode: ${aiMode}`);
   });

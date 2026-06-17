@@ -25,8 +25,8 @@ function buildIntegrity(aiResult, { lbId, carbon, adversarial } = {}) {
   // adversarial.gate is 'passed' | 'flagged' | 'failed' | 'n/a' (from evaluateAdversarial).
   const fraudGate = (adversarial && adversarial.gate) ? adversarial.gate : 'n/a';
   return {
-    model: p.model || (aiResult.isMock ? 'demo (no model)' : 'claude'),
-    source: p.source || (aiResult.isMock ? 'mock' : 'claude'),
+    model: p.model || (aiResult.isMock ? 'demo (no model)' : 'openai'),
+    source: p.source || (aiResult.isMock ? 'mock' : 'openai'),
     confidence: aiResult.confidence ?? 0,
     promptVersion: p.promptVersion || null,
     // Grounded carbon evidence (formula + cited factors + uncertainty), or null.

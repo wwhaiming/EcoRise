@@ -4,7 +4,7 @@
  *
  * Inserts a tiny, APPROVED, source-cited corpus and embeds its chunks so the Coach
  * can retrieve from trustworthy material without ingesting real papers during a
- * sprint. Embeddings use Gemini text-embedding-004 if a key is present, else a
+ * sprint. Embeddings use OpenAI text-embedding-3-small if a key is present, else a
  * deterministic offline vector (see utils/coachEmbed.js).
  *
  * Safe + idempotent: it only ever deletes and rebuilds rows whose provenance is

@@ -23,7 +23,7 @@ async function toDataUrl(url) {
 }
 
 (async () => {
-  console.log('GEMINI key present:', !!process.env.GEMINI_API_KEY, '| model:', process.env.GEMINI_MODEL || '(default)');
+  console.log('OPENAI key present:', !!process.env.OPENAI_API_KEY, '| model:', process.env.ECO_MODEL || '(default gpt-4o-mini)');
   for (const [label, url] of Object.entries(IMGS)) {
     try {
       const dataUrl = await toDataUrl(url);

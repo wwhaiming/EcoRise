@@ -2,7 +2,7 @@
  *
  * Loads the CNN trained in datasets/train_trash_detector.py (exported to ONNX)
  * and classifies an image as trash / not-trash. Used by aiClient.rateTrashSeverity
- * when ANTHROPIC_API_KEY is not set, so trash detection works fully offline.
+ * when OPENAI_API_KEY is not set, so trash detection works fully offline.
  *
  * Returns null if the runtime or model file is unavailable (caller falls back).
  */

@@ -29,7 +29,7 @@ That makes the product easy to demo and technically defensible: every important 
 |---------|-------------|
 | **AI Eco Coach** | Main app experience. Retrieval-augmented coach that uses approved environmental sources plus local board activity to identify hidden footprint gaps, generate cited questions, explain answers, and recommend practical next actions. |
 | **AI Evidence Panel** | After **every** submission: which model decided, its confidence, the **grounded** CO₂ math (formula + cited source + uncertainty range), the full point breakdown, the deterministic tool pipeline that ran, and every anti-fraud gate cleared (or why it was rejected) — the AI's reasoning, made visible |
-| **AI Action Analysis** | Upload a photo → Claude **perceives** the action + measurable attributes; it never invents the impact |
+| **AI Action Analysis** | Upload a photo → OpenAI vision **perceives** the action + measurable attributes; it never invents the impact |
 | **Grounded Carbon Engine** | Deterministic kg CO₂e from **published emission factors** (EPA GHG Hub, EPA WARM, OWID/Poore-Nemecek) with formula + uncertainty range — the LLM cannot fabricate the number ([`utils/carbonEngine.js`](backend/utils/carbonEngine.js)) |
 | **Measured Eval Gate** | The eco-action classifier is measured, not asserted: accuracy / FP / FN / adversarial-rejection / calibration ([`test/eco_eval/`](backend/test/eco_eval/), `npm run test:eval`) |
 | **Adversarial Fraud Screen** | A second vision pass flags photo-of-screen / stock / AI-generated images; high suspicion rejects, low suspicion halves points ([`utils/integrityGates.js`](backend/utils/integrityGates.js)) |
@@ -49,7 +49,7 @@ That makes the product easy to demo and technically defensible: every important 
 - **Backend:** Node.js + Express
 - **Database:** SQLite (via better-sqlite3)
 - **Auth:** JWT (httpOnly cookies) + bcrypt
-- **AI:** Anthropic Claude vision (`ECO_MODEL`, default `claude-sonnet-4-6`) for eco analysis + a custom CNN (ONNX) for trash. Without an API key the server **rejects rather than fabricates** points; set `MOCK_ECO_ALWAYS_PASS=true` for a clearly-flagged demo.
+- **AI:** OpenAI vision (`ECO_MODEL`, default `gpt-4o-mini`) for eco analysis + a custom CNN (ONNX) for trash. Without an `OPENAI_API_KEY` the server **rejects rather than fabricates** points; set `MOCK_ECO_ALWAYS_PASS=true` for a clearly-flagged demo.
 - **Coach AI:** Retrieval-augmented generation over approved source chunks with citation validation, faithfulness gates, daily/weekly point caps, and seeded demo corpus.
 - **Design:** Botanical Ledger — white paper surfaces, moss-green hierarchy, source-chip texture, and sliding screen transitions.
 
@@ -72,7 +72,7 @@ npm run install:all
 # Copy the template
 cp .env.example .env
 
-# Edit .env and add your Anthropic API key (optional — mock mode works without it)
+# Edit .env and add your OpenAI API key (optional — mock mode works without it)
 ```
 
 ### 3. Run Locally
@@ -129,7 +129,7 @@ georise/
 │   ├── middleware/         Auth (JWT), upload (multer), rate limiting
 │   ├── utils/
 │   │   ├── rubric.js      Points calculation engine
-│   │   ├── aiClient.js    Anthropic Claude API wrapper
+│   │   ├── aiClient.js    OpenAI API wrapper
 │   │   └── pointsEngine.js Orchestration layer
 │   ├── db.js              SQLite schema + initialization
 │   └── server.js          Express entry point
