@@ -30,3 +30,6 @@ __pycache__/
 .serena/
 **/.claude/
 AGENTS.md
+
+# misc
+context.md

@@ -77,7 +77,6 @@ function CommentSection({ postId, ctx }) {
 function FeedCard({ post, ctx }) {
   const [menu, setMenu] = useState(false);
   const [showC, setShowC] = useState(false);
-  const [imgErr, setImgErr] = useState(false);
   const ago = (() => {
     if (!post.created_at) return '';
     const mins = Math.round((Date.now() - new Date(post.created_at).getTime()) / 60000);
@@ -101,40 +100,17 @@ function FeedCard({ post, ctx }) {
           </div>
         )}
       </div>
-      {/* photo, or a designed action-typed gradient when there's no image */}
-      {(() => {
-        const hasPhoto = !imgErr && !!post.image && (post.image.startsWith('data:') || post.image.startsWith('http'));
-        const t = (post.action_type || '').toLowerCase();
-        const THEME = {
-          transport: { c: '#2BFF9C', c2: '#38E0F0', icon: 'bike' },
-          waste:     { c: '#38E0F0', c2: '#7CEDF8', icon: 'drop' },
-          food:      { c: '#B8FF5C', c2: '#2BFF9C', icon: 'leaf' },
-          cleanup:   { c: '#FF6F8B', c2: '#FFD66B', icon: 'trash' },
-          nature:    { c: '#2BFF9C', c2: '#B8FF5C', icon: 'leaf' },
-          energy:    { c: '#FFD66B', c2: '#FF9AAE', icon: 'bolt' },
-          community: { c: '#AD93FF', c2: '#38E0F0', icon: 'users' },
-        };
-        const key = Object.keys(THEME).find(k => t.includes(k)) || 'nature';
-        const th = THEME[key];
-        return (
-          <div style={{
-            position: 'relative', height: hasPhoto ? 230 : 168, overflow: 'hidden',
-            display: 'flex', alignItems: 'flex-end', padding: 14,
-            background: hasPhoto ? undefined
-              : `radial-gradient(130% 120% at 86% -12%, ${th.c}40, transparent 55%), radial-gradient(110% 110% at 0% 120%, ${th.c2}33, transparent 55%), linear-gradient(150deg, #0d2a1e, #0a1712)`,
-          }}>
-            {hasPhoto && <img src={post.image} alt={post.action_desc || 'Eco action'} onError={() => setImgErr(true)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-            {!hasPhoto && <Icon name={th.icon} size={158} color={th.c} strokeWidth={1.4} style={{ position: 'absolute', right: -16, bottom: -26, opacity: .16, transform: 'rotate(-8deg)' }} />}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 45%, rgba(0,0,0,.5))' }} />
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span className="chip" style={{ background: 'rgba(0,0,0,.4)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: 12, boxShadow: `inset 0 0 0 1px ${th.c}55` }}>
-                <Icon name={th.icon} size={13} color={th.c} /> {post.action_type}
-              </span>
-              <PointsChip pts={post.points} />
-            </div>
-          </div>
-        );
-      })()}
+      {/* photo / gradient placeholder */}
+      <div style={{ position: 'relative', height: 230, background: post.image?.startsWith('data:') ? `url(${post.image}) center/cover` : 'linear-gradient(135deg,#0e7a4f,#11b06f)', display: 'flex', alignItems: 'flex-end', padding: 14 }}>
+        {post.image?.startsWith('data:') && <img src={post.image} alt={post.action_desc || 'Eco action'} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,.45))' }} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <span className="chip" style={{ background: 'rgba(0,0,0,.45)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: 12 }}>
+            <Icon name="leaf" size={13} color="var(--green-2)" /> {post.action_type}
+          </span>
+          <PointsChip pts={post.points} />
+        </div>
+      </div>
       <div style={{ padding: '12px 14px 14px' }}>
         <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5, marginBottom: 6 }}>{post.action_desc}</div>
         {post.caption && <div className="muted" style={{ fontSize: 14, lineHeight: 1.45, fontWeight: 600 }}>{mention(post.caption)}</div>}
@@ -189,8 +165,26 @@ export function Leaderboard({ ctx }) {
   const top3 = members.slice(0, 3);
   const rest = members.slice(3);
 
+  const [joinCode, setJoinCode] = useState('');
+  const [joining, setJoining] = useState(false);
+
+  const handleJoin = async (e) => {
+    e?.preventDefault();
+    const code = joinCode.trim().toUpperCase();
+    if (!code) return;
+    setJoining(true);
+    try {
+      await ctx.joinBoardByCode(code);
+      setJoinCode('');
+    } catch (err) {
+      ctx.showToast(err.message || 'Could not join');
+    } finally {
+      setJoining(false);
+    }
+  };
+
   return (
-    <div className="screen-in" style={{ paddingBottom: 24 }}>
+    <div className="screen-in" style={{ paddingBottom: 110 }}>
       <div style={{ padding: '18px 18px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div className="eyebrow" style={{ color: 'var(--green)' }}>{leaderboard?.name || 'EcoRise'}</div>
@@ -220,34 +214,50 @@ export function Leaderboard({ ctx }) {
           </div>
         )}
 
-        <div className="card" style={{ padding: 6 }}>
-          {rest.map((p, i) => (
-            <div key={p.user_id} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 16,
-              background: p.isYou ? 'linear-gradient(90deg, rgba(43,255,156,.18), rgba(43,255,156,.04))' : 'transparent',
-              boxShadow: p.isYou ? 'inset 0 0 0 1.5px rgba(43,255,156,.45)' : 'none',
-              borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none',
-            }}>
-              <RankBadge rank={p.rank} />
-              <Avatar src={p.avatar} name={p.name} size={42} ring={p.isYou ? 'var(--green)' : undefined} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                  {p.isYou && <span className="chip chip-green" style={{ padding: '2px 8px', fontSize: 11 }}>YOU</span>}
+        {rest.length > 0 && (
+          <div className="card" style={{ padding: 6 }}>
+            {rest.map((p, i) => (
+              <div key={p.user_id} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 16,
+                background: p.isYou ? 'linear-gradient(90deg, rgba(0,230,118,.16), rgba(0,230,118,.04))' : 'transparent',
+                boxShadow: p.isYou ? 'inset 0 0 0 1.5px rgba(0,230,118,.4)' : 'none',
+                borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none',
+              }}>
+                <RankBadge rank={p.rank} />
+                <Avatar src={p.avatar} name={p.name} size={42} ring={p.isYou ? 'var(--green)' : undefined} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                    {p.isYou && <span className="chip chip-green" style={{ padding: '2px 8px', fontSize: 11 }}>YOU</span>}
+                  </div>
+                  <Streak n={p.streak || 0} size={12} />
                 </div>
-                <Streak n={p.streak || 0} size={12} />
+                <div style={{ textAlign: 'right' }}>
+                  <div className={bump === p.user_id ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>{(p.points || 0).toLocaleString()}</div>
+                  <div className="dim" style={{ fontSize: 10, fontWeight: 800, letterSpacing: .5 }}>PTS</div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className={bump === p.user_id ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>{(p.points || 0).toLocaleString()}</div>
-                <div className="dim" style={{ fontSize: 10, fontWeight: 800, letterSpacing: .5 }}>PTS</div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         <button className="btn btn-purple btn-block" onClick={() => copyInvite(leaderboard?.invite_code, ctx)}>
           <Icon name="share" size={19} color="#fff" /> Invite friends
         </button>
+
+        <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <input
+            className="field"
+            placeholder="Enter invite code to join board"
+            value={joinCode}
+            onChange={e => setJoinCode(e.target.value)}
+            style={{ flex: 1 }}
+            required
+          />
+          <button className="btn btn-primary" type="submit" disabled={joining} style={{ padding: '0 18px' }}>
+            {joining ? 'Joining...' : 'Join'}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -313,7 +323,6 @@ export function Profile({ ctx }) {
         )}
       </div>
       <div style={{ padding: '18px 16px 100px', display: 'grid', gap: 12 }}>
-        <button className="btn btn-primary btn-block" onClick={() => ctx.go('leaderboard')}><Icon name="trophy" size={18} color="#06281A" /> View leaderboard</button>
         <button className="btn btn-purple btn-block" onClick={() => ctx.go('organizer')}><Icon name="plus" size={18} color="#fff" strokeWidth={3} /> Create a leaderboard</button>
         <button className="btn btn-secondary btn-block" onClick={ctx.logout}>Log out</button>
       </div>

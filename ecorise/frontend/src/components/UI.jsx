@@ -4,9 +4,9 @@ import Icon from './Icon';
 
 // ── Metal colors for podium ranks ──
 export const METAL = {
-  1: { a: '#EBD08C', b: '#C49A45', glow: 'rgba(227,193,115,.30)', ink: '#3a2c08', label: '1st' },
-  2: { a: '#DDE6E2', b: '#98A8A0', glow: 'rgba(180,195,188,.28)', ink: '#2c3833', label: '2nd' },
-  3: { a: '#E0AE82', b: '#B0703F', glow: 'rgba(214,154,107,.28)', ink: '#3d260f', label: '3rd' },
+  1: { a: '#FFE066', b: '#E0A92E', glow: 'rgba(255,210,63,.55)', ink: '#5a4410', label: '1st' },
+  2: { a: '#EAF1FB', b: '#9AAAC4', glow: 'rgba(200,215,235,.5)', ink: '#33405a', label: '2nd' },
+  3: { a: '#FBC08A', b: '#C26E38', glow: 'rgba(232,150,91,.5)', ink: '#5a3013', label: '3rd' },
 };
 
 // ── Points Chip ──
@@ -49,17 +49,18 @@ export function Toast({ toast }) {
   if (!toast) return null;
   return (
     <div style={{
-      position: 'absolute', left: '50%', bottom: 96, transform: 'translateX(-50%)',
-      zIndex: 80, display: 'flex', alignItems: 'center', gap: 10,
-      background: 'rgba(12,24,19,.92)', backdropFilter: 'blur(14px) saturate(160%)',
-      border: '1px solid rgba(43,255,156,.4)', boxShadow: '0 14px 34px rgba(0,0,0,.55), 0 0 34px rgba(43,255,156,.22)',
-      borderRadius: 9999, padding: '12px 20px', whiteSpace: 'nowrap',
-      animation: 'popIn .4s cubic-bezier(.2,.8,.2,1.2) both', maxWidth: '88%',
+      position: 'absolute', left: '50%', bottom: 110, transform: 'translateX(-50%)',
+      zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+      background: 'rgba(20,20,40,.95)', backdropFilter: 'blur(12px)',
+      border: '1px solid rgba(0,230,118,.4)', boxShadow: '0 12px 30px rgba(0,0,0,.5), 0 0 30px rgba(0,230,118,.2)',
+      borderRadius: 20, padding: '12px 20px', maxWidth: '88%',
+      animation: 'popIn .4s cubic-bezier(.2,.8,.2,1.2) both', boxSizing: 'border-box',
+      textAlign: 'center'
     }}>
-      <span style={{ display: 'inline-flex', width: 26, height: 26, borderRadius: '50%', background: 'var(--green)', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ display: 'inline-flex', width: 26, height: 26, borderRadius: '50%', background: 'var(--green)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Icon name="check" size={16} color="#06281A" strokeWidth={3} />
       </span>
-      <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15 }}>{toast}</span>
+      <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 14, lineHeight: 1.4, color: '#fff', whiteSpace: 'pre-wrap', wordBreak: 'break-word', textAlign: 'center' }}>{toast}</span>
     </div>
   );
 }

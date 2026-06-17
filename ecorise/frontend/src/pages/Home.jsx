@@ -84,9 +84,13 @@ export default function Home({ ctx }) {
   const { user, members, quests, go, openTrash, bump, notifications, unreadCount, markNotificationsRead } = ctx;
   const [notifOpen, setNotifOpen] = useState(false);
   const you = members.find(m => m.isYou) || { points: 0, rank: members.length, streak: 0 };
-  const top3 = members.slice(0, 3);
-  const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
-  const ranks = top3.length >= 3 ? [2, 1, 3] : top3.map((_, i) => i + 1);
+  const paddedTop3 = [
+    members[0] || null,
+    members[1] || null,
+    members[2] || null
+  ];
+  const order = [paddedTop3[1], paddedTop3[0], paddedTop3[2]];
+  const ranks = [2, 1, 3];
 
   const nextRankPts = you.rank > 1 ? (members[you.rank - 2]?.points || 0) : you.points;
   const gap = Math.max(0, nextRankPts - (you.points || 0));
@@ -107,7 +111,7 @@ export default function Home({ ctx }) {
         <Avatar src={user.avatar} name={user.name} size={46} ring="var(--green)" />
         <div style={{ flex: 1 }}>
           <div className="dim" style={{ fontWeight: 700, fontSize: 13 }}>Good morning,</div>
-          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 19, lineHeight: 1 }}>{user.name || 'Eco Champion'}</div>
+          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 18, lineHeight: 1 }}>{user.name || 'Eco Champion'} 🌍</div>
         </div>
         <div style={{ position: 'relative' }}>
           <button className="btn btn-secondary btn-sm" style={{ padding: 10, position: 'relative' }} aria-label="Notifications" aria-expanded={notifOpen}
@@ -183,23 +187,34 @@ export default function Home({ ctx }) {
           <button className="btn btn-ghost btn-sm" style={{ color: 'var(--green)', padding: 4 }} onClick={() => go('leaderboard')}>See all</button>
         </div>
         <div className="card" style={{ padding: '10px 8px 12px' }}>
-          {top3.length >= 3 && (
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-              {order.map((p, i) => {
-                const r = ranks[i], m = METAL[r], first = r === 1;
-                return (
-                  <div key={p.user_id || i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', animation: `risePodium .5s cubic-bezier(.2,.8,.2,1) ${i * .1}s both` }}>
-                    <div style={{ position: 'relative' }} className={bump === p.user_id ? 'pop-in' : ''}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+            {order.map((p, i) => {
+              const r = ranks[i], m = METAL[r], first = r === 1;
+              const key = p ? (p.user_id || p.id || `pos-${r}`) : `empty-${r}`;
+              return (
+                <div key={key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', animation: `risePodium .5s cubic-bezier(.2,.8,.2,1) ${i * .1}s both`, opacity: p ? 1 : 0.45 }}>
+                  <div style={{ position: 'relative' }} className={p && bump === p.user_id ? 'pop-in' : ''}>
+                    {first && <div style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 18 }}>👑</div>}
+                    {p ? (
                       <Avatar src={p.avatar} name={p.name} size={first ? 56 : 46} ring={m.a} glow style={{ boxShadow: `0 0 16px ${m.glow}` }} />
-                      <span className="rankbadge" style={{ position: 'absolute', bottom: -6, right: -6, minWidth: 22, height: 22, fontSize: 12, background: `linear-gradient(180deg,${m.a},${m.b})`, color: m.ink, border: '2px solid var(--navy-800)' }}>{r}</span>
-                    </div>
-                    <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 12.5, marginTop: 8 }}>{p.name.split(' ')[0]}</div>
-                    <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 14, color: m.a }}>{(p.points || 0).toLocaleString()}</div>
+                    ) : (
+                      <div style={{
+                        width: first ? 56 : 46, height: first ? 56 : 46, borderRadius: '50%',
+                        border: '1.5px dashed rgba(255,255,255,.2)', background: 'rgba(255,255,255,.03)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: 'var(--display)', fontSize: 13, color: 'var(--text-dim)', fontWeight: 700
+                      }}>
+                        ?
+                      </div>
+                    )}
+                    <span className="rankbadge" style={{ position: 'absolute', bottom: -6, right: -6, minWidth: 20, height: 20, fontSize: 11, background: `linear-gradient(180deg,${m.a},${m.b})`, color: m.ink, border: '2px solid var(--navy-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>{r}</span>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 12.5, marginTop: 8, color: p ? 'inherit' : 'var(--text-dim)' }}>{p ? p.name.split(' ')[0] : 'Empty'}</div>
+                  <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 14, color: p ? m.a : 'rgba(255,255,255,.15)' }}>{p ? (p.points || 0).toLocaleString() : '-'}</div>
+                </div>
+              );
+            })}
+          </div>
           {members.slice(3, 5).map(p => (
             <div key={p.user_id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 8px', borderTop: '1px solid rgba(255,255,255,.05)' }}>
               <RankBadge rank={p.rank} style={{ minWidth: 26, height: 26, fontSize: 13 }} />

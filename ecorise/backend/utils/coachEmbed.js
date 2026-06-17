@@ -1,10 +1,10 @@
 /* EcoRise — AI Eco Coach embeddings.
  *
- * embed(text) returns an L2-normalized Float32 vector. If a Gemini/Google key is
- * present it uses text-embedding-004 (same key already wired in aiClient); otherwise
- * it falls back to a deterministic, offline lexical embedding so the demo and the
- * hermetic test suite work with no network. Vectors are normalized on creation, so
- * cosine similarity is just a dot product.
+ * embed(text) returns an L2-normalized Float32 vector. If OPENAI_API_KEY is present
+ * it uses OpenAI text-embedding-3-small (same key as aiClient); otherwise it falls
+ * back to a deterministic, offline lexical embedding so the demo and the hermetic
+ * test suite work with no network. Vectors are normalized on creation, so cosine
+ * similarity is just a dot product.
  *
  * Mixed-provider note: a single deployment embeds the corpus and the query through
  * the same path (key present or not), so dimensions match. cosineSim guards length
@@ -50,26 +50,22 @@ function deterministicEmbed(text) {
   return normalize(v);
 }
 
-async function geminiEmbed(text, key) {
-  const model = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify({ model: `models/${model}`, content: { parts: [{ text: String(text || '').slice(0, 8000) }] } }),
-  });
-  if (!resp.ok) throw new Error(`Gemini embed ${resp.status}`);
-  const data = await resp.json();
-  const values = data && data.embedding && data.embedding.values;
+let OpenAI = null;
+try { OpenAI = require('openai'); } catch (_) { /* optional — falls back to lexical */ }
+
+async function openaiEmbed(text) {
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const model = process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-small';
+  const r = await client.embeddings.create({ model, input: String(text || '').slice(0, 8000) });
+  const values = r && r.data && r.data[0] && r.data[0].embedding;
   if (!Array.isArray(values) || !values.length) throw new Error('empty embedding');
   return normalize(Float32Array.from(values));
 }
 
 async function embed(text) {
-  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  if (key) {
-    try { return await geminiEmbed(text, key); }
-    catch (err) { console.error('coachEmbed: Gemini failed, using lexical fallback:', err.message); }
+  if (process.env.OPENAI_API_KEY && OpenAI) {
+    try { return await openaiEmbed(text); }
+    catch (err) { console.error('coachEmbed: OpenAI failed, using lexical fallback:', err.message); }
   }
   return deterministicEmbed(text);
 }

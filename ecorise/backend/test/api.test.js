@@ -8,20 +8,20 @@ const fs = require('fs');
 // Test env MUST be set before requiring the app/auth (which enforce JWT_SECRET).
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-' + 'x'.repeat(40);
 process.env.NODE_ENV = 'test';
-delete process.env.ANTHROPIC_API_KEY;        // force mock / local model
-// Hermetic: server.js loads ../.env, which may hold a live GEMINI_API_KEY. Pin these
-// to '' BEFORE requiring the app — dotenv never overrides an already-set var, so an
-// empty (falsy) value keeps getClient() on the mock path and off the live network.
-process.env.GEMINI_API_KEY = '';
-process.env.GOOGLE_API_KEY = '';
+// Hermetic: server.js loads ../.env, which may hold a live OPENAI_API_KEY. Pin it to
+// '' BEFORE requiring the app — dotenv never overrides an already-set var, so an empty
+// (falsy) value keeps getClient() on the mock path and off the live network.
+process.env.OPENAI_API_KEY = '';
 process.env.TRASH_PROB_THRESHOLD = '1.1';     // trash detector rejects everything (deterministic)
 process.env.MOCK_ECO_ALWAYS_PASS = 'true';    // let eco posts succeed so we can test points/ledger logic
 process.env.MOCK_TRASH_ALWAYS_PASS = 'false'; // hermetic: ignore any local .env that flips trash to demo-pass
+process.env.AUTH_MAX_PER_WINDOW = '1000';      // don't let the brute-force guard throttle a large test suite
 const DB = path.join(__dirname, 'test-' + process.pid + '.db');
 process.env.DATABASE_URL = DB;
 
 const request = require('supertest');
 const app = require('../server');
+delete process.env.OPENAI_API_KEY; // Force mock mode even after server.js loads dotenv
 const { getDb } = require('../db');
 const { signToken } = require('../middleware/auth');
 
@@ -268,4 +268,26 @@ test('eco post response carries AI evidence (integrity + breakdown)', async () =
   assert.equal(r.body.integrity.checks.serverScored, 'passed', 'server-scored gate reported');
   assert.equal(r.body.integrity.checks.aiVisionGate, 'verified', 'AI gate reported as verified');
   assert.ok(Array.isArray(r.body.breakdown), 'point breakdown present for the evidence panel');
+});
+
+test('conversational AI: start chat', async () => {
+  const a = await newUser('Chat1');
+  const r = await request(app).post('/api/posts/chat').set(...auth(a.token)).send({ image: png(101), messages: [] });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.chatResult.isComplete, false, 'Initial turn is not complete');
+  assert.ok(r.body.chatResult.message.includes('What eco-friendly action'));
+});
+
+test('conversational AI: complete chat with transport details', async () => {
+  const a = await newUser('Chat2');
+  const messages = [
+    { role: 'user', content: 'Analyze this photo of my eco-friendly action.' },
+    { role: 'assistant', content: 'What eco-friendly action are you taking?' },
+    { role: 'user', content: 'I biked 5 miles.' }
+  ];
+  const r = await request(app).post('/api/posts/chat').set(...auth(a.token)).send({ image: png(102), messages });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.chatResult.isComplete, true, 'Chat should complete when details are provided');
+  assert.equal(r.body.chatResult.actionType, 'transportation');
+  assert.ok(r.body.chatResult.points > 0);
 });

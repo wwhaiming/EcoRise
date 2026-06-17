@@ -5,7 +5,7 @@ const { getDb } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { upload, fileToBase64 } = require('../middleware/upload');
 const { aiRateLimit } = require('../middleware/rateLimit');
-const { analyzeEcoAction, checkQuestMatch, adversarialCritique } = require('../utils/aiClient');
+const { analyzeEcoAction, checkQuestMatch, chatEcoAction, adversarialCritique } = require('../utils/aiClient');
 const { processEcoAction } = require('../utils/pointsEngine');
 const { computeCarbon } = require('../utils/carbonEngine');
 const { evaluateAdversarial } = require('../utils/integrityGates');
@@ -25,8 +25,8 @@ function buildIntegrity(aiResult, { lbId, carbon, adversarial } = {}) {
   // adversarial.gate is 'passed' | 'flagged' | 'failed' | 'n/a' (from evaluateAdversarial).
   const fraudGate = (adversarial && adversarial.gate) ? adversarial.gate : 'n/a';
   return {
-    model: p.model || (aiResult.isMock ? 'demo (no model)' : 'claude'),
-    source: p.source || (aiResult.isMock ? 'mock' : 'claude'),
+    model: p.model || (aiResult.isMock ? 'demo (no model)' : 'openai'),
+    source: p.source || (aiResult.isMock ? 'mock' : 'openai'),
     confidence: aiResult.confidence ?? 0,
     promptVersion: p.promptVersion || null,
     // Grounded carbon evidence (formula + cited factors + uncertainty), or null.
@@ -66,6 +66,38 @@ function isBoardMember(db, lbId, userId) {
   return !!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lbId, userId);
 }
 
+// POST /api/posts/analyze — analyze the eco action photo to preview results
+router.post('/analyze', authMiddleware, upload.single('image'), aiRateLimit, async (req, res) => {
+  try {
+    const image = req.file ? fileToBase64(req.file) : (req.body.image || '');
+    if (!image || !image.startsWith('data:')) {
+      return res.status(400).json({ error: 'A photo is required to analyze.' });
+    }
+    const aiResult = await analyzeEcoAction(image);
+    res.json({ aiResult, aiRemaining: req.aiRemaining });
+  } catch (err) {
+    console.error('Analyze error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/posts/chat — multi-turn conversation with the AI assistant
+router.post('/chat', authMiddleware, upload.single('image'), aiRateLimit, body('chatPost'), async (req, res) => {
+  try {
+    const v = req.valid;
+    const image = req.file ? fileToBase64(req.file) : (v.image || '');
+    if (!image || !image.startsWith('data:')) {
+      return res.status(400).json({ error: 'A photo is required to start a chat.' });
+    }
+    const messages = v.messages || [];
+    const chatResult = await chatEcoAction(messages, image);
+    res.json({ chatResult, aiRemaining: req.aiRemaining });
+  } catch (err) {
+    console.error('Chat error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/posts — create eco-action post (image REQUIRED; points scored server-side)
 router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('createPost'), async (req, res) => {
   try {
@@ -99,13 +131,30 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
       }
     }
 
-    // Reuse the verified analysis if this same photo was just analyzed (e.g. the
-    // follow-up "how many miles?" round-trip) — never re-run the model or trust a
-    // client-supplied verdict. Falls through to a fresh analysis on a cache miss.
-    let aiResult = analysisCache.get(req.userId, hash);
-    if (!aiResult) {
-      aiResult = await analyzeEcoAction(image);
-      analysisCache.set(req.userId, hash, aiResult);
+    // Resolve the eco action. A manual log (actionType + actionDesc, e.g. confirmed
+    // through the chat assistant) is trusted as-is; otherwise reuse the cached
+    // analysis for this photo or run a fresh vision pass — never trust a
+    // client-supplied verdict.
+    let aiResult;
+    if (v.actionType && v.actionDesc) {
+      aiResult = {
+        isEcoAction: true,
+        actionType: v.actionType,
+        specificAction: v.actionDesc,
+        requiresFollowUp: false,
+        attributes: {},
+        estimatedCO2Saved: 0,
+        environmentalImpactSummary: `Manually logged: ${v.actionDesc}`,
+        confidence: 1.0,
+        isMock: false,
+        provenance: { source: 'manual', model: 'manual', promptVersion: null },
+      };
+    } else {
+      aiResult = analysisCache.get(req.userId, hash);
+      if (!aiResult) {
+        aiResult = await analyzeEcoAction(image);
+        analysisCache.set(req.userId, hash, aiResult);
+      }
     }
     if (aiResult.isEcoAction === false) {
       return res.json({
@@ -143,9 +192,6 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     const integrity = buildIntegrity(aiResult, { lbId, carbon, adversarial });
 
     if (verdict.verdict === 'reject') {
-      // Keep BOTH the analysis and fraud-screen cached: a rejected image writes no
-      // post row (so the dup-guard can't block a re-POST), and the verdict is
-      // deterministic for the TTL — a re-submit reuses it for 0 extra model calls.
       return res.json({
         success: false, accepted: false, reason: 'suspected_fraud', points: 0,
         confidence: aiResult.confidence ?? 0,

@@ -69,7 +69,7 @@ export function Sheet({ title, children, onClose, accent = 'var(--green)' }) {
 }
 
 // ── Upload frame (3 phases: capture → analyzing → result) ──
-export function UploadFrame({ phase, label, accent = 'var(--green)', onCapture }) {
+export function UploadFrame({ phase, label, accent = 'var(--green)', onCapture, image }) {
   return (
     <div onClick={phase === 'capture' ? onCapture : undefined} style={{
       position: 'relative', height: 200, borderRadius: 22, overflow: 'hidden', cursor: phase === 'capture' ? 'pointer' : 'default',
@@ -77,6 +77,9 @@ export function UploadFrame({ phase, label, accent = 'var(--green)', onCapture }
       border: phase === 'capture' ? '2px dashed var(--navy-500)' : 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10,
     }}>
+      {image && phase !== 'capture' && (
+        <img src={image} alt="Uploaded" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+      )}
       {phase === 'capture' && (
         <>
           <span style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(0,230,118,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
