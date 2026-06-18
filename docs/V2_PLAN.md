@@ -17,16 +17,18 @@ truthful confidence label + assumptions. We build the rest to masterful quality.
   confidence + assumptions + low/high. Defaults labeled estimates; confidence rises with real inputs. (f79bdbd, sanity-checked)
 - ☑ `backend/routes/coach.js` `/school-footprint` (baseline) + `/school-insight` (biggest emitter +
   action-leverage + grounded recommendation gated by deterministicFaithfulness >= SIM_FLOOR). (1332251, verified live)
-- ◐ "action leverage" line implemented in /school-insight; UI surfacing pending.
-- ☐ frontend `pages/Footprint.jsx` baseline wizard + digest as the HOME dashboard hero. ← RESUME HERE
+- ☑ "action leverage" line in /school-insight, surfaced in the digest UI.
+- ☑ `components/SchoolFootprint.jsx` digest as the AI-tab hero + baseline wizard. (a0c7e66, verified live + screenshotted)
 - ☐ add a footprintModel unit test to backend/test (currently only ad-hoc sanity-checked).
 
 ### RESUME POINTER (for a fresh session)
-Branch `georise-v2-footprint-privacy`, pushed. Done: footprint model + the two routes (verified live).
-NEXT: (1) Footprint digest UI + make it the home hero + nav tab; (2) Phase 2 privacy. The Phase 2
-multi-tenant `school_id` migration is HIGH-RISK (touches db.js + every route) — do it FIRST in a fresh,
-full-context session, not across a compaction. The additive privacy pieces (consent gate, image
-retention, teacher-review-before-feed, privacy screen, model/data card) are lower-risk and can follow.
+Branch `georise-v2-footprint-privacy`, pushed (a0c7e66). DONE: Phase 1 fully — footprint model +
+/school-footprint + /school-insight + SchoolFootprint digest hero (all verified live).
+NEXT = Phase 2 privacy. Start with the multi-tenant `school_id` migration FIRST in a fresh
+full-context session (touches db.js + every route; HIGH-RISK, never across a compaction), then the
+additive pieces: consent gate, image retention modes, teacher-review-before-feed, account export/delete,
+privacy-by-design screen, model/data card. Then council re-grade checkpoint CP1.
+Also still owed: footprintModel unit test.
 
 ### Phase 2 — Privacy / FERPA-COPPA for minors  (can DISQUALIFY; non-negotiable)
 - ☐ multi-tenant `school_id` isolation: schema migration + scoped authz on every query + audit log.
