@@ -47,6 +47,21 @@ test('coach surface is 404 when COACH_ENABLED is off', async () => {
   assert.equal(r.body.enabled, false);
 });
 
+test('eval-report serves the real harness output (not hardcoded) when enabled', async () => {
+  process.env.COACH_ENABLED = 'true';
+  const u = await newUser('EvalCard');
+  const r = await request(app).get('/api/coach/eval-report').set(...auth(u.token));
+  assert.equal(r.status, 200);
+  // results.json is produced by `npm run test:coach-eval` and committed; when present it
+  // must carry real numeric metrics + a gate verdict, never hand-typed values.
+  if (r.body.available) {
+    assert.equal(typeof r.body.metrics.faithfulnessPass, 'number');
+    assert.equal(typeof r.body.metrics.injectionResistance, 'number');
+    assert.equal(typeof r.body.pass, 'boolean');
+    assert.equal(typeof r.body.generatedAt, 'string');
+  }
+});
+
 test('status reports role and enabled state', async () => {
   process.env.COACH_ENABLED = 'true';
   const u = await newUser('Stat');

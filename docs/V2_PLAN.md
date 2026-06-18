@@ -24,7 +24,7 @@ truthful confidence label + assumptions. We build the rest to masterful quality.
 ### RESUME POINTER (for a fresh session)
 Branch `georise-v2-footprint-privacy`. DONE: Phase 1 (footprint intelligence + unit tests) AND
 Phase 2 (privacy/FERPA-COPPA, re-scoped to additive — see docs/PRIVACY.md). Backend 79/79 green,
-frontend builds clean. Commit + push of the Phase 2 work is PENDING (next mechanical step).
+frontend builds clean. Committed dd85755 and pushed to georise-v2-footprint-privacy.
 NEXT = council re-grade checkpoint CP1 (re-run /claude-council:ask with Phase 1+2 implemented),
 then Phase 3 (evaluation rigor: real metrics, semantic entailment gate, in-app AI report card,
 model cards). Phases 4-6 (winning-plan UX fixes, scale honesty, submission artifacts) after.
@@ -51,7 +51,9 @@ the budget on the additive pieces a harsh judge actually grades. Full design: do
   citation precision, refusal precision, fraud false-positive rate.
 - ☐ semantic entailment grounding gate (atomic-claim → entailment judge) ALONGSIDE lexical gate;
   label honestly as added layer.
-- ☐ in-app "AI report card" reads REAL eval output, not hardcoded numbers.
+- ☑ in-app "AI report card" reads REAL eval output, not hardcoded numbers — GET
+  /api/coach/eval-report serves results.json (written by `npm run test:coach-eval`),
+  surfaced in the Research tab. (80/80 suite, +1 endpoint test.)
 - ☐ model cards: CNN (dataset/accuracy/confusion/limits) + OpenAI vision usage.
 
 ### Phase 4 — Winning-plan correctness + UX (from the 17-agent review)

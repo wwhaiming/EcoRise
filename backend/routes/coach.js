@@ -19,6 +19,9 @@ const { computeGrant } = require('../utils/coachScoring');
 const { generateCoachQuestion, generateCoachGuidance, answerFromSources, summarizePaper, paperVisual } = require('../utils/aiClient');
 const { estimateFootprint, actionLeverage } = require('../utils/footprintModel');
 const { awardPoints } = require('../utils/pointsEngine');
+const fs = require('fs');
+const path = require('path');
+const EVAL_RESULTS = path.join(__dirname, '..', 'test', 'coach_eval', 'results.json');
 
 const router = express.Router();
 const CATEGORIES = ['transportation', 'waste', 'food', 'energy', 'nature'];
@@ -51,6 +54,18 @@ router.get('/status', authMiddleware, async (req, res) => {
   const approved = db.prepare("SELECT COUNT(*) c FROM eco_sources WHERE status = 'approved'").get().c;
   await runDueCoachTips(db, req.userId).catch(() => {}); // fail open; never block status
   res.json({ enabled: true, role, approvedSources: approved, awardsPoints: true });
+});
+
+// ── AI report card: serves the latest REAL eval-harness output (never hardcoded). ──
+// Regenerate with `npm run test:coach-eval`, which writes results.json. Honest about
+// being illustrative fixtures (the responsible-AI properties), not a third-party benchmark.
+router.get('/eval-report', authMiddleware, (req, res) => {
+  try {
+    if (!fs.existsSync(EVAL_RESULTS)) return res.json({ available: false });
+    res.json({ available: true, ...JSON.parse(fs.readFileSync(EVAL_RESULTS, 'utf8')) });
+  } catch (_) {
+    res.json({ available: false });
+  }
 });
 
 // ── Sources (teacher/admin) ──

@@ -80,6 +80,7 @@ export const api = {
     apiFetch(`/api/coach/papers?q=${encodeURIComponent(q)}&topic=${encodeURIComponent(topic)}&limit=${limit}&offset=${offset}`),
   coachPaperSummary: (id) => apiFetch(`/api/coach/papers/${id}/summary`),
   coachPaperVisual: (id) => apiFetch(`/api/coach/papers/${id}/visual`),
+  coachEvalReport: () => apiFetch('/api/coach/eval-report'),
 
   // School hidden-footprint (Direction B)
   coachSchoolInsight: (leaderboardId) => apiFetch(`/api/coach/school-insight${leaderboardId ? `?leaderboardId=${encodeURIComponent(leaderboardId)}` : ''}`),

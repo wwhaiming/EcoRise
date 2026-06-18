@@ -128,6 +128,15 @@ if (require.main === module) {
     console.log('AI Eco Coach eval (illustrative fixtures, NOT a benchmark)\n' + formatReport(m));
     const pass = gatesPass(m);
     console.log('\nGates: ' + (pass ? 'PASS' : 'FAIL'));
+    // Persist the REAL harness output so the in-app AI report card reads it instead of
+    // hardcoded numbers (GET /api/coach/eval-report). Honest about what it is.
+    try {
+      fs.writeFileSync(path.join(__dirname, 'results.json'), JSON.stringify({
+        generatedAt: new Date().toISOString(),
+        note: 'Illustrative fixtures of the responsible-AI properties (citation validity, faithfulness, refusal, hallucination, injection resistance, point cap). Deterministic offline harness, NOT a third-party benchmark. Regenerate: npm run test:coach-eval.',
+        metrics: m, gates: GATES, pass,
+      }, null, 2));
+    } catch (_) { /* report file is best-effort */ }
     for (const f of [process.env.DATABASE_URL, process.env.DATABASE_URL + '-shm', process.env.DATABASE_URL + '-wal']) {
       try { fs.existsSync(f) && fs.unlinkSync(f); } catch (_) {}
     }
