@@ -62,21 +62,21 @@ function consentSatisfied(db, leaderboardId, userId) {
   return rec.status === 'attested' || rec.status === 'granted';
 }
 
-function recordConsent(db, { leaderboardId, userId, tier, status, attestedBy = null, method = '', note = '' }) {
+function recordConsent(db, { leaderboardId, userId, tier, status, attestedBy = null, method = '', note = '', documentName = '', documentData = '' }) {
   if (!CONSENT_MODES.includes(tier)) throw new Error(`invalid consent tier: ${tier}`);
   const valid = ['none', 'attested', 'granted', 'revoked'];
   if (!valid.includes(status)) throw new Error(`invalid consent status: ${status}`);
   const existing = consentStatus(db, leaderboardId, userId);
   if (existing) {
-    db.prepare(`UPDATE consent_records SET tier = ?, status = ?, attested_by = ?, method = ?, note = ?, updated_at = datetime('now')
-      WHERE leaderboard_id = ? AND user_id = ?`).run(tier, status, attestedBy, method, note, leaderboardId, userId);
+    db.prepare(`UPDATE consent_records SET tier = ?, status = ?, attested_by = ?, method = ?, note = ?, document_name = ?, document_data = ?, updated_at = datetime('now')
+      WHERE leaderboard_id = ? AND user_id = ?`).run(tier, status, attestedBy, method, note, documentName, documentData, leaderboardId, userId);
   } else {
-    db.prepare(`INSERT INTO consent_records (id, leaderboard_id, user_id, tier, status, attested_by, method, note)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(uuid(), leaderboardId, userId, tier, status, attestedBy, method, note);
+    db.prepare(`INSERT INTO consent_records (id, leaderboard_id, user_id, tier, status, attested_by, method, note, document_name, document_data)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(uuid(), leaderboardId, userId, tier, status, attestedBy, method, note, documentName, documentData);
   }
   auditLog(db, {
     actorUserId: attestedBy || userId, action: 'consent.' + status, targetType: 'user',
-    targetId: userId, leaderboardId, detail: { tier },
+    targetId: userId, leaderboardId, detail: { tier, hasDocument: !!documentData },
   });
   return consentStatus(db, leaderboardId, userId);
 }
@@ -160,7 +160,7 @@ function exportUserData(db, userId) {
     trashReports: get('SELECT id, leaderboard_id, severity, description, location, points, created_at FROM trash_reports WHERE user_id = ?', userId),
     comments: get('SELECT id, post_id, text, created_at FROM comments WHERE user_id = ?', userId),
     pointEvents: get('SELECT leaderboard_id, source, source_id, points, created_at FROM point_events WHERE user_id = ?', userId),
-    consent: get('SELECT leaderboard_id, tier, status, method, note, created_at, updated_at FROM consent_records WHERE user_id = ?', userId),
+    consent: get('SELECT leaderboard_id, tier, status, method, note, document_name, document_data, created_at, updated_at FROM consent_records WHERE user_id = ?', userId),
     badges: get('SELECT badge_type, earned_at FROM badges WHERE user_id = ?', userId),
     coachAnswers: get('SELECT question_id, correct, points, created_at FROM coach_answers WHERE user_id = ?', userId),
     notifications: get('SELECT type, message, read, created_at FROM notifications WHERE user_id = ?', userId),

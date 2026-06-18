@@ -83,6 +83,7 @@ def main():
     lossf = nn.CrossEntropyLoss(weight=w)
 
     best = 0.0
+    best_cm = [[0, 0], [0, 0]]
     for ep in range(1, args.epochs + 1):
         net.train()
         for x, y in dl_tr:
@@ -101,6 +102,7 @@ def main():
         print(f'epoch {ep:2d}  val_acc {acc:.3f}  cm(rows=true not_trash/trash) {cm}')
         if acc > best:
             best = acc
+            best_cm = cm
             torch.save(net.state_dict(), 'best.pt')
 
     print(f'best val_acc {best:.3f}')
@@ -112,7 +114,13 @@ def main():
         dynamic_axes={'input': {0: 'batch'}, 'probs': {0: 'batch'}}, opset_version=13)
     meta = {'classes': full.classes, 'img_size': IMG,
             'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225],
-            'val_acc': round(best, 4), 'counts': dict(zip(full.classes, counts))}
+            'val_acc': round(best, 4), 'counts': dict(zip(full.classes, counts)),
+            'confusion_matrix': {
+                'tp': best_cm[1][1],
+                'fp': best_cm[0][1],
+                'tn': best_cm[0][0],
+                'fn': best_cm[1][0]
+            }}
     with open(os.path.splitext(args.out)[0] + '.json', 'w') as f:
         json.dump(meta, f, indent=2)
     print('exported', args.out, '+ meta json')

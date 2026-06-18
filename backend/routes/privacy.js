@@ -13,16 +13,24 @@ const { getDb } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { body } = require('../utils/validate');
 const P = require('../utils/privacy');
+const { docUpload, fileToBase64 } = require('../middleware/upload');
 
 const router = express.Router();
 
 // Real model-card numbers for the in-repo litter CNN, read from its metadata file so
 // the card never drifts from the shipped model. Degrades to limits-only if missing.
 let CNN_CARD = null;
+let CNN_CONFUSION = null;
 try {
   const meta = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'model', 'trash_detector.json'), 'utf8'));
   const total = Object.values(meta.counts || {}).reduce((a, b) => a + Number(b || 0), 0);
-  CNN_CARD = `Validation accuracy ${meta.val_acc} on ${total} labeled images (${meta.counts?.not_trash ?? '?'} not-litter / ${meta.counts?.trash ?? '?'} litter), ${meta.img_size}px input. Binary litter / not-litter.`;
+  let cmStr = '';
+  if (meta.confusion_matrix) {
+    const cm = meta.confusion_matrix;
+    cmStr = ` Confusion Matrix: TP=${cm.tp}, FP=${cm.fp}, TN=${cm.tn}, FN=${cm.fn}.`;
+    CNN_CONFUSION = cm;
+  }
+  CNN_CARD = `Validation accuracy ${meta.val_acc} on ${total} labeled images (${meta.counts?.not_trash ?? '?'} not-litter / ${meta.counts?.trash ?? '?'} litter), ${meta.img_size}px input. Binary litter / not-litter.${cmStr}`;
 } catch (_) { /* model card degrades to limits-only */ }
 
 const CLEAR_COOKIE = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' };
@@ -62,8 +70,8 @@ router.get('/policy', (_req, res) => {
     },
     models: [
       { name: 'OpenAI gpt-4o-mini (vision + text)', use: 'Perceives the photo and proposes an action label + attributes. It NEVER awards points or computes CO2e.', limits: 'May misclassify unusual photos; gated by a confidence floor + an adversarial fraud screen.' },
-      { name: 'text-embedding-3-small', use: 'Embeds the approved research corpus for retrieval (the Eco Coach / Research Library).', limits: 'Retrieval is brute-force cosine over the corpus — a documented demo-scale choice.' },
-      { name: 'In-repo ONNX litter CNN', use: 'Offline fallback for trash detection when no API key is present.', metrics: CNN_CARD, limits: 'Trained on a public litter dataset; coarse severity only; class-imbalanced toward litter.' },
+      { name: 'text-embedding-3-small', use: 'Embeds the approved research corpus for retrieval (the Eco Coach / Research Library).', limits: 'Retrieval uses a sqlite-vec KNN index (vec0 virtual table); degrades gracefully to brute-force cosine scan if the native extension is unavailable.' },
+      { name: 'In-repo ONNX litter CNN', use: 'Offline fallback for trash detection when no API key is present.', metrics: CNN_CARD, confusion: CNN_CONFUSION, limits: 'Trained on a public litter dataset; coarse severity only; class-imbalanced toward litter.' },
     ],
     responsibleAi: 'Perception (the LLM) and calculation (a deterministic carbon engine using cited EPA/OWID factors) are split. The model proposes; the server disposes. Points are computed server-side and capped; the LLM cannot mint them.',
     rights: ['GET /api/privacy/export — download all your data', 'POST /api/privacy/account/delete — erase your account and cascade'],
@@ -92,7 +100,7 @@ router.get('/consent', authMiddleware, (req, res) => {
 // Record consent. A member may self-attest (classroom) or revoke their own consent.
 // Granting parent-tier consent, or acting on behalf of another member, requires the
 // board organizer (the teacher).
-router.post('/consent', authMiddleware, body('recordConsent'), (req, res) => {
+router.post('/consent', authMiddleware, docUpload.single('document'), body('recordConsent'), (req, res) => {
   try {
     const db = getDb();
     const { leaderboardId, userId, status, method, note } = req.valid;
@@ -111,9 +119,13 @@ router.post('/consent', authMiddleware, body('recordConsent'), (req, res) => {
     const isMember = db.prepare('SELECT 1 FROM leaderboard_members WHERE leaderboard_id = ? AND user_id = ?').get(leaderboardId, target);
     if (!isMember) return res.status(400).json({ error: 'That user is not a member of this board.' });
 
+    const documentName = req.file ? req.file.originalname : '';
+    const documentData = req.file ? fileToBase64(req.file) : '';
+
     const rec = P.recordConsent(db, {
       leaderboardId, userId: target, tier: priv.consentMode, status,
       attestedBy: req.userId, method: method || '', note: note || '',
+      documentName, documentData,
     });
     res.json({ consent: rec, satisfied: P.consentSatisfied(db, leaderboardId, target) });
   } catch (err) {
@@ -217,6 +229,70 @@ router.get('/audit', authMiddleware, (req, res) => {
     res.json({ audit: rows.map(r => ({ ...r, detail: r.detail ? JSON.parse(r.detail) : null })) });
   } catch (err) {
     console.error('Audit read error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── Legal Document Vault: list all board members and consent info (organizer only) ──
+router.get('/boards/:id/consent-vault', authMiddleware, (req, res) => {
+  try {
+    const db = getDb();
+    const board = db.prepare('SELECT organizer_id FROM leaderboards WHERE id = ?').get(req.params.id);
+    if (!board) return res.status(404).json({ error: 'Leaderboard not found' });
+    if (board.organizer_id !== req.userId) {
+      return res.status(403).json({ error: 'Only the organizer can access the consent vault.' });
+    }
+
+    // Get all board members and their consent records (if any).
+    // Note: we exclude document_data here to keep the list response lightweight.
+    const vault = db.prepare(`
+      SELECT lm.user_id, lm.role, u.name, u.handle,
+             c.status AS consent_status, c.tier AS consent_tier,
+             c.attested_by, c.method, c.note, c.document_name,
+             (CASE WHEN c.document_data IS NOT NULL AND c.document_data != '' THEN 1 ELSE 0 END) AS has_document,
+             c.updated_at
+      FROM leaderboard_members lm
+      JOIN users u ON u.id = lm.user_id
+      LEFT JOIN consent_records c ON c.leaderboard_id = lm.leaderboard_id AND c.user_id = lm.user_id
+      WHERE lm.leaderboard_id = ?
+      ORDER BY lm.role DESC, u.name ASC
+    `).all(req.params.id);
+
+    res.json({ vault });
+  } catch (err) {
+    console.error('Get consent vault error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── Legal Document Vault: get a specific consent slip (organizer or user themselves) ──
+router.get('/boards/:id/consent-vault/:userId/document', authMiddleware, (req, res) => {
+  try {
+    const db = getDb();
+    const leaderboardId = req.params.id;
+    const userId = req.params.userId;
+
+    const board = db.prepare('SELECT organizer_id FROM leaderboards WHERE id = ?').get(leaderboardId);
+    if (!board) return res.status(404).json({ error: 'Leaderboard not found' });
+
+    const isOrganizer = board.organizer_id === req.userId;
+    const isSelf = userId === req.userId;
+
+    if (!isOrganizer && !isSelf) {
+      return res.status(403).json({ error: 'You do not have permission to view this document.' });
+    }
+
+    const rec = db.prepare('SELECT document_name, document_data FROM consent_records WHERE leaderboard_id = ? AND user_id = ?').get(leaderboardId, userId);
+    if (!rec || !rec.document_data) {
+      return res.status(404).json({ error: 'No signed consent document found for this user.' });
+    }
+
+    res.json({
+      documentName: rec.document_name,
+      documentData: rec.document_data,
+    });
+  } catch (err) {
+    console.error('Get consent document error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

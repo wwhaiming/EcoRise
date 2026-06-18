@@ -65,4 +65,5 @@ Any Node host can serve the API and the built `frontend/dist` as static files be
 The deployed URL, the recorded video, and live screenshots are the only remaining
 submission items, and they require your hosting/recording accounts — they are **not**
 fabricated in this repo. Everything they showcase (footprint digest, Evidence Panel,
-privacy center, AI report card) is built, tested (86/86), and runnable locally today.
+privacy center, AI report card) is built, tested (102 tests: 91 backend + 11 frontend),
+and runnable locally today.

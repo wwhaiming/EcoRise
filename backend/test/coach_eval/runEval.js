@@ -36,7 +36,8 @@ async function runCoachEval(db, fixtures, { relevanceFloor = fixtures.relevanceF
     const chunks = await retrieve(db, p, { k: 5 });
     const q = await generateCoachQuestion(chunks, { topic: p });
     if (q.sourceIds && validateCitations(q.sourceIds, chunks.map(c => c.id))) citationOk++;
-    if (gate(q, chunks).ok) faithPass++;
+    const g = await gate(q, chunks);
+    if (g.ok) faithPass++;
   }
 
   let refused = 0, hallucinatedOnUnanswerable = 0;
@@ -45,7 +46,8 @@ async function runCoachEval(db, fixtures, { relevanceFloor = fixtures.relevanceF
     const topScore = chunks[0] ? chunks[0].score : 0;
     if (topScore < relevanceFloor) { refused++; continue; }   // system refuses low-relevance prompts
     const q = await generateCoachQuestion(chunks, { topic: p });
-    if (q.refusal || !gate(q, chunks).ok) refused++;
+    const g = await gate(q, chunks);
+    if (q.refusal || !g.ok) refused++;
     else hallucinatedOnUnanswerable++;
   }
 
@@ -140,8 +142,10 @@ if (require.main === module) {
     process.env.DATABASE_URL = path.join(__dirname, `coacheval-${process.pid}.db`);
     const { getDb } = require('../../db');
     const { seedCoachCorpus } = require('../../scripts/seedCoachCorpus');
+    const { ingest: ingestResearch } = require('../../scripts/ingestResearchCorpus');
     const db = getDb();
     await seedCoachCorpus(db);
+    await ingestResearch(db);
     const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures.json'), 'utf8'));
     const m = await runCoachEval(db, fixtures);
     console.log('AI Eco Coach eval (illustrative fixtures, NOT a benchmark)\n' + formatReport(m));

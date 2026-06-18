@@ -10,7 +10,10 @@ function getCookie(name) {
 
 async function apiFetch(path, opts = {}) {
   const method = (opts.method || 'GET').toUpperCase();
-  const headers = { 'Content-Type': 'application/json', ...opts.headers };
+  const headers = { ...opts.headers };
+  if (!(opts.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (method !== 'GET' && method !== 'HEAD') {
     const csrf = getCookie('csrf');
     if (csrf) headers['X-CSRF-Token'] = csrf;
@@ -89,7 +92,14 @@ export const api = {
   // Privacy / FERPA-COPPA (Phase 2)
   privacyPolicy: () => apiFetch('/api/privacy/policy'),
   getConsent: (leaderboardId) => apiFetch(`/api/privacy/consent?leaderboardId=${encodeURIComponent(leaderboardId)}`),
-  setConsent: (body) => apiFetch('/api/privacy/consent', { method: 'POST', body: JSON.stringify(body) }),
+  setConsent: (body) => {
+    if (body instanceof FormData) {
+      return apiFetch('/api/privacy/consent', { method: 'POST', body });
+    }
+    return apiFetch('/api/privacy/consent', { method: 'POST', body: JSON.stringify(body) });
+  },
+  getConsentVault: (boardId) => apiFetch(`/api/privacy/boards/${boardId}/consent-vault`),
+  getConsentDocument: (boardId, userId) => apiFetch(`/api/privacy/boards/${boardId}/consent-vault/${userId}/document`),
   setBoardPrivacy: (id, body) => apiFetch(`/api/privacy/boards/${id}/privacy`, { method: 'POST', body: JSON.stringify(body) }),
   reviewQueue: (id) => apiFetch(`/api/privacy/boards/${id}/review-queue`),
   reviewPost: (id, body) => apiFetch(`/api/privacy/posts/${id}/review`, { method: 'POST', body: JSON.stringify(body) }),

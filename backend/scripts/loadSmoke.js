@@ -3,10 +3,11 @@
  *
  *   node scripts/loadSmoke.js [N]     (or: npm run loadtest)
  *
- * Times N brute-force retrieve() calls over the seeded coach corpus and reports
- * throughput + latency percentiles. Fully offline (deterministic embeddings); uses a
- * throwaway DB. This is what backs the honest numbers in docs/SCALE.md — re-run to
- * refresh them. NOT a production benchmark, but a real measurement of the demo path.
+ * Times N retrieve() calls over the seeded coach corpus and reports throughput +
+ * latency percentiles. Uses sqlite-vec KNN when the native extension is loaded, and
+ * falls back to brute-force cosine otherwise. Fully offline (deterministic embeddings);
+ * uses a throwaway DB. This is what backs the honest numbers in docs/SCALE.md —
+ * re-run to refresh them. NOT a production benchmark, but a real measurement.
  */
 const path = require('path');
 const fs = require('fs');
@@ -47,7 +48,8 @@ const QUERIES = [
   const pct = (q) => times[Math.min(times.length - 1, Math.floor(q * times.length))];
   const totalMs = times.reduce((a, b) => a + b, 0);
 
-  console.log(`retrieve() x${N} over ${chunks} approved chunks (brute-force cosine, offline)`);
+  const backend = (() => { try { require('../db').getDb().prepare('SELECT vec_version()').get(); return 'sqlite-vec KNN'; } catch (_) { return 'brute-force cosine'; } })();
+  console.log(`retrieve() x${N} over ${chunks} approved chunks (${backend}, offline)`);
   console.log(`  throughput: ${(N / (totalMs / 1000)).toFixed(0)} queries/sec`);
   console.log(`  latency ms: p50=${pct(0.5).toFixed(3)}  p95=${pct(0.95).toFixed(3)}  max=${times[times.length - 1].toFixed(3)}`);
 

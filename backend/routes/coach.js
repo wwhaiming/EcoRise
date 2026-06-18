@@ -128,7 +128,7 @@ router.get('/question', authMiddleware, async (req, res) => {
     const draft = await generateCoachQuestion(chunks, { topic, difficulty });
     const v = validateGenerated(draft);
     if (!v.ok) return res.status(502).json({ error: 'Could not generate a valid question', reason: v.reason });
-    const g = gate(draft, chunks);                  // citation + faithfulness gate
+    const g = await gate(draft, chunks);                  // citation + faithfulness gate
     if (!g.ok) return res.status(502).json({ error: 'Question failed the faithfulness gate', reason: g.reason });
 
     const id = uuid();
@@ -210,11 +210,11 @@ router.get('/guidance', authMiddleware, async (req, res) => {
     // Same faithfulness gate the /question path uses: a real citation id is not enough,
     // the guidance text itself must be lexically supported by the cited chunks. Without
     // this a model could cite a valid chunk while emitting unsupported advice.
-    const f = deterministicFaithfulness(
+    const g = await gate(
       { correct: draft.action, explanation: `${draft.recommendation || ''} ${draft.explanation || ''}`, sourceIds: sids },
       chunks,
     );
-    if (f < SIM_FLOOR) return res.status(502).json({ error: 'Guidance not supported by cited sources', reason: 'unsupported' });
+    if (!g.ok) return res.status(502).json({ error: 'Guidance not supported by cited sources', reason: g.reason });
     res.json({
       guidance: {
         recommendation: String(draft.recommendation || ''),
@@ -409,9 +409,9 @@ router.get('/school-insight', authMiddleware, async (req, res) => {
         if (draft && !draft.refusal) {
           const ids = new Set(chunks.map(c => c.id));
           const sids = Array.isArray(draft.sourceIds) ? draft.sourceIds.filter(id => ids.has(id)) : [];
-          const f = sids.length ? deterministicFaithfulness({ explanation: draft.explanation || '', sourceIds: sids }, chunks) : 0;
-          if (sids.length && f >= SIM_FLOOR) {
-            recommendation = { recommendation: String(draft.recommendation || ''), action: String(draft.action || ''), explanation: String(draft.explanation || ''), faithfulness: f, sources: snippetsForChunks(db, sids) };
+          const g = sids.length ? await gate({ explanation: draft.explanation || '', sourceIds: sids }, chunks) : { ok: false };
+          if (sids.length && g.ok) {
+            recommendation = { recommendation: String(draft.recommendation || ''), action: String(draft.action || ''), explanation: String(draft.explanation || ''), faithfulness: g.faithfulness, sources: snippetsForChunks(db, sids) };
           }
         }
       }

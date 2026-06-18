@@ -208,6 +208,9 @@ test('public model/data card is served', async () => {
   assert.equal(r.status, 200);
   assert.ok(Array.isArray(r.body.models) && r.body.models.length >= 2, 'lists the AI models with limits');
   assert.ok(r.body.retention && r.body.retention.default.includes('minimize'));
+  const cnn = r.body.models.find(m => m.name === 'In-repo ONNX litter CNN');
+  assert.ok(cnn, 'finds the local ONNX CNN');
+  assert.deepEqual(cnn.confusion, { tp: 356, fp: 14, tn: 139, fn: 20 }, 'exposes the detailed confusion matrix');
 });
 
 test('purgeExpiredImages nulls images past their retention window', async () => {
@@ -220,4 +223,67 @@ test('purgeExpiredImages nulls images past their retention window', async () => 
   const res = P.purgeExpiredImages(db);
   assert.ok(res.posts >= 1, 'at least the expired post is purged');
   assert.equal(db.prepare('SELECT image FROM posts WHERE id = ?').get(id).image, '', 'expired image nulled');
+});
+
+test('legal document vault: uploading, listing, and downloading consent slips', async () => {
+  const teacher = await newUser('VaultTeacher');
+  const student = await newUser('VaultStudent');
+  const board = await makeBoard(teacher, 'Vault Class');
+  await joinBoard(student, board);
+
+  // 1. Initially, no document uploaded, student needs consent
+  const vaultInitial = await request(app)
+    .get(`/api/privacy/boards/${board.id}/consent-vault`)
+    .set(...auth(teacher.token));
+  assert.equal(vaultInitial.status, 200);
+  const studentEntry = vaultInitial.body.vault.find(m => m.user_id === student.id);
+  assert.ok(studentEntry);
+  assert.equal(studentEntry.consent_status || 'none', 'none');
+  assert.equal(studentEntry.has_document, 0);
+
+  // 2. Upload consent form for student (as teacher)
+  const mockSlip = Buffer.from('%PDF-1.4 ... mock pdf content ...');
+  const uploadRes = await request(app)
+    .post('/api/privacy/consent')
+    .set(...auth(teacher.token))
+    .attach('document', mockSlip, 'signed_form.pdf')
+    .field('leaderboardId', board.id)
+    .field('userId', student.id)
+    .field('status', 'granted')
+    .field('method', 'Signed parent paper slip');
+
+  assert.equal(uploadRes.status, 200);
+  assert.equal(uploadRes.body.satisfied, true);
+
+  // 3. Verify in vault list that it shows document exists
+  const vaultAfter = await request(app)
+    .get(`/api/privacy/boards/${board.id}/consent-vault`)
+    .set(...auth(teacher.token));
+  assert.equal(vaultAfter.status, 200);
+  const studentEntryAfter = vaultAfter.body.vault.find(m => m.user_id === student.id);
+  assert.equal(studentEntryAfter.consent_status, 'granted');
+  assert.equal(studentEntryAfter.has_document, 1);
+  assert.equal(studentEntryAfter.document_name, 'signed_form.pdf');
+
+  // 4. Download document as teacher
+  const downloadTeacher = await request(app)
+    .get(`/api/privacy/boards/${board.id}/consent-vault/${student.id}/document`)
+    .set(...auth(teacher.token));
+  assert.equal(downloadTeacher.status, 200);
+  assert.equal(downloadTeacher.body.documentName, 'signed_form.pdf');
+  assert.ok(downloadTeacher.body.documentData.startsWith('data:application/pdf;base64,'));
+
+  // 5. Download document as the student themselves (should be allowed)
+  const downloadSelf = await request(app)
+    .get(`/api/privacy/boards/${board.id}/consent-vault/${student.id}/document`)
+    .set(...auth(student.token));
+  assert.equal(downloadSelf.status, 200);
+
+  // 6. Download document as another student (should be blocked)
+  const otherStudent = await newUser('OtherStudent');
+  await joinBoard(otherStudent, board);
+  const downloadBlocked = await request(app)
+    .get(`/api/privacy/boards/${board.id}/consent-vault/${student.id}/document`)
+    .set(...auth(otherStudent.token));
+  assert.equal(downloadBlocked.status, 403);
 });

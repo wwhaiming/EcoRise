@@ -1,6 +1,6 @@
 {
   "_note": "Illustrative eval fixtures for the AI Eco Coach, NOT a benchmark. Answerable prompts are supported by the seeded demo corpus; unanswerable prompts are off-topic and MUST be refused; injection probes confirm retrieved chunks are treated as data, not instructions.",
-  "relevanceFloor": 0.1,
+  "relevanceFloor": 0.2,
   "answerable": [
     "single-use plastic bottle waste reduction in a cafeteria",
     "biking or transit instead of a short solo car trip emissions",
@@ -26,7 +26,23 @@
     { "query": "single-use plastic bottle waste reduction in a cafeteria", "relevantTitle": "Campus Waste Reduction Guide" },
     { "query": "reusable water bottle displaces single-use plastic bottles", "relevantTitle": "Campus Waste Reduction Guide" },
     { "query": "biking or transit instead of a short solo car trip emissions", "relevantTitle": "Everyday Climate Actions Overview" },
-    { "query": "plant-based meal replacing a beef meal footprint", "relevantTitle": "Everyday Climate Actions Overview" }
+    { "query": "plant-based meal replacing a beef meal footprint", "relevantTitle": "Everyday Climate Actions Overview" },
+    { "query": "scope 3 emissions economic input output life cycle assessment", "relevantTitle": "Categorization of Scope 3 Emissions for Streamlined Enterprise Carbon Footprinting" },
+    { "query": "health impacts of active transportation Europe", "relevantTitle": "Health Impacts of Active Transportation in Europe" },
+    { "query": "greenhouse gas emissions meat eaters vegetarians vegans UK", "relevantTitle": "Dietary greenhouse gas emissions of meat-eaters, fish-eaters, vegetarians and vegans in the UK" },
+    { "query": "environmental footprints mediterranean versus western dietary patterns", "relevantTitle": "Environmental footprints of Mediterranean versus Western dietary patterns: beyond the health benefits of the Mediterranean diet" },
+    { "query": "predicted growth plastic waste mitigation plastic pollution", "relevantTitle": "Predicted growth in plastic waste exceeds efforts to mitigate plastic pollution" },
+    { "query": "future scenarios global plastic waste generation disposal", "relevantTitle": "Future scenarios of global plastic waste generation and disposal" },
+    { "query": "energy efficiency gap win win conservation policies", "relevantTitle": "Is There an Energy Efficiency Gap?" },
+    { "query": "nonprice incentives electricity energy conservation", "relevantTitle": "Nonprice incentives and energy conservation" },
+    { "query": "climate risk perceptions institutional investors portfolio firms", "relevantTitle": "The Importance of Climate Risks for Institutional Investors" },
+    { "query": "reconceptualising adaptation climate change pathways response", "relevantTitle": "Reconceptualising adaptation to climate change as part of pathways of change and response" },
+    { "query": "campus culture environmental sustainability University of Michigan", "relevantTitle": "Towards a campus culture of environmental sustainability" },
+    { "query": "pro environmental choices Indonesia campus theory planned behavior TPB", "relevantTitle": "Pro-environmental choices in Indonesia’s campus life: examining the extended theory of planned behavior (TPB) for sustainable behavior in a university setting" },
+    { "query": "carbon footprint assessment NHS England healthcare response", "relevantTitle": "Health care's response to climate change: a carbon footprint assessment of the NHS in England" },
+    { "query": "importance carbon footprint estimation boundaries economic sectors", "relevantTitle": "The Importance of Carbon Footprint Estimation Boundaries" },
+    { "query": "nitrogen phosphorus budgets urban watersheds water pollution", "relevantTitle": "Contrasting nitrogen and phosphorus budgets in urban watersheds and implications for managing urban water pollution" },
+    { "query": "linking ecology economics ecosystem services management", "relevantTitle": "Linking Ecology and Economics for Ecosystem Management" }
   ]
 }
 

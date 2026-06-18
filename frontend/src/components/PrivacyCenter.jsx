@@ -33,6 +33,7 @@ export default function PrivacyCenter({ ctx }) {
 
   const [policy, setPolicy] = useState(null);
   const [consent, setConsent] = useState(null);   // { board, consent, satisfied }
+  const [vault, setVault] = useState([]);
   const [queue, setQueue] = useState([]);
   const [board, setBoard] = useState({ consentMode: leaderboard?.consent_mode || 'classroom', retentionMode: leaderboard?.retention_mode || 'minimize', reviewRequired: !!leaderboard?.review_required, displayMode: leaderboard?.display_mode || 'names' });
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -44,11 +45,57 @@ export default function PrivacyCenter({ ctx }) {
       api.getConsent(leaderboardId).then(c => { setConsent(c); if (c.board) setBoard(c.board); }).catch(() => {});
       if (isOrganizer) {
         api.reviewQueue(leaderboardId).then(r => setQueue(r.pending || [])).catch(() => {});
+        api.getConsentVault(leaderboardId).then(r => setVault(r.vault || [])).catch(() => {});
       }
     }
   }, [leaderboardId, isOrganizer]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const handleDocumentUpload = async (targetUserId, status, file) => {
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('leaderboardId', leaderboardId);
+      fd.append('userId', targetUserId);
+      fd.append('status', status || 'attested');
+      fd.append('method', 'Signed consent slip');
+      fd.append('document', file);
+
+      await api.setConsent(fd);
+      showToast('Signed consent slip uploaded successfully');
+      refresh();
+    } catch (e) {
+      showToast(e.message || 'Could not upload consent slip');
+    }
+  };
+
+  const updateMemberConsent = async (targetUserId, status, method = '') => {
+    try {
+      await api.setConsent({
+        leaderboardId,
+        userId: targetUserId,
+        status,
+        method: method || (status === 'granted' ? 'Parent Consent' : status === 'attested' ? 'Teacher Attested' : 'Revoked')
+      });
+      showToast('Consent status updated');
+      refresh();
+    } catch (e) {
+      showToast(e.message || 'Could not update consent status');
+    }
+  };
+
+  const downloadDocument = async (targetUserId, documentName) => {
+    try {
+      const { documentData } = await api.getConsentDocument(leaderboardId, targetUserId);
+      const a = document.createElement('a');
+      a.href = documentData;
+      a.download = documentName || 'consent-slip';
+      a.click();
+    } catch (e) {
+      showToast(e.message || 'Could not download consent slip');
+    }
+  };
 
   const selfAttest = async () => {
     try { await api.setConsent({ leaderboardId, status: 'attested' }); showToast('Consent recorded'); refresh(); }
@@ -116,11 +163,28 @@ export default function PrivacyCenter({ ctx }) {
               <span className="chip" style={{ fontSize: 11, background: consent.satisfied ? 'rgba(46,125,79,.14)' : 'rgba(182,111,77,.16)', color: consent.satisfied ? 'var(--green-d)' : 'var(--coral-d)' }}>
                 {consent.satisfied ? 'Consent on file' : 'Consent needed'}
               </span>
+              {consent.consent?.document_name && (
+                <button onClick={() => downloadDocument(user.id, consent.consent.document_name)} className="btn-link" style={{ fontSize: 11, color: 'var(--green)', background: 'none', border: 'none', padding: 0, textDecoration: 'underline', cursor: 'pointer' }}>
+                  📄 {consent.consent.document_name}
+                </button>
+              )}
             </div>
             {!consent.satisfied && consent.board.consentMode === 'classroom' && (
-              <button className="btn btn-primary btn-sm btn-block" style={{ marginTop: 10 }} onClick={selfAttest}>
-                I have permission — record my consent
-              </button>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button className="btn btn-primary btn-sm btn-block" onClick={selfAttest}>
+                  I have permission — record my consent
+                </button>
+                <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--grey)' }}>— OR —</div>
+                <label className="btn btn-secondary btn-sm btn-block" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', margin: 0 }}>
+                  <Icon name="share" size={14} /> Upload signed parent slip
+                  <input
+                    type="file"
+                    accept=".pdf,image/jpeg,image/png,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleDocumentUpload(user.id, 'attested', e.target.files[0])}
+                  />
+                </label>
+              </div>
             )}
             {!consent.satisfied && consent.board.consentMode === 'parent' && (
               <div className="dim" style={{ fontSize: 12, fontWeight: 600, marginTop: 8 }}>This class needs parent-approved consent. Ask your teacher to record it.</div>
@@ -140,6 +204,68 @@ export default function PrivacyCenter({ ctx }) {
             </button>
             <label className="dim" style={{ fontSize: 11.5, fontWeight: 800, display: 'block', marginTop: 12 }}>Leaderboard display</label>
             <Select value={board.displayMode} onChange={v => saveBoard({ displayMode: v })} options={DISPLAY_LABEL} />
+          </Section>
+        )}
+
+        {/* Legal Document Vault (Organizer only) */}
+        {isOrganizer && (
+          <Section icon="file" title="Legal Document Vault" tint="var(--green)">
+            <div className="dim" style={{ fontSize: 12.5, fontWeight: 650, marginBottom: 10 }}>
+              Collect and store signed classroom/parent consent forms (PDF or images) for student roster compliance.
+            </div>
+            <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
+              {vault.length === 0 ? (
+                <div className="dim" style={{ fontSize: 12.5, fontWeight: 700 }}>No members found on this board.</div>
+              ) : vault.map(m => (
+                <div key={m.user_id} style={{ padding: 12, borderRadius: 12, background: 'var(--navy-800)', border: '1px solid rgba(45,91,57,.10)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>
+                        {m.name} <span className="muted" style={{ fontSize: 11.5 }}>({m.role})</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4, alignItems: 'center' }}>
+                        <span className="chip" style={{
+                          fontSize: 10.5,
+                          background: m.consent_status === 'granted' ? 'rgba(46,125,79,.14)' :
+                                      m.consent_status === 'attested' ? 'rgba(46,125,79,.08)' :
+                                      'rgba(182,111,77,.16)',
+                          color: m.consent_status === 'granted' || m.consent_status === 'attested' ? 'var(--green-d)' : 'var(--coral-d)'
+                        }}>
+                          {m.consent_status === 'granted' ? 'Parent Granted' :
+                           m.consent_status === 'attested' ? 'Teacher Attested' : 'Needs Consent'}
+                        </span>
+                        {m.has_document ? (
+                          <button onClick={() => downloadDocument(m.user_id, m.document_name)} className="btn-link" style={{ fontSize: 11, color: 'var(--green)', background: 'none', border: 'none', padding: 0, textDecoration: 'underline', cursor: 'pointer' }}>
+                            📄 {m.document_name || 'View Slip'}
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 11, color: 'var(--coral-d)' }}>⚠️ No slip uploaded</span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Actions */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => updateMemberConsent(m.user_id, 'granted')}>Grant Parent</button>
+                        <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => updateMemberConsent(m.user_id, 'attested')}>Attest Class</button>
+                        {m.consent_status !== 'none' && m.consent_status !== 'revoked' && (
+                          <button className="btn btn-sm" style={{ padding: '4px 8px', fontSize: 11, color: 'var(--coral-d)', background: 'rgba(182,111,77,.10)' }} onClick={() => updateMemberConsent(m.user_id, 'revoked')}>Revoke</button>
+                        )}
+                      </div>
+                      <label className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '4px 8px', fontSize: 11, margin: 0 }}>
+                        <Icon name="share" size={11} /> Upload Slip
+                        <input
+                          type="file"
+                          accept=".pdf,image/jpeg,image/png,image/webp"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleDocumentUpload(m.user_id, m.consent_status === 'granted' ? 'granted' : 'attested', e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </Section>
         )}
 
@@ -190,6 +316,34 @@ export default function PrivacyCenter({ ctx }) {
                   <div style={{ fontWeight: 800, fontSize: 12.5 }}>{m.name}</div>
                   <div className="muted" style={{ fontSize: 11.5, fontWeight: 600, marginTop: 2 }}>{m.use}</div>
                   {m.metrics && <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2, color: 'var(--green-d)' }}>Metrics: {m.metrics}</div>}
+                  {m.confusion && (
+                    <div style={{ marginTop: 8, marginBottom: 8 }}>
+                      <div className="dim" style={{ fontSize: 10.5, fontWeight: 700, marginBottom: 4 }}>Detailed Validation Confusion Matrix (argmax):</div>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: 1,
+                        background: 'rgba(45,91,57,.15)',
+                        border: '1px solid rgba(45,91,57,.2)',
+                        borderRadius: 6,
+                        overflow: 'hidden',
+                        maxWidth: 280,
+                        fontSize: 11.5
+                      }}>
+                        <div style={{ background: 'var(--navy-700)', padding: '4px 6px', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Actual \ Pred</div>
+                        <div style={{ background: 'var(--navy-700)', padding: '4px 6px', fontWeight: 700, textAlign: 'center', color: 'var(--text-dim)' }}>Not Litter</div>
+                        <div style={{ background: 'var(--navy-700)', padding: '4px 6px', fontWeight: 700, textAlign: 'center', color: 'var(--text-dim)' }}>Litter</div>
+
+                        <div style={{ background: 'var(--navy-700)', padding: '4px 6px', fontWeight: 700, color: 'var(--text-dim)' }}>Not Litter</div>
+                        <div style={{ background: 'var(--navy-800)', padding: '4px 6px', textAlign: 'center', color: 'var(--green-d)', fontWeight: 800 }}>{m.confusion.tn} <span style={{ fontSize: 8.5, fontWeight: 600 }}>(TN)</span></div>
+                        <div style={{ background: 'var(--navy-800)', padding: '4px 6px', textAlign: 'center', color: 'var(--coral-d)' }}>{m.confusion.fp} <span style={{ fontSize: 8.5, fontWeight: 600 }}>(FP)</span></div>
+
+                        <div style={{ background: 'var(--navy-700)', padding: '4px 6px', fontWeight: 700, color: 'var(--text-dim)' }}>Litter</div>
+                        <div style={{ background: 'var(--navy-800)', padding: '4px 6px', textAlign: 'center', color: 'var(--coral-d)' }}>{m.confusion.fn} <span style={{ fontSize: 8.5, fontWeight: 600 }}>(FN)</span></div>
+                        <div style={{ background: 'var(--navy-800)', padding: '4px 6px', textAlign: 'center', color: 'var(--green-d)', fontWeight: 800 }}>{m.confusion.tp} <span style={{ fontSize: 8.5, fontWeight: 600 }}>(TP)</span></div>
+                      </div>
+                    </div>
+                  )}
                   <div className="dim" style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>Limits: {m.limits}</div>
                 </div>
               ))}

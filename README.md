@@ -30,7 +30,7 @@ That makes the product easy to demo and technically defensible: every important 
 - **School Hidden-Footprint digest** — estimates a school's institutional CO₂e by category from cited EPA/OWID factors, each with a confidence band, and points students at the biggest hidden emitter.
 - **Privacy / FERPA-COPPA engine** — consent gate before any minor's photo is processed, image-retention minimization, teacher review, account export/delete, audit log. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
 - **In-app AI report card** — real eval-harness output (citation validity, faithfulness, refusal precision, hallucination, injection resistance, retrieval Recall@k/MRR), not hardcoded.
-- **Scale honesty** — measured load test + documented vector-index migration path. See [`docs/SCALE.md`](docs/SCALE.md).
+- **Scale honesty** — measured load test + **sqlite-vec KNN index now active** (see [`docs/SCALE.md`](docs/SCALE.md) for the documented migration path to pgvector).
 - **Run the demo:** [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) · **Deploy + record:** [`DEPLOY.md`](DEPLOY.md)
 
 ## Architecture — the perception / calculation split
@@ -80,7 +80,7 @@ The LLM only appears in the *perceive* and *draft* boxes. Every box that touches
 | **AI Evidence Panel** | After **every** submission: which model decided, its confidence, the **grounded** CO₂ math (formula + cited source + uncertainty range), the full point breakdown, the deterministic tool pipeline that ran, and every anti-fraud gate cleared (or why it was rejected) — the AI's reasoning, made visible |
 | **AI Action Analysis** | Upload a photo → OpenAI vision **perceives** the action + measurable attributes; it never invents the impact |
 | **Grounded Carbon Engine** | Deterministic kg CO₂e from **published emission factors** (EPA GHG Hub, EPA WARM, OWID/Poore-Nemecek) with formula + uncertainty range — the LLM cannot fabricate the number ([`utils/carbonEngine.js`](backend/utils/carbonEngine.js)) |
-| **Measured Eval Gate** | The eco-action classifier is measured, not asserted: accuracy / FP / FN / adversarial-rejection / calibration ([`test/eco_eval/`](backend/test/eco_eval/), `npm run test:eval`) |
+| **Measured Eval Gate** | The eco-action classifier is measured, not asserted: accuracy / FP / FN / adversarial-rejection / calibration ([`test/eco_eval/`](backend/test/eco_eval/), `npm run test:eval`); coach retrieval eval at `npm run test:coach-eval` |
 | **Adversarial Fraud Screen** | A second vision pass flags photo-of-screen / stock / AI-generated images; high suspicion rejects, low suspicion halves points ([`utils/integrityGates.js`](backend/utils/integrityGates.js)) |
 | **Points Rubric Engine** | Comprehensive **server-side** scoring across transport, waste, energy, food, nature, and learning; the LLM cannot award points |
 | **Social Feed** | Instagram-style cards with likes, comments, @mentions, reporting |
@@ -94,12 +94,12 @@ The LLM only appears in the *perceive* and *draft* boxes. Every box that touches
 
 ## Tech Stack
 
-- **Frontend:** React 19 + Vite
-- **Backend:** Node.js + Express
-- **Database:** SQLite (via better-sqlite3)
+- **Frontend:** React 19 + Vite · Vitest + Testing Library (11 UI tests)
+- **Backend:** Node.js + Express · Node built-in test runner (91 backend tests)
+- **Database:** SQLite (via better-sqlite3) + **sqlite-vec** for vector KNN retrieval
 - **Auth:** JWT (httpOnly cookies) + bcrypt
-- **AI:** OpenAI vision (`ECO_MODEL`, default `gpt-4o-mini`) for eco analysis + a custom CNN (ONNX) for trash. Without an `OPENAI_API_KEY` the server **rejects rather than fabricates** points; set `MOCK_ECO_ALWAYS_PASS=true` for a clearly-flagged demo.
-- **Coach AI:** Retrieval-augmented generation over approved source chunks with citation validation, faithfulness gates, daily/weekly point caps, and seeded demo corpus.
+- **AI:** OpenAI vision (`ECO_MODEL`, default `gpt-4o-mini`) for eco analysis + a custom CNN (ONNX, val_acc 0.936) for offline trash detection. Without an `OPENAI_API_KEY` the server **rejects rather than fabricates** points; set `MOCK_ECO_ALWAYS_PASS=true` for a clearly-flagged demo.
+- **Coach AI:** Retrieval-augmented generation over approved source chunks with citation validation, faithfulness + numeric-claim gates, daily/weekly point caps, sqlite-vec KNN index, and seeded demo corpus.
 - **Design:** Botanical Ledger — white paper surfaces, moss-green hierarchy, source-chip texture, and sliding screen transitions.
 
 ---
@@ -160,9 +160,24 @@ cd frontend && npm run dev
 ecorise/
 ├── frontend/              React + Vite app
 │   ├── src/
-│   │   ├── components/    Reusable UI components (Icon, Avatar, Podium, etc.)
-│   │   ├── pages/         Screen-level components (Home, Feed, Quests, etc.)
+│   │   ├── components/    Reusable UI components
+│   │   │   ├── AIEvidence.jsx    Evidence panel (carbon math, gates, breakdown)
+│   │   │   ├── PrivacyCenter.jsx Consent, retention, export, delete, model card
+│   │   │   ├── ResearchLibrary.jsx Research corpus browser
+│   │   │   ├── SchoolFootprint.jsx Hidden-footprint digest + baseline wizard
+│   │   │   ├── Podium.jsx        Animated leaderboard podium
+│   │   │   └── ...               Avatar, BottomNav, Icon, Shared, UI
+│   │   ├── pages/         Screen-level components
+│   │   │   ├── Home.jsx          Eco feed + action logging
+│   │   │   ├── Coach.jsx         AI Eco Coach (RAG, footprint, report card)
+│   │   │   ├── Pages.jsx         Leaderboard, profile, trash spotter, badges
+│   │   │   ├── Quests.jsx        Daily quest tracker
+│   │   │   ├── Research.jsx      Research library page
+│   │   │   ├── Modals.jsx        All modal dialogs
+│   │   │   └── Onboarding.jsx    Signup/login flows
+│   │   ├── __tests__/     Vitest component tests (11 tests)
 │   │   ├── styles/        Design tokens + global CSS + component styles
+│   │   ├── hooks/         Custom React hooks
 │   │   ├── utils/         API client
 │   │   └── App.jsx        Root component with routing + state management
 │   └── index.html
@@ -170,19 +185,42 @@ ecorise/
 ├── backend/               Express API server
 │   ├── routes/            REST endpoints
 │   │   ├── auth.js        Signup, login, logout, me
-│   │   ├── leaderboard.js CRUD, join, ranking
+│   │   ├── coach.js       AI Eco Coach: footprint, questions, report card
+│   │   ├── leaderboard.js CRUD, join, ranking, season resets
 │   │   ├── posts.js       Feed, likes, comments, reports
+│   │   ├── privacy.js     Consent, retention, review, export/delete, audit
 │   │   ├── quests.js      Daily quest generation + progress
-│   │   ├── trashspotter.js AI severity analysis
+│   │   ├── trashspotter.js AI severity analysis (OpenAI + ONNX CNN)
 │   │   └── users.js       Profiles, badges, notifications
-│   ├── middleware/         Auth (JWT), upload (multer), rate limiting
+│   ├── middleware/        auth.js · csrf.js · rateLimit.js · upload.js
+│   ├── model/             trash_detector.onnx (val_acc 0.936) + metadata
 │   ├── utils/
-│   │   ├── rubric.js      Points calculation engine
-│   │   ├── aiClient.js    OpenAI API wrapper
-│   │   └── pointsEngine.js Orchestration layer
-│   ├── db.js              SQLite schema + initialization
+│   │   ├── aiClient.js        OpenAI API wrapper (vision, text, embeddings)
+│   │   ├── carbonEngine.js    Deterministic CO₂e from cited EPA/OWID factors
+│   │   ├── pointsEngine.js    Orchestration: vision → fraud → carbon → rubric
+│   │   ├── rubric.js          Server-side points calculation engine
+│   │   ├── coachRetrieval.js  sqlite-vec KNN retrieval over approved corpus
+│   │   ├── coachFaithfulness.js Citation + numeric-claim faithfulness gate
+│   │   ├── coachEmbed.js      Embedding utilities
+│   │   ├── coachChunk.js      Corpus chunking helpers
+│   │   ├── coachScoring.js    Coach point caps + scoring rules
+│   │   ├── footprintModel.js  School hidden-footprint estimator (EPA/OWID)
+│   │   ├── privacy.js         Consent gate, retention policy, FERPA/COPPA engine
+│   │   ├── evalMetrics.js     Recall@k, MRR, calibration, precision/recall
+│   │   ├── integrityGates.js  Adversarial fraud screen
+│   │   ├── imageHash.js       SHA-256 dedup + perceptual hash
+│   │   ├── localTrashModel.js ONNX CNN inference for offline trash detection
+│   │   ├── analysisCache.js   Per-request analysis caching
+│   │   ├── jsonExtract.js     Robust JSON extraction from LLM output
+│   │   ├── seasons.js         Leaderboard season reset scheduler
+│   │   └── validate.js        Zod validation schemas
+│   ├── scripts/           seedDemo.js · seedCoachCorpus.js · loadSmoke.js
+│   ├── test/              91 tests (api · coach · privacy · carbon · eval)
+│   ├── db.js              SQLite schema + initialization (sqlite-vec extension)
 │   └── server.js          Express entry point
 │
+├── docs/                  PRIVACY.md · SCALE.md · AI_ECO_COACH_PLAN.md
+├── datasets/              ONNX model training scripts + metadata
 ├── .env                   Local secrets (never commit)
 ├── .env.example           Template with required keys
 └── package.json           Root scripts
@@ -238,6 +276,29 @@ ecorise/
 | GET | `/api/users/:id` | Get user profile + badges |
 | PUT | `/api/users/:id` | Update profile |
 | GET | `/api/users/:id/notifications` | Get notifications |
+
+### Coach (AI Eco Coach)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/coach/footprint` | School hidden-footprint digest |
+| GET | `/api/coach/question` | Retrieve a cited question + guidance |
+| GET | `/api/coach/eval-report` | In-app AI report card (live eval metrics) |
+| GET | `/api/coach/research` | Browse the approved research corpus |
+
+### Privacy (FERPA/COPPA)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/privacy/policy` | Public model/data card |
+| GET | `/api/privacy/consent` | My consent state on a board |
+| POST | `/api/privacy/consent` | Record/attest/grant/revoke consent (accepts signed document upload) |
+| POST | `/api/privacy/boards/:id/privacy` | Set consent mode, retention, review, display mode |
+| GET | `/api/privacy/boards/:id/review-queue` | Pending posts (organizer) |
+| POST | `/api/privacy/posts/:id/review` | Approve / reject a post (reverses points) |
+| GET | `/api/privacy/audit` | Board audit trail (organizer) |
+| GET | `/api/privacy/boards/:id/consent-vault` | List members + consent status + document presence (organizer) |
+| GET | `/api/privacy/boards/:id/consent-vault/:userId/document` | Download a stored signed consent slip (organizer / self) |
+| GET | `/api/privacy/export` | Download all my data |
+| POST | `/api/privacy/account/delete` | Erase my account |
 
 ---
 
