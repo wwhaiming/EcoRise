@@ -12,14 +12,21 @@ truthful confidence label + assumptions. We build the rest to masterful quality.
 ## Phases (dependency-ordered)
 
 ### Phase 1 — School hidden-footprint intelligence  (#1 gap, both reviews)
-- ☐ `backend/utils/footprintModel.js`: Scope-style categories (electricity, natural_gas, commuting,
-  cafeteria_food, landfill_waste, procurement, water) → kgCO2e/month from cited EPA/OWID factors,
-  each with confidence + assumptions + sourceIds. No invented numbers; defaults clearly labeled "estimate".
-- ☐ `backend/routes/coach.js` `/school-footprint` (baseline wizard input) + `/school-insight`
-  (aggregate board → biggest emitter + action-leverage card, grounded + cited).
-- ☐ frontend `pages/Footprint.jsx` baseline wizard + digest as the HOME dashboard hero.
-- ☐ "action leverage" card: logged student savings vs institutional emitter (e.g. 1 meatless day = 95kg vs 18kg).
-- ☐ tests: footprint math deterministic; insight refuses when no baseline.
+- ☑ `backend/utils/footprintModel.js`: Scope-style categories (electricity, natural_gas, commuting,
+  cafeteria_food, landfill_waste, water) → kgCO2e/month from cited EPA/OWID factors, each with
+  confidence + assumptions + low/high. Defaults labeled estimates; confidence rises with real inputs. (f79bdbd, sanity-checked)
+- ☑ `backend/routes/coach.js` `/school-footprint` (baseline) + `/school-insight` (biggest emitter +
+  action-leverage + grounded recommendation gated by deterministicFaithfulness >= SIM_FLOOR). (1332251, verified live)
+- ◐ "action leverage" line implemented in /school-insight; UI surfacing pending.
+- ☐ frontend `pages/Footprint.jsx` baseline wizard + digest as the HOME dashboard hero. ← RESUME HERE
+- ☐ add a footprintModel unit test to backend/test (currently only ad-hoc sanity-checked).
+
+### RESUME POINTER (for a fresh session)
+Branch `georise-v2-footprint-privacy`, pushed. Done: footprint model + the two routes (verified live).
+NEXT: (1) Footprint digest UI + make it the home hero + nav tab; (2) Phase 2 privacy. The Phase 2
+multi-tenant `school_id` migration is HIGH-RISK (touches db.js + every route) — do it FIRST in a fresh,
+full-context session, not across a compaction. The additive privacy pieces (consent gate, image
+retention, teacher-review-before-feed, privacy screen, model/data card) are lower-risk and can follow.
 
 ### Phase 2 — Privacy / FERPA-COPPA for minors  (can DISQUALIFY; non-negotiable)
 - ☐ multi-tenant `school_id` isolation: schema migration + scoped authz on every query + audit log.
