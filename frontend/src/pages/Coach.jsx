@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '../components/Icon';
+import SchoolFootprint from '../components/SchoolFootprint';
 import api from '../utils/api';
 
 function nowMs() {
@@ -264,6 +265,8 @@ export default function Coach({ ctx }) {
           <Icon name="home" size={18} />
         </button>
       </div>
+
+      <SchoolFootprint leaderboardId={leaderboardId} showToast={showToast} />
 
       <CoachCommandCenter footprint={footprint} openLog={openLog} />
 
