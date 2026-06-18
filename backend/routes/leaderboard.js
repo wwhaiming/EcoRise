@@ -94,7 +94,7 @@ router.get('/:id', authMiddleware, (req, res) => {
     const allMembers = db.prepare(`
       SELECT lm.leaderboard_id, lm.user_id, lm.role, lm.points, lm.streak, u.name, u.handle, u.avatar
       FROM leaderboard_members lm JOIN users u ON u.id = lm.user_id
-      WHERE lm.leaderboard_id = ? ORDER BY lm.points DESC
+      WHERE lm.leaderboard_id = ? ORDER BY lm.points DESC, lm.streak DESC, lm.last_action_date ASC, lm.user_id ASC
     `).all(req.params.id);
     // include_self governs whether the organizer is ranked among competitors. When
     // off, drop the organizer row before ranking so ranks stay contiguous.

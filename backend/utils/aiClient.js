@@ -48,7 +48,7 @@ const MOCK_ECO_ACTIONS = [
 const MOCK_QUESTS = [
   { title: 'Two-Wheel Tuesday', description: 'Log a bike or walk commute', actionType: 'transportation', targetDetails: 'bike or walk', pointsBase: 60 },
   { title: 'Zero-Waste Lunch', description: 'Post a meal with no single-use plastic', actionType: 'waste', targetDetails: 'no plastic meal', pointsBase: 40 },
-  { title: 'Bottle Streak', description: 'Refill a reusable bottle 3 times', actionType: 'waste', targetDetails: 'reusable bottle', pointsBase: 45 },
+  { title: 'Bottle Streak', description: 'Refill a reusable bottle 3 times', actionType: 'waste', targetDetails: 'reusable bottle', pointsBase: 45, goal: 3 },
   { title: 'Spot the Trash', description: 'Report one litter hotspot near you', actionType: 'nature', targetDetails: 'trash report', pointsBase: 50 },
   { title: 'Bring a Friend', description: 'Invite someone to your leaderboard', actionType: 'community', targetDetails: 'invite friend', pointsBase: 75 },
 ];
@@ -138,11 +138,11 @@ async function generateDailyQuests(context = {}) {
   try {
     const response = await client.chat.completions.create({
       model: MODEL, max_tokens: 1024,
-      messages: [{ role: 'user', content: `Generate 5 personalized daily environmental quests as JSON: {"quests":[{title, description, actionType, targetDetails, pointsBase}]}.
+      messages: [{ role: 'user', content: `Generate 5 personalized daily environmental quests as JSON: {"quests":[{title, description, actionType, targetDetails, pointsBase, goal}]}.
 User's last-30-day activity: ${activity}.
 Categories they have NOT done recently (prioritize): ${weak.length ? weak.join(', ') : 'none — keep variety'}.
 Most frequent category: ${ctx.topCategory || 'unknown'}.
-Rules: at least 2 quests target the neglected categories; at least 1 builds on their most frequent; vary across transportation, waste, energy, food, nature; each completable in a day with a concrete, photo-verifiable targetDetails; actionType in [transportation, waste, energy, food, nature, community]; pointsBase integer 40-80. Respond ONLY in JSON.` }],
+Rules: at least 2 quests target the neglected categories; at least 1 builds on their most frequent; vary across transportation, waste, energy, food, nature; each completable in a day with a concrete, photo-verifiable targetDetails; actionType in [transportation, waste, energy, food, nature, community]; pointsBase integer 40-80; goal integer 1-3 (most quests are 1; a repeat/streak quest like "refill 3 times" may be 2-3, each step needing its own verified photo). Respond ONLY in JSON.` }],
       response_format: { type: 'json_object' },
     });
     const json = extractJson(response.choices[0].message.content);

@@ -31,7 +31,10 @@ router.get('/', authMiddleware, async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `);
       const insertMany = db.transaction((items) => {
-        for (const q of items) insert.run(uuid(), req.userId, q.title, q.description, q.actionType, q.targetDetails || '', q.pointsBase || 50, 1, today);
+        for (const q of items) {
+          const goal = Math.min(5, Math.max(1, Number(q.goal) || 1)); // respect multi-step quests (e.g. "refill 3x")
+          insert.run(uuid(), req.userId, q.title, q.description, q.actionType, q.targetDetails || '', q.pointsBase || 50, goal, today);
+        }
       });
       insertMany(generated.slice(0, 5));
       quests = db.prepare('SELECT * FROM quests WHERE user_id = ? AND date = ?').all(req.userId, today);
@@ -52,19 +55,16 @@ router.post('/:id/progress', authMiddleware, body('questProgress'), (req, res) =
     const db = getDb();
     const quest = db.prepare('SELECT * FROM quests WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
     if (!quest) return res.status(404).json({ error: 'Quest not found' });
-    if (quest.completed) return res.json({ message: 'Quest already completed', quest, bonusPoints: 0, bonusApplied: false });
 
-    // Advance progress only. Never set completed here — completion requires a
-    // verified action (logging the matching eco photo), which also grants the 2x.
-    const newProgress = Math.min(quest.goal, quest.progress + 1);
-    db.prepare('UPDATE quests SET progress = ? WHERE id = ?').run(newProgress, quest.id);
-
+    // Progress is driven ONLY by a verified matching photo (POST /api/posts advances it
+    // through the AI gate). This endpoint never advances the bar by hand and never mints
+    // points — so the progress shown always reflects real, verified actions.
     res.json({
-      quest: { ...quest, progress: newProgress, completed: 0 },
+      quest,
       justCompleted: false,
       bonusPoints: 0,
       bonusApplied: false,
-      note: 'Log the matching eco action (with a photo) to complete this quest and earn the 2x bonus.',
+      note: 'Log the matching eco action (with a photo) to progress this quest and earn the 2x bonus.',
     });
   } catch (err) {
     console.error('Quest progress error:', err);
