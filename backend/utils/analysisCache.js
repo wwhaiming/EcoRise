@@ -36,7 +36,17 @@ function get(userId, hash) {
 
 function set(userId, hash, result) {
   if (!userId || !hash) return;
-  if (store.size >= MAX_ENTRIES) prune();
+  if (store.size >= MAX_ENTRIES) {
+    prune();
+    // Hard cap: if a burst of >MAX_ENTRIES live (unexpired) keys means prune reclaimed
+    // nothing, evict oldest-first (Map preserves insertion order) so size never grows
+    // unbounded — the MAX_ENTRIES invariant holds even under sustained load.
+    while (store.size >= MAX_ENTRIES) {
+      const oldest = store.keys().next().value;
+      if (oldest === undefined) break;
+      store.delete(oldest);
+    }
+  }
   store.set(keyOf(userId, hash), { result, expires: Date.now() + TTL_MS });
 }
 
