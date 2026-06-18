@@ -86,9 +86,11 @@ the budget on the additive pieces a harsh judge actually grades. Full design: do
   gate + startup self-check). scripts/loadSmoke.js (npm run loadtest). Honest limit stated: single-node
   SQLite, no real production load test beyond the smoke test.
 
-### Phase 6 — Submission
-- ☐ mermaid architecture; DEMO_SCRIPT (digest-first order); comparison table; one sticky hook;
-  hero screenshots/GIF; deployed URL; recorded fallback video.
+### Phase 6 — Submission  ◐ (code artifacts DONE; infra items owed to the user)
+- ☑ mermaid architecture diagram + comparison table + sticky hook in README; DEMO_SCRIPT.md
+  (digest-first 3-min); DEPLOY.md (exact deploy + record steps); doc links to PRIVACY/SCALE.
+- ☐ deployed URL + recorded fallback video + hero screenshots — require the user's hosting/recording
+  accounts (cannot be produced from the repo). Steps fully specified in DEPLOY.md. NOT faked.
 
 ## Council re-grade checkpoints
 - CP1 after Phase 1+2 · CP2 after Phase 3 · CP3 after Phase 4-6. Re-run `/claude-council:ask` each time,

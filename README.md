@@ -23,6 +23,55 @@ Most sustainability apps either teach passively or gamify actions without proof.
 
 That makes the product easy to demo and technically defensible: every important claim has a source, a deterministic check, or an eval.
 
+> **Sticky hook:** *The AI never awards a point or invents a kilogram. It perceives; a deterministic, cited engine decides.*
+
+## What's new in v2 (Direction B)
+
+- **School Hidden-Footprint digest** — estimates a school's institutional CO₂e by category from cited EPA/OWID factors, each with a confidence band, and points students at the biggest hidden emitter.
+- **Privacy / FERPA-COPPA engine** — consent gate before any minor's photo is processed, image-retention minimization, teacher review, account export/delete, audit log. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
+- **In-app AI report card** — real eval-harness output (citation validity, faithfulness, refusal precision, hallucination, injection resistance, retrieval Recall@k/MRR), not hardcoded.
+- **Scale honesty** — measured load test + documented vector-index migration path. See [`docs/SCALE.md`](docs/SCALE.md).
+- **Run the demo:** [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) · **Deploy + record:** [`DEPLOY.md`](DEPLOY.md)
+
+## Architecture — the perception / calculation split
+
+```mermaid
+flowchart TD
+  U[Student photo] --> DS[Client downscale]
+  DS --> CG{Consent gate<br/>FERPA/COPPA}
+  CG -- not consented --> RC[Refused: needs consent]
+  CG -- ok --> AV[OpenAI vision<br/>perceives action + attributes]
+  AV --> FR{Adversarial fraud screen}
+  FR -- reject --> RJ[Rejected + Evidence Panel]
+  FR -- ok --> CE[Deterministic carbon engine<br/>cited EPA/OWID factors]
+  CE --> SS[Server scores + caps points]
+  SS --> LED[(Immutable point_events ledger)]
+  SS --> RET{Retention policy}
+  RET --> ST[(Thumbnail / label only<br/>full image discarded by default)]
+  SS --> EP[AI Evidence Panel<br/>perception + carbon math + every gate]
+  subgraph Coach [AI Eco Coach · RAG]
+    Q[Approved teacher corpus] --> EMB[Embeddings]
+    EMB --> RX[Retrieve top-k]
+    RX --> GEN[LLM drafts question / guidance]
+    GEN --> GATE{Citation + faithfulness<br/>+ numeric claim gate}
+    GATE -- fail --> WH[Withheld · refusal card]
+    GATE -- pass --> INS[Cited insight + capped learning points]
+  end
+```
+
+The LLM only appears in the *perceive* and *draft* boxes. Every box that touches a number, a point, or a published post is deterministic code with a citation or a gate.
+
+## How GeoRise compares
+
+| | Typical eco app | Generic "AI" hackathon app | **GeoRise** |
+|---|---|---|---|
+| Impact number | self-reported / hardcoded | LLM guesses it | deterministic carbon engine, cited EPA/OWID factors + uncertainty band |
+| Points | client-trusted | LLM awards them | server-computed, capped, immutable ledger; LLM cannot mint |
+| AI grounding | none | ungrounded generation | retrieval + citation + faithfulness + numeric-claim gates; refuses if unsupported |
+| Minor privacy | ignored | ignored | consent gate before upload, image minimization, teacher review, export/delete, audit log |
+| Evaluation | "it works" | demo only | measured: accuracy/FP/FN, Recall@k/MRR, refusal precision, hallucination rate (in-app) |
+| Scale story | hand-waved | hand-waved | measured load test + documented migration path |
+
 ## Core Features
 
 | Feature | Description |
@@ -228,7 +277,7 @@ GeoRise uses a polished white/green system designed to feel like a field noteboo
 - All secrets in `.env` (never committed)
 - Passwords hashed with bcrypt (12 rounds)
 - JWT tokens in httpOnly cookies (7-day expiry)
-- AI endpoint rate limited: 20 analyses/user/day
-- Image uploads validated (type + 5MB max)
+- AI endpoint rate limited: a configurable per-user daily cap (`middleware/rateLimit.js`) + a global 300 req / 15 min limit; OpenAI calls have a 30s timeout + retry budget
+- Image uploads validated (type + size; server JSON limit 9 MB; the client downscales before upload, and the server minimizes what it retains — see `docs/PRIVACY.md`)
 - User inputs validated server-side (zod schemas) + parameterized SQL (no string-built queries)
 - Reported posts are flagged for organizer moderation; only the post owner or leaderboard organizer can hide a post
