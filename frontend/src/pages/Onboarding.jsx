@@ -49,9 +49,9 @@ export default function Onboarding({ onAuth }) {
   /* ----- HERO ----- */
   if (stage === 'hero') {
     return (
-      <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '52px 26px 34px' }}>
+      <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 34, padding: '52px 26px 34px' }}>
         <Orbs />
-        <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 22 }}>
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 22 }}>
           <div className="floaty" style={{ filter: 'drop-shadow(0 16px 30px rgba(30,91,57,.16))' }}>
             <LogoMark size={104} />
           </div>
@@ -59,8 +59,10 @@ export default function Onboarding({ onAuth }) {
             <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 46, letterSpacing: 0, lineHeight: 1 }}>
               Eco<span style={{ color: 'var(--green)' }}>Rise</span>
             </div>
-            <div className="h-hero" style={{ marginTop: 18, fontSize: 26, lineHeight: 1.15, maxWidth: 300 }}>
-              AI school audit.<br />Local insight.<br /><span style={{ color: 'var(--green)' }}>Verified action.</span>
+            <div className="h-hero" style={{ marginTop: 18, fontSize: 26, lineHeight: 1.2, maxWidth: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <span>AI school audit.</span>
+              <span>Local insight.</span>
+              <span style={{ color: 'var(--green)' }}>Verified action.</span>
             </div>
           </div>
         </div>
