@@ -1,8 +1,14 @@
-/* GeoRise — SQLite database initialization */
+/* EcoRise — SQLite database initialization */
 const Database = require('better-sqlite3');
 const path = require('path');
+let sqliteVec = null;
+try {
+  sqliteVec = require('sqlite-vec');
+} catch (e) {
+  console.warn('sqlite-vec not installed or could not be loaded:', e.message);
+}
 
-const DB_PATH = process.env.DATABASE_URL || path.join(__dirname, 'georise.db');
+const DB_PATH = process.env.DATABASE_URL || path.join(__dirname, 'ecorise.db');
 
 let db;
 
@@ -11,6 +17,13 @@ function getDb() {
     db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
+    if (sqliteVec) {
+      try {
+        sqliteVec.load(db);
+      } catch (e) {
+        console.error('Failed to load sqlite-vec extension into better-sqlite3:', e.message);
+      }
+    }
     initTables();
     migrate();
     createIndexes();
@@ -267,6 +280,8 @@ function initTables() {
       attested_by TEXT,                    -- teacher/organizer who attested (classroom/parent)
       method TEXT DEFAULT '',              -- how consent was obtained (free text)
       note TEXT DEFAULT '',
+      document_name TEXT DEFAULT '',
+      document_data TEXT DEFAULT '',
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
       UNIQUE (leaderboard_id, user_id),
@@ -317,6 +332,8 @@ function migrate() {
     ['trash_reports', 'retention_mode', "TEXT DEFAULT 'standard'"],
     ['trash_reports', 'image_expires_at', 'TEXT'],
     ['trash_reports', 'derived_label', "TEXT DEFAULT ''"],
+    ['consent_records', 'document_name', "TEXT DEFAULT ''"],
+    ['consent_records', 'document_data', "TEXT DEFAULT ''"],
   ];
   for (const [table, col, type] of adds) {
     try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch (_) { /* exists */ }

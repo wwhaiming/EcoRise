@@ -1,4 +1,4 @@
-/* GeoRise — Rate limiting middleware */
+/* EcoRise — Rate limiting middleware */
 const rateLimit = require('express-rate-limit');
 
 // Per-user daily cap on AI analyses (in-memory; swap for Redis in production).

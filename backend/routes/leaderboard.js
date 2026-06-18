@@ -1,4 +1,4 @@
-/* GeoRise — Leaderboard routes */
+/* EcoRise — Leaderboard routes */
 const express = require('express');
 const { v4: uuid } = require('uuid');
 const { getDb } = require('../db');

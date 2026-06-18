@@ -1,4 +1,4 @@
-/* GeoRise — Image upload middleware */
+/* EcoRise — Image upload middleware */
 const multer = require('multer');
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -18,6 +18,19 @@ const upload = multer({
   },
 });
 
+const docUpload = multer({
+  storage,
+  limits: { fileSize: MAX_SIZE },
+  fileFilter: (req, file, cb) => {
+    const allowed = [...ALLOWED_TYPES, 'application/pdf'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, WebP, GIF, and PDF are allowed.'));
+    }
+  },
+});
+
 // Convert uploaded file to base64 data URI
 function fileToBase64(file) {
   if (!file) return '';
@@ -25,5 +38,5 @@ function fileToBase64(file) {
   return `data:${file.mimetype};base64,${base64}`;
 }
 
-module.exports = { upload, fileToBase64 };
+module.exports = { upload, docUpload, fileToBase64 };
 

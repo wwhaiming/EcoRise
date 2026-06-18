@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* GeoRise — eco-action gate eval runner.
+/* EcoRise — eco-action gate eval runner.
  *
  * The core app depends on the eco-action vision gate, so we measure it instead
  * of claiming "we prompt strictly". This produces accuracy, false-positive /
@@ -17,7 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 // Load the same .env the server uses (one level above backend) so a single key in
-// georise/.env powers the live eval — ANTHROPIC_API_KEY or GEMINI_API_KEY/GOOGLE_API_KEY.
+// ecorise/.env powers the live eval — ANTHROPIC_API_KEY or GEMINI_API_KEY/GOOGLE_API_KEY.
 try { require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') }); } catch (_) { /* dotenv optional */ }
 const { computeMetrics, formatReport } = require('../../utils/evalMetrics');
 

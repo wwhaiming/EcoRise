@@ -1,8 +1,8 @@
-/* GeoRise — AI Eco Coach screen.
+/* EcoRise — AI Eco Coach screen.
  *
  * The learning-to-action loop, with the responsible-AI guardrails made VISIBLE:
  * every question and tip shows its sources, learning points are explicitly capped,
- * and the UI says "AI drafts; GeoRise validates" rather than "AI says this is true".
+ * and the UI says "AI drafts; EcoRise validates" rather than "AI says this is true".
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '../components/Icon';
@@ -92,7 +92,7 @@ function Banner() {
       <div className="card" style={{ padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'center', border: '1px solid rgba(46,125,79,.18)' }}>
         <Icon name="sparkle" size={18} color="var(--green)" />
         <span className="muted" style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35 }}>
-          AI drafts from trusted sources; GeoRise validates every citation and caps learning points so real-world action stays #1.
+          AI drafts from trusted sources; EcoRise validates every citation and caps learning points so real-world action stays #1.
         </span>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# GeoRise — deploy & record (run by you)
+# EcoRise — deploy & record (run by you)
 
 > These steps need a hosting account and a screen recorder, so **you** run them — they
 > can't be done from inside the repo. Everything here is verified against the actual
@@ -22,7 +22,7 @@
   - `COACH_ENABLED` = `true`
   - `NODE_ENV` = `production`
   - `CORS_ORIGINS` = `https://<your-netlify-domain>`
-- **Persistent DB:** attach a Render Disk mounted where `georise.db` lives, or accept that the SQLite file resets on redeploy (fine for a demo). State this honestly to judges if asked.
+- **Persistent DB:** attach a Render Disk mounted where `ecorise.db` lives, or accept that the SQLite file resets on redeploy (fine for a demo). State this honestly to judges if asked.
 - After first deploy, open the service shell and seed:
   ```bash
   npm run seed          # demo board + login
@@ -56,7 +56,7 @@ Any Node host can serve the API and the built `frontend/dist` as static files be
 
 - Deployed URL → README top + submission.
 - Video link → README + submission.
-- Repo branch: `georise-v2-footprint-privacy` (or merge to `main` before submitting).
+- Repo branch: `ecorise-v2-footprint-privacy` (or merge to `main` before submitting).
 
 ---
 
@@ -65,4 +65,5 @@ Any Node host can serve the API and the built `frontend/dist` as static files be
 The deployed URL, the recorded video, and live screenshots are the only remaining
 submission items, and they require your hosting/recording accounts — they are **not**
 fabricated in this repo. Everything they showcase (footprint digest, Evidence Panel,
-privacy center, AI report card) is built, tested (86/86), and runnable locally today.
+privacy center, AI report card) is built, tested (102 tests: 91 backend + 11 frontend),
+and runnable locally today.

@@ -1,4 +1,4 @@
-/* GeoRise — AI Eco Coach demo corpus seeder (Phase 0-1).
+/* EcoRise — AI Eco Coach demo corpus seeder (Phase 0-1).
  *
  *   node scripts/seedCoachCorpus.js     (or: npm run seed:coach)
  *
@@ -13,11 +13,11 @@
 const { v4: uuid } = require('uuid');
 const { ingestSourceChunks } = require('../utils/coachRetrieval');
 
-// Short, factually-general passages tied to GeoRise's real action categories.
+// Short, factually-general passages tied to EcoRise's real action categories.
 const SOURCES = [
   {
     title: 'Campus Waste Reduction Guide',
-    institution: 'GeoRise Demo Corpus',
+    institution: 'EcoRise Demo Corpus',
     license: 'CC-BY (demo)',
     pubYear: 2024,
     topicTags: ['waste', 'plastic', 'school'],
@@ -28,7 +28,7 @@ const SOURCES = [
   },
   {
     title: 'Everyday Climate Actions Overview',
-    institution: 'GeoRise Demo Corpus',
+    institution: 'EcoRise Demo Corpus',
     license: 'CC-BY (demo)',
     pubYear: 2024,
     topicTags: ['transportation', 'food', 'energy'],

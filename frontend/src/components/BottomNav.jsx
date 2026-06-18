@@ -1,4 +1,4 @@
-/* GeoRise — Bottom navigation bar with FAB */
+/* EcoRise — Bottom navigation bar with FAB */
 import Icon from './Icon';
 
 const NAV = [

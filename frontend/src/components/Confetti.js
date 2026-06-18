@@ -1,4 +1,4 @@
-/* GeoRise — Confetti canvas burst */
+/* EcoRise — Confetti canvas burst */
 
 export function fireConfetti(host, opts = {}) {
   const { count = 90, origin = { x: 0.5, y: 0.4 } } = opts;

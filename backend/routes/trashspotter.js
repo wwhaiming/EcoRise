@@ -1,4 +1,4 @@
-/* GeoRise — Trash Spotter routes */
+/* EcoRise — Trash Spotter routes */
 const express = require('express');
 const { v4: uuid } = require('uuid');
 const { getDb } = require('../db');

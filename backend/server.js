@@ -1,4 +1,4 @@
-/* GeoRise — Express API Server */
+/* EcoRise — Express API Server */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const express = require('express');
@@ -79,7 +79,7 @@ app.use((err, req, res, next) => {
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`🌱 GeoRise API running on http://localhost:${PORT}`);
+    console.log(`🌱 EcoRise API running on http://localhost:${PORT}`);
     const aiMode = process.env.OPENAI_API_KEY ? `LIVE (OpenAI ${process.env.ECO_MODEL || 'gpt-4o-mini'})`
       : 'MOCK / local model';
     console.log(`   AI mode: ${aiMode}`);

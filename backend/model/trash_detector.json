@@ -18,5 +18,11 @@
   "counts": {
     "not_trash": 1000,
     "trash": 2527
+  },
+  "confusion_matrix": {
+    "tp": 356,
+    "fp": 14,
+    "tn": 139,
+    "fn": 20
   }
 }

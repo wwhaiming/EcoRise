@@ -1,7 +1,7 @@
 {
-  "name": "georise",
+  "name": "ecorise",
   "version": "1.0.0",
-  "description": "GeoRise — AI-powered environmental leaderboard",
+  "description": "EcoRise — AI-powered environmental leaderboard",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
@@ -10,7 +10,8 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm run build",
     "seed": "cd backend && node scripts/seedDemo.js",
-    "demo": "npm run seed && npm run dev"
+    "demo": "npm run seed && npm run dev",
+    "test:frontend": "cd frontend && npm run test"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

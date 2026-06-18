@@ -1,4 +1,4 @@
-/* GeoRise — Home / Dashboard page */
+/* EcoRise — Home / Dashboard page */
 import { useRef, useState } from 'react';
 import Icon from '../components/Icon';
 import Avatar from '../components/Avatar';

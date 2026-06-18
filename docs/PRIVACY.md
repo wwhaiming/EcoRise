@@ -1,6 +1,6 @@
-# GeoRise — Privacy, FERPA & COPPA (Phase 2)
+# EcoRise — Privacy, FERPA & COPPA (Phase 2)
 
-GeoRise is used by students, some of whom are minors. Privacy is built as an engine,
+EcoRise is used by students, some of whom are minors. Privacy is built as an engine,
 not a settings page. This document is the design + the model/data card. The live,
 machine-readable version is served at `GET /api/privacy/policy` and rendered in-app
 under **Profile → Privacy & data**.
@@ -107,8 +107,8 @@ Points are computed server-side and capped; the LLM cannot mint them.
   substitute for the school's own signed parental-consent forms. We record and enforce
   the state, we do not collect the legal document.
 - The demo board is intentionally open (`demo` mode) for judging.
-- Retrieval is brute-force (no vector index yet) — fine at demo scale, documented as a
-  migration path.
+- Retrieval uses a **sqlite-vec KNN index** (`vec0` virtual table) — fine at demo scale,
+  with a documented migration path to pgvector for larger deployments (see `docs/SCALE.md`).
 - No real classroom pilot has run; all footprint figures ship with honest confidence
   labels.
 
@@ -118,10 +118,12 @@ Points are computed server-side and capped; the LLM cannot mint them.
 |--------|------|-----|---------|
 | GET | `/api/privacy/policy` | public | model/data card |
 | GET | `/api/privacy/consent?leaderboardId=` | member | my consent state |
-| POST | `/api/privacy/consent` | member / organizer | record/attest/grant/revoke consent |
-| POST | `/api/privacy/boards/:id/privacy` | organizer | set consent mode, retention, review |
+| POST | `/api/privacy/consent` | member / organizer | record/attest/grant/revoke consent (accepts optional document upload) |
+| POST | `/api/privacy/boards/:id/privacy` | organizer | set consent mode, retention, review, display mode |
 | GET | `/api/privacy/boards/:id/review-queue` | organizer | pending posts |
 | POST | `/api/privacy/posts/:id/review` | organizer | approve / reject (reverses points) |
 | GET | `/api/privacy/audit?leaderboardId=` | organizer | board audit trail |
+| GET | `/api/privacy/boards/:id/consent-vault` | organizer | list members with consent status + document presence |
+| GET | `/api/privacy/boards/:id/consent-vault/:userId/document` | organizer / self | download a stored signed consent slip |
 | GET | `/api/privacy/export` | self | download all my data |
 | POST | `/api/privacy/account/delete` | self | erase my account |

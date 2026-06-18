@@ -1,4 +1,4 @@
-/* GeoRise — User routes */
+/* EcoRise — User routes */
 const express = require('express');
 const { getDb } = require('../db');
 const { authMiddleware } = require('../middleware/auth');

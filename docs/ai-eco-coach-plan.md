@@ -2,7 +2,7 @@
 
 Competition target: USAII Global AI Hackathon 2026.
 
-Positioning: GeoRise is already an AI-powered environmental action app. The AI Eco Coach turns it into a complete learning-to-action system: students learn from trusted climate sources, answer source-cited questions, receive practical guidance, and convert learning into small, capped leaderboard rewards while verified real-world eco actions remain the main point source.
+Positioning: EcoRise is already an AI-powered environmental action app. The AI Eco Coach turns it into a complete learning-to-action system: students learn from trusted climate sources, answer source-cited questions, receive practical guidance, and convert learning into small, capped leaderboard rewards while verified real-world eco actions remain the main point source.
 
 This plan is intentionally designed for a hackathon submission: clear user problem, justified AI use, understandable architecture, visible impact, and responsible AI controls.
 
@@ -14,7 +14,7 @@ Students often want to help the environment but face three linked problems:
 2. Environmental science content is scattered across papers, class materials, agency reports, and teacher resources.
 3. Leaderboard apps can reward activity without proving that users learned anything accurate.
 
-GeoRise AI Eco Coach solves this by adding a retrieval-augmented learning layer to the existing GeoRise app.
+GeoRise AI Eco Coach solves this by adding a retrieval-augmented learning layer to the existing EcoRise app.
 
 The coach:
 
@@ -68,7 +68,7 @@ Feature flag:
 
 ## 4. Principles Reused From This Repo
 
-The strongest part of the current GeoRise codebase is that the model is not trusted as the authority. Keep that pattern.
+The strongest part of the current EcoRise codebase is that the model is not trusted as the authority. Keep that pattern.
 
 | Principle | Existing precedent | Coach reuse |
 | --- | --- | --- |
@@ -85,12 +85,12 @@ The demo should be one clean student journey, not a feature tour.
 
 Persona:
 
-- Maya, a high school or undergraduate student on an GeoRise board.
+- Maya, a high school or undergraduate student on an EcoRise board.
 - She wants to help her campus reduce waste but does not know which actions matter.
 
 Demo flow:
 
-1. Maya opens GeoRise and sees the new "Coach" entry.
+1. Maya opens EcoRise and sees the new "Coach" entry.
 2. The coach asks a cited question from a teacher-approved source:
    - "Which single-use item reduction has the most immediate plastic-waste impact in a school cafeteria?"
 3. Maya answers.
@@ -101,7 +101,7 @@ Demo flow:
    - +2 learning points, capped
    - "Learning points are capped so real-world actions stay primary."
 5. The coach recommends a next real action:
-   - "Bring a reusable bottle today. If you log it with a photo, GeoRise can verify it as a real action."
+   - "Bring a reusable bottle today. If you log it with a photo, EcoRise can verify it as a real action."
 6. Maya receives or previews a daily tip:
    - short, practical, cited, not guilt-based
 7. The judge sees an "AI Evidence" panel:
@@ -462,7 +462,7 @@ Example:
 ```text
 Tip: Try carrying a reusable bottle today. Schools can cut plastic waste quickly when common single-use items are replaced with reusables.
 Source: Campus Waste Reduction Guide, approved source #eco_source_12.
-Action: Log a reusable bottle refill for verified GeoRise points.
+Action: Log a reusable bottle refill for verified EcoRise points.
 ```
 
 ## 14. Threat Model
@@ -593,7 +593,7 @@ Done when:
 
 - Recommendation names one concrete action.
 - It cites a source.
-- It maps to a known GeoRise action category.
+- It maps to a known EcoRise action category.
 
 ### Phase 5: Daily tips
 
@@ -658,7 +658,7 @@ Coach screen sections:
 4. Responsible AI panel
    - sources retrieved
    - faithfulness status
-   - "AI drafts; GeoRise validates"
+   - "AI drafts; EcoRise validates"
 
 Design rule:
 
@@ -691,7 +691,7 @@ Pitch video structure:
 
 One-line pitch:
 
-"GeoRise AI Eco Coach turns trusted climate sources into cited student learning and small capped rewards, then guides users into verified real-world eco actions."
+"EcoRise AI Eco Coach turns trusted climate sources into cited student learning and small capped rewards, then guides users into verified real-world eco actions."
 
 ## 19. Winning Differentiators
 
@@ -753,4 +753,4 @@ The hackathon-winning version is not "thousands of papers fully ingested." The w
 - tests proving no hallucination/cap bypass in the demo path;
 - a pitch that clearly maps to the official rubric.
 
-If this is implemented cleanly, GeoRise becomes a strong responsible-AI submission because it combines environmental impact, education, behavior change, safety, and measurable architecture in one product loop.
+If this is implemented cleanly, EcoRise becomes a strong responsible-AI submission because it combines environmental impact, education, behavior change, safety, and measurable architecture in one product loop.

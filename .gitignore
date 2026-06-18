@@ -3,7 +3,7 @@ dist/
 .env
 .DS_Store
 
-# SQLite runtime artifacts (any db, incl. old ecorise.db + new georise.db + test dbs)
+# SQLite runtime artifacts (any db, incl. old georise.db + new ecorise.db + test dbs)
 *.db
 *.db-shm
 *.db-wal
@@ -11,12 +11,12 @@ dist/
 # scratch + export artifacts (not source)
 tmp-*.png
 *_NEW_CODE.txt
-GEORISE_ALL_CODE.txt
-GEORISE_FULL_SOURCE_WITH_AI_FIRST_UPDATE.txt
+ECORISE_ALL_CODE.txt
+ECORISE_FULL_SOURCE_WITH_AI_FIRST_UPDATE.txt
 ECORISE_NEW_CODE.txt
-georise-current-source.MANIFEST.txt
-georise-current-source.tar.gz
+ecorise-current-source.MANIFEST.txt
+ecorise-current-source.tar.gz
 *.tar.gz
-GEORISE_COMPLETE_SOURCE*.txt
+ECORISE_COMPLETE_SOURCE*.txt
 research-corpus-*.json
 research-corpus-viewer.html

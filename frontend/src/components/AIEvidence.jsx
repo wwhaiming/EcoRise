@@ -1,4 +1,4 @@
-/* GeoRise — AI Evidence Panel.
+/* EcoRise — AI Evidence Panel.
  *
  * The centerpiece for an AI hackathon: after EVERY submission the user sees
  * exactly how the model reasoned — what it detected, how confident it was, the

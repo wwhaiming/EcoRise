@@ -8,6 +8,8 @@
  * required to ship a question. See docs/AI_ECO_COACH_PLAN.md section 11.
  */
 const SIM_FLOOR = Number(process.env.COACH_SIM_FLOOR || 0.35);
+const { judgeEntailment } = require('./aiClient');
+
 
 function toks(s) {
   return new Set((String(s || '').toLowerCase().match(/[a-z0-9]{3,}/g) || []));
@@ -68,7 +70,7 @@ function deterministicFaithfulness(q, retrievedChunks) {
 }
 
 // Accept/reject a generated question against the chunks it was retrieved from.
-function gate(q, retrievedChunks, { simFloor = SIM_FLOOR } = {}) {
+async function gate(q, retrievedChunks, { simFloor = SIM_FLOOR } = {}) {
   if (!q || q.refusal) return { ok: false, reason: 'refusal', faithfulness: 0 };
   const retrievedIds = retrievedChunks.map(c => c.id);
   if (!validateCitations(q.sourceIds, retrievedIds)) {
@@ -82,7 +84,14 @@ function gate(q, retrievedChunks, { simFloor = SIM_FLOOR } = {}) {
   const evidence = cited.map(c => c.text).join(' ');
   const unsupported = unsupportedNumbers(`${q.correct || ''} ${q.explanation || ''}`, evidence);
   if (unsupported.length) return { ok: false, reason: 'unsupported_number', faithfulness: f, unsupportedNumbers: unsupported };
-  return { ok: true, reason: 'ok', faithfulness: f };
+
+  // Learned Semantic Entailment Gate
+  const judgeResult = await judgeEntailment(`${q.correct || ''} ${q.explanation || ''}`, evidence);
+  if (!judgeResult.entailment) {
+    return { ok: false, reason: 'semantic_contradiction', faithfulness: judgeResult.score, details: judgeResult.reasoning };
+  }
+
+  return { ok: true, reason: 'ok', faithfulness: judgeResult.score !== undefined ? judgeResult.score : f, reasoning: judgeResult.reasoning };
 }
 
 module.exports = { gate, deterministicFaithfulness, validateCitations, coverage, unsupportedNumbers, numericClaims, SIM_FLOOR };

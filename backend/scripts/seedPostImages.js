@@ -1,4 +1,4 @@
-/* GeoRise — backfill real demo photos onto seeded feed posts.
+/* EcoRise — backfill real demo photos onto seeded feed posts.
  * Fills posts whose `image` is empty OR a remote http URL (demo placeholder);
  * never overwrites real `data:` uploads. Run: node scripts/seedPostImages.js
  */
@@ -7,7 +7,7 @@ const Database = require('better-sqlite3');
 
 const DB_PATH = process.env.DATABASE_URL
   ? path.resolve(__dirname, '..', process.env.DATABASE_URL)
-  : path.join(__dirname, '..', 'georise.db');
+  : path.join(__dirname, '..', 'ecorise.db');
 
 // Curated, reachability-verified Unsplash photo IDs per action category.
 const PHOTOS = {

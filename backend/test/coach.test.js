@@ -1,4 +1,4 @@
-/* GeoRise — AI Eco Coach tests (Phases 0-5).
+/* EcoRise — AI Eco Coach tests (Phases 0-5).
  * Gating, roles, retrieval, cited question generation, capped scoring (no cap
  * bypass / no re-farming), guidance, and daily tips. Fully hermetic: no API keys,
  * deterministic offline embeddings + mock generation, so the correct answer of a

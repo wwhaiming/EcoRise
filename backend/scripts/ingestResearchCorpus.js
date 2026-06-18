@@ -1,4 +1,4 @@
-/* GeoRise — Research corpus ingester.
+/* EcoRise — Research corpus ingester.
  *
  *   node scripts/ingestResearchCorpus.js      (or: npm run seed:research)
  *
@@ -73,24 +73,62 @@ async function ingest(db) {
   insertAll();
 
   // Batch-embed every chunk and store normalized Float32 blobs.
-  const client = new (require('openai'))({ apiKey: process.env.OPENAI_API_KEY });
+  const hasKey = !!(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-'));
+  const client = hasKey ? new (require('openai'))({ apiKey: process.env.OPENAI_API_KEY }) : null;
+  const { deterministicEmbed } = require('../utils/coachEmbed');
   const upd = db.prepare('UPDATE eco_source_chunks SET embedding = ? WHERE id = ?');
   let embedded = 0;
-  for (let i = 0; i < chunkRows.length; i += BATCH) {
-    const slice = chunkRows.slice(i, i + BATCH);
-    const vecs = await embedBatch(client, slice.map(r => r.text));
+
+  let useLexicalFallback = !client;
+  if (client) {
+    try {
+      for (let i = 0; i < chunkRows.length; i += BATCH) {
+        const slice = chunkRows.slice(i, i + BATCH);
+        const vecs = await embedBatch(client, slice.map(r => r.text));
+        const writeBatch = db.transaction(() => {
+          slice.forEach((r, j) => { upd.run(toBlob(vecs[j]), r.id); embedded++; });
+        });
+        writeBatch();
+        process.stderr.write(`  embedded ${embedded}/${chunkRows.length}\r`);
+      }
+    } catch (err) {
+      console.warn('\n⚠️  Batch embedding failed, falling back to offline lexical embeddings:', err.message);
+      useLexicalFallback = true;
+    }
+  }
+
+  if (useLexicalFallback) {
+    // Deterministic offline embedding fallback
     const writeBatch = db.transaction(() => {
-      slice.forEach((r, j) => { upd.run(toBlob(vecs[j]), r.id); embedded++; });
+      for (const r of chunkRows) {
+        const v = deterministicEmbed(r.text);
+        upd.run(toBlob(v), r.id);
+        embedded++;
+      }
     });
     writeBatch();
-    process.stderr.write(`  embedded ${embedded}/${chunkRows.length}\r`);
   }
+
+  // Force virtual table sync for sqlite-vec
+  const { syncVectorTable } = require('../utils/coachRetrieval');
+  const { fromBlob } = require('../utils/coachEmbed');
+  if (chunkRows.length > 0) {
+    const firstChunk = db.prepare('SELECT embedding FROM eco_source_chunks WHERE id = ?').get(chunkRows[0].id);
+    if (firstChunk && firstChunk.embedding) {
+      const v = fromBlob(firstChunk.embedding);
+      if (v) syncVectorTable(db, v.length);
+    }
+  }
+
   return { sources: papers.length, chunks: chunkRows.length, embedded };
 }
 
 if (require.main === module) {
-  if (!process.env.OPENAI_API_KEY) { console.error('OPENAI_API_KEY required for embeddings.'); process.exit(1); }
   (async () => {
+    const hasKey = !!(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-'));
+    if (!hasKey) {
+      console.log('⚠️  OPENAI_API_KEY not set or invalid SK format. Using offline deterministic lexical embeddings.');
+    }
     const r = await ingest(getDb());
     console.log(`\n📚 Research corpus ingested: ${r.sources} approved sources, ${r.chunks} chunks, ${r.embedded} embedded.`);
   })().then(() => process.exit(0)).catch((e) => { console.error('\nIngest failed:', e.message); process.exit(1); });

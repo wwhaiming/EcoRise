@@ -1,4 +1,4 @@
-/* GeoRise — Phase 3 eval-rigor unit tests (pure, hermetic).
+/* EcoRise — Phase 3 eval-rigor unit tests (pure, hermetic).
  * Retrieval metrics (Recall@k / MRR / Precision@k) + the numeric claim-verification
  * layer that backs the semantic-entailment gate. No DB, no env, no network. */
 const test = require('node:test');
@@ -41,12 +41,12 @@ test('numeric gate compares VALUES not digit-substrings (surface-form equiv acce
   assert.deepStrictEqual(unsupportedNumbers('holds 5 liters', 'holds 50 liters'), ['5']); // no false-accept via substring
 });
 
-test('gate: rejects a fabricated numeric claim even when lexical coverage passes', () => {
+test('gate: rejects a fabricated numeric claim even when lexical coverage passes', async () => {
   const chunks = [{ id: 'c1', text: 'Replacing a beef meal with a plant-based meal lowers the per-meal footprint substantially.' }];
   const supported = { sourceIds: ['c1'], correct: 'plant-based meal', explanation: 'Replacing a beef meal with a plant-based meal lowers the per-meal footprint substantially.' };
   const fabricated = { sourceIds: ['c1'], correct: 'plant-based meal', explanation: 'Replacing a beef meal with a plant-based meal lowers the per-meal footprint by 73%.' };
-  assert.strictEqual(gate(supported, chunks).ok, true);
-  const bad = gate(fabricated, chunks);
+  assert.strictEqual((await gate(supported, chunks)).ok, true);
+  const bad = await gate(fabricated, chunks);
   assert.strictEqual(bad.ok, false);
   assert.strictEqual(bad.reason, 'unsupported_number');
 });

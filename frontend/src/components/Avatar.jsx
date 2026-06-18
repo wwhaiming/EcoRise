@@ -1,4 +1,4 @@
-/* GeoRise — Avatar component (photo + initials fallback + optional ring/glow) */
+/* EcoRise — Avatar component (photo + initials fallback + optional ring/glow) */
 import { useState } from 'react';
 
 export default function Avatar({ src, name = '?', size = 44, ring, glow, style }) {

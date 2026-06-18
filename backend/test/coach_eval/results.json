@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-18T16:50:23.511Z",
+  "generatedAt": "2026-06-18T19:06:23.438Z",
   "note": "Illustrative fixtures of the responsible-AI properties (citation validity, faithfulness, refusal, hallucination, injection resistance, point cap). Deterministic offline harness, NOT a third-party benchmark. Regenerate: npm run test:coach-eval.",
   "metrics": {
     "n": 13,
@@ -10,11 +10,11 @@
     "hallucinationRate": 0,
     "injectionResistance": 1,
     "retrieval": {
-      "n": 4,
+      "n": 20,
       "k": 5,
-      "recallAtK": 1,
-      "mrr": 1,
-      "precisionAtK": 0.4
+      "recallAtK": 0.9,
+      "mrr": 0.817,
+      "precisionAtK": 0.19
     },
     "capMaxDaily": 10
   },

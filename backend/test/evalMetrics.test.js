@@ -1,4 +1,4 @@
-/* GeoRise — eval metric math tests.
+/* EcoRise — eval metric math tests.
  * A hand-computed 8-case confusion matrix pins every reported number so the
  * eco-gate eval dashboard cannot silently miscount. */
 const test = require('node:test');

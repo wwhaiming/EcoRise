@@ -1,4 +1,4 @@
-/* GeoRise — image-hash unit tests (the non-LLM near-duplicate fraud primitive).
+/* EcoRise — image-hash unit tests (the non-LLM near-duplicate fraud primitive).
  * Proves the deterministic distance math and the fail-open guards the post route
  * and the test suite both rely on (tiny/garbage images -> null -> check skipped). */
 const test = require('node:test');

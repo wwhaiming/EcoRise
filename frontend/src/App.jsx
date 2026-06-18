@@ -1,4 +1,4 @@
-/* GeoRise — App shell: auth, routing, state, API integration */
+/* EcoRise — App shell: auth, routing, state, API integration */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './styles/global.css';
 
@@ -215,7 +215,7 @@ export default function App() {
       const data = await api.listLeaderboards();
       board = data.leaderboards?.[0] || null;
       if (!board) {
-        board = await api.createLeaderboard({ name: 'My GeoRise Board', resetInterval: 'weekly', prize: '', includeSelf: true });
+        board = await api.createLeaderboard({ name: 'My EcoRise Board', resetInterval: 'weekly', prize: '', includeSelf: true });
       }
       if (board) { setLeaderboardId(board.id); setLeaderboard(board); }
     } catch { /* offline: stay empty rather than show fake data */ }
@@ -302,7 +302,7 @@ export default function App() {
   // ── Logout ──
   const logout = async () => {
     try { await api.logout(); } catch { /* local logout still clears client state */ }
-    localStorage.removeItem('georise_onboarded');
+    localStorage.removeItem('ecorise_onboarded');
     setUser(null);
     setAuthed(false);
     setScreen('onboarding');
@@ -340,7 +340,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="scroll slide-screen" key={screen} ref={scrollRef}>
+      <div className="scroll slide-screen" key={screen} ref={scrollRef} style={isOnboarding ? { paddingBottom: 0 } : null}>
         {renderScreen()}
       </div>
       {showNav && <BottomNav screen={screen} go={go} onFab={() => setModal('log')} />}

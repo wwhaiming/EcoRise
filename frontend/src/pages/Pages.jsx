@@ -1,4 +1,4 @@
-/* GeoRise — Feed, Quests, Profile, Leaderboard, Organizer pages */
+/* EcoRise — Feed, Quests, Profile, Leaderboard, Organizer pages */
 import { useState, useEffect } from 'react';
 import Icon from '../components/Icon';
 import Avatar from '../components/Avatar';
@@ -207,7 +207,7 @@ export function Leaderboard({ ctx }) {
     <div className="screen-in" style={{ paddingBottom: 24 }}>
       <div style={{ padding: '18px 18px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div className="eyebrow" style={{ color: 'var(--green)' }}>{leaderboard?.name || 'GeoRise'}</div>
+          <div className="eyebrow" style={{ color: 'var(--green)' }}>{leaderboard?.name || 'EcoRise'}</div>
           <div className="h1" style={{ fontSize: 27 }}>Leaderboard</div>
         </div>
         <button className="btn btn-secondary btn-sm" aria-label="Board settings" onClick={() => ctx.go('organizer')} style={{ padding: 10 }}>
@@ -368,7 +368,7 @@ export function Profile({ ctx }) {
    ORGANIZER
    ============================================================ */
 export function Organizer({ ctx }) {
-  const [name, setName] = useState(ctx.leaderboard?.name || 'My GeoRise Board');
+  const [name, setName] = useState(ctx.leaderboard?.name || 'My EcoRise Board');
   const [interval, setInterval_] = useState(ctx.leaderboard?.reset_interval || 'weekly');
   const [prizeOn, setPrizeOn] = useState(true);
   const [prize, setPrize] = useState(ctx.leaderboard?.prize || '');
@@ -444,7 +444,7 @@ export function Organizer({ ctx }) {
           <div>
             <label className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>Invite link</label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <div className="field" style={{ flex: 1, display: 'flex', alignItems: 'center', color: 'var(--green)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>georise.app/j/{ctx.leaderboard?.invite_code || 'INVITE'}</div>
+              <div className="field" style={{ flex: 1, display: 'flex', alignItems: 'center', color: 'var(--green)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>ecorise.app/j/{ctx.leaderboard?.invite_code || 'INVITE'}</div>
               <button className="btn btn-primary" style={{ padding: '0 18px' }} aria-label="Copy invite link" onClick={() => copyInvite(ctx.leaderboard?.invite_code, ctx)}><Icon name="share" size={18} color="#fff" /></button>
             </div>
           </div>

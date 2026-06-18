@@ -1,4 +1,4 @@
-/* GeoRise — AI Eco Coach eval gates (Phase 6).
+/* EcoRise — AI Eco Coach eval gates (Phase 6).
  * Runs the offline coach eval against the seeded corpus and asserts the plan's
  * responsible-AI thresholds: citations valid, answers faithful, off-topic prompts
  * refused, no hallucination, injection-resistant, and the spam cap holds. */
@@ -18,6 +18,7 @@ process.env.DATABASE_URL = DB;
 
 const { getDb } = require('../db');
 const { seedCoachCorpus } = require('../scripts/seedCoachCorpus');
+const { ingest: ingestResearch } = require('../scripts/ingestResearchCorpus');
 const { runCoachEval, gatesPass, GATES } = require('./coach_eval/runEval');
 
 test.after(() => { try { for (const f of [DB, DB + '-shm', DB + '-wal']) fs.existsSync(f) && fs.unlinkSync(f); } catch (_) {} });
@@ -25,6 +26,7 @@ test.after(() => { try { for (const f of [DB, DB + '-shm', DB + '-wal']) fs.exis
 test('coach eval meets all responsible-AI gates on the seeded corpus', async () => {
   const db = getDb();
   await seedCoachCorpus(db);
+  await ingestResearch(db);
   const fixtures = JSON.parse(fs.readFileSync(path.join(__dirname, 'coach_eval', 'fixtures.json'), 'utf8'));
   const m = await runCoachEval(db, fixtures);
 

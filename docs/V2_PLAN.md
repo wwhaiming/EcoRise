@@ -1,6 +1,6 @@
-# GeoRise v2 — Win Plan & Progress Tracker
+# EcoRise v2 — Win Plan & Progress Tracker
 
-Branch: `georise-v2-footprint-privacy`. Goal: push every CODEABLE rubric gap to its honest
+Branch: `ecorise-v2-footprint-privacy`. Goal: push every CODEABLE rubric gap to its honest
 maximum and re-grade with the council at each checkpoint. Status legend: ☐ todo · ◐ in-progress · ☑ done+verified.
 
 ## Honest ceiling (no cheating)
@@ -22,9 +22,9 @@ truthful confidence label + assumptions. We build the rest to masterful quality.
 - ☑ add a footprintModel unit test to backend/test (1164aed, 8 hermetic cases).
 
 ### RESUME POINTER (for a fresh session)
-Branch `georise-v2-footprint-privacy`. DONE: Phase 1 (footprint intelligence + unit tests) AND
+Branch `ecorise-v2-footprint-privacy`. DONE: Phase 1 (footprint intelligence + unit tests) AND
 Phase 2 (privacy/FERPA-COPPA, re-scoped to additive — see docs/PRIVACY.md). Backend 79/79 green,
-frontend builds clean. Committed dd85755 and pushed to georise-v2-footprint-privacy.
+frontend builds clean. Committed dd85755 and pushed to ecorise-v2-footprint-privacy.
 NEXT = council re-grade checkpoint CP1 (re-run /claude-council:ask with Phase 1+2 implemented),
 then Phase 3 (evaluation rigor: real metrics, semantic entailment gate, in-app AI report card,
 model cards). Phases 4-6 (winning-plan UX fixes, scale honesty, submission artifacts) after.
@@ -69,7 +69,7 @@ the budget on the additive pieces a harsh judge actually grades. Full design: do
   backend/.env.example; OpenAI per-request timeout + retries (covers every call); deleted the dead
   chatEcoAction/simulateMockChat/CHAT_SYSTEM_PROMPT chain; removed the rubric-gaming chips from Coach.
   CONFIRMED already done (grep-audited): AI rate-limit/day, eco offline mock fallback, honest labels,
-  auto-loaded research, Board->Home nav, GeoRise branding.
+  auto-loaded research, Board->Home nav, EcoRise branding.
   DONE 2nd pass (2026-06-18): client-side image downscale (utils/image.js, used in both upload paths);
   startup retrieval self-check (server.js, skipped under test); 502/503 -> visible "guidance withheld"
   refusal card; a11y on the Evidence Panel (role=dialog / aria-modal / Escape / focus-on-open) + aria-live

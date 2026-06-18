@@ -1,4 +1,4 @@
-# GeoRise — 3-minute judge demo script
+# EcoRise — 3-minute judge demo script
 
 Digest-first order: lead with the Direction-B centerpiece (the school's hidden
 footprint), then prove the responsible-AI claims, then the privacy story. Works fully
@@ -9,7 +9,7 @@ offline (no API key) — offline mode is clearly flagged in the UI, never faked.
 ```bash
 npm run install:all
 npm run demo            # seeds a populated board + login, starts frontend + backend
-# login: demo@georise.app  (password printed by the seed)  ·  board "Greenfield High"
+# login: demo@ecorise.app  (password printed by the seed)  ·  board "Greenfield High"
 cd backend && COACH_ENABLED=true npm run seed:coach   # enable + seed the coach corpus
 ```
 
@@ -19,7 +19,7 @@ Open http://localhost:5173 and log in. With an `OPENAI_API_KEY` set you get live
 
 ## 0:00 – 0:30 · The hook + the hidden footprint
 
-> "Most eco apps let the AI invent an impact number. GeoRise never does. The AI perceives; a deterministic, cited engine decides."
+> "Most eco apps let the AI invent an impact number. EcoRise never does. The AI perceives; a deterministic, cited engine decides."
 
 - Land on the **AI Footprint Coach**. Point at the **School Hidden-Footprint digest** (the hero): total t CO₂e/month, the **biggest hidden emitter** flagged, the **confidence chip**, and the disclaimer.
 - "These come from cited EPA/OWID factors with an uncertainty band — a teacher can enter real bills to raise confidence." (Open the baseline wizard for one second.)
