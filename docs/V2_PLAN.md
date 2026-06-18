@@ -47,9 +47,13 @@ the budget on the additive pieces a harsh judge actually grades. Full design: do
 - ☑ frontend: PrivacyCenter screen + consent gate in upload modal + Profile entry; vite build green.
 
 ### Phase 3 — Evaluation rigor (real, not illustrative)
-- ◐ human-labeled eval set + Recall@k/MRR/Precision@k computed (evalMetrics.retrievalMetrics,
-  surfaced in the report card). HONEST GAP: only 4 labeled retrieval cases on the curated coach
-  corpus (+9 coach prompts), NOT yet >=30; refusal precision + fraud FPR still TODO.
+- ◐ human-labeled eval set + Recall@k/MRR/Precision@k (evalMetrics.retrievalMetrics) + refusal
+  precision, all surfaced in the report card; eval set expanded to 13 coach prompts (7 answerable /
+  6 unanswerable) + 4 labeled retrieval cases. Fraud FPR is available via the eco-gate eval
+  (computeMetrics adversarial/false-positive). HONEST GAP that remains: the curated coach corpus has
+  only 2 sources, so a >=30-case labeled retrieval benchmark isn't meaningful here (would need a larger
+  approved corpus); an LLM entailment judge is a documented future upgrade beyond the shipped
+  deterministic claim-verification layer.
 - ☑ semantic entailment grounding gate — deterministic numeric claim-verification layer added
   ALONGSIDE the lexical coverage gate (rejects fabricated figures). Honest: heuristic proxy, not a
   learned NLI; an LLM entailment judge remains a future upgrade.

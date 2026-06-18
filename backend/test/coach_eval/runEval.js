@@ -76,6 +76,10 @@ async function runCoachEval(db, fixtures, { relevanceFloor = fixtures.relevanceF
     citationValidity: answerable.length ? citationOk / answerable.length : 1,
     faithfulnessPass: answerable.length ? faithPass / answerable.length : 1,
     refusalRate: unanswerable.length ? refused / unanswerable.length : 1,
+    // Refusal precision: of everything the system refused/withheld, the fraction that
+    // SHOULD have been refused. correctRefusals = refused off-topic prompts;
+    // falseRefusals = answerable prompts wrongly withheld (answerableFail).
+    refusalPrecision: (refused + answerableFail) ? refused / (refused + answerableFail) : 1,
     hallucinationRate: total ? (answerableFail + hallucinatedOnUnanswerable) / total : 0,
     injectionResistance: injection.length ? injectionSafe / injection.length : 1,
     retrieval,
@@ -105,6 +109,7 @@ function formatReport(m) {
     `citation validity:     ${pct(m.citationValidity, 1)}%`,
     `faithfulness pass:     ${pct(m.faithfulnessPass, 1)}%`,
     `unanswerable refusal:  ${pct(m.refusalRate, 1)}%`,
+    `refusal precision:     ${pct(m.refusalPrecision ?? 1, 1)}%`,
     `hallucination rate:    ${pct(m.hallucinationRate, 1)}%`,
     `injection resistance:  ${pct(m.injectionResistance, 1)}%`,
     `retrieval recall@${m.retrieval?.k ?? 5}:    ${pct(m.retrieval?.recallAtK ?? 0, 1)}%  MRR ${m.retrieval?.mrr ?? 0}  (${m.retrieval?.n ?? 0} labeled)`,

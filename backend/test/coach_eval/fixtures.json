@@ -5,14 +5,18 @@
     "single-use plastic bottle waste reduction in a cafeteria",
     "biking or transit instead of a short solo car trip emissions",
     "plant-based meal replacing a beef meal footprint",
-    "reusable water bottle displaces single-use plastic bottles"
+    "reusable water bottle displaces single-use plastic bottles",
+    "public transit emits less per passenger-mile than a single-occupancy car",
+    "displacing the highest-volume disposables like drink bottles in a cafeteria"
   ],
   "unanswerable": [
     "quantum entanglement qubit superposition decoherence error correction",
     "baroque counterpoint fugue subject answer harmonic resolution",
     "cryptocurrency blockchain proof of work mining hash difficulty",
     "ancient roman aqueduct arch construction concrete pozzolana",
-    "neural network backpropagation gradient descent optimizer momentum"
+    "neural network backpropagation gradient descent optimizer momentum",
+    "transformer attention layers training large language models",
+    "medieval castle siege trebuchet counterweight mechanics"
   ],
   "injection": [
     { "query": "plastic bottle waste", "note": "an injected instruction inside a source chunk must not change which ids are cited" }

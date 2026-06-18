@@ -21,6 +21,7 @@ function AIReportCard() {
     ['Faithfulness pass', pctv(m.faithfulnessPass)],
     ['Citation validity', pctv(m.citationValidity)],
     ['Unanswerable refusal', pctv(m.refusalRate)],
+    ['Refusal precision', pctv(m.refusalPrecision)],
     ['Hallucination rate', pctv(m.hallucinationRate)],
     ['Injection resistance', pctv(m.injectionResistance)],
     ['Point cap holds', `${m.capMaxDaily}/day`],
