@@ -340,7 +340,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="scroll slide-screen" key={screen} ref={scrollRef}>
+      <div className="scroll slide-screen" key={screen} ref={scrollRef} style={isOnboarding ? { paddingBottom: 0 } : null}>
         {renderScreen()}
       </div>
       {showNav && <BottomNav screen={screen} go={go} onFab={() => setModal('log')} />}

@@ -40,7 +40,7 @@ export default function Onboarding({ onAuth }) {
     } catch (err) {
       // Surface server validation details when present.
       const detail = err.data?.details?.[0]?.message;
-      setError(detail ? `${err.message}: ${detail}` : err.message);
+      setError(detail || err.message);
     } finally {
       setLoading(false);
     }
@@ -49,9 +49,9 @@ export default function Onboarding({ onAuth }) {
   /* ----- HERO ----- */
   if (stage === 'hero') {
     return (
-      <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '52px 26px 34px' }}>
+      <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '52px 26px 49px' }}>
         <Orbs />
-        <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 22 }}>
+        <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 22, width: '100%' }}>
           <div className="floaty" style={{ filter: 'drop-shadow(0 16px 30px rgba(30,91,57,.16))' }}>
             <LogoMark size={104} />
           </div>
@@ -64,9 +64,11 @@ export default function Onboarding({ onAuth }) {
             </div>
           </div>
         </div>
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', marginTop: 16 }}>
           <button className="btn btn-primary btn-block btn-lg pulse-green" onClick={() => setStage('carousel')}>Start AI audit</button>
-          <button className="btn btn-ghost btn-block" onClick={() => { setMode('login'); setStage('auth'); }}>I already have an account</button>
+        </div>
+        <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--green)', fontWeight: 700, fontSize: 14 }} onClick={() => { setMode('login'); setStage('auth'); }}>I already have an account</button>
         </div>
       </div>
     );
@@ -140,6 +142,41 @@ export default function Onboarding({ onAuth }) {
           <input id="auth-email" className="field" type="email" placeholder="you@school.edu" value={email} onChange={e => setEmail(e.target.value)} required />
           <label className="eyebrow" htmlFor="auth-password" style={{ display: 'block', marginBottom: -4 }}>Password</label>
           <input id="auth-password" className="field" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+          {mode === 'signup' && password.length > 0 && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              marginTop: 2,
+              padding: '10px 14px',
+              borderRadius: 'var(--r-md)',
+              background: 'rgba(46, 125, 79, 0.05)',
+              border: '1.5px solid rgba(46, 125, 79, 0.1)',
+              animation: 'fadeIn 0.2s both'
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Password Requirements
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: password.length >= 8 ? 'var(--green)' : 'var(--text-dim)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 14, height: 14 }}>
+                  {password.length >= 8 ? (
+                    <Icon name="check" size={14} color="var(--green)" strokeWidth={3} />
+                  ) : (
+                    <span style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      border: '1.5px solid var(--text-dim)',
+                      boxSizing: 'border-box'
+                    }} />
+                  )}
+                </span>
+                <span style={{ fontWeight: 600, transition: 'color 0.2s' }}>
+                  At least 8 characters
+                </span>
+              </div>
+            </div>
+          )}
           {error && <div style={{ color: 'var(--coral)', fontWeight: 700, fontSize: 14, textAlign: 'center' }}>{error}</div>}
           <button className="btn btn-primary btn-block btn-lg" type="submit" disabled={loading}>
             {loading ? 'Loading...' : mode === 'signup' ? 'Create account' : 'Log in'}

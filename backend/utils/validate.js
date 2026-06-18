@@ -1,15 +1,21 @@
 /* GeoRise — request validation (zod). */
 const { z } = require('zod');
 
-const email = z.string().trim().toLowerCase().email().max(254);
-const password = z.string().min(8).max(200);
+const email = z.string({ required_error: 'Email is required' })
+  .trim()
+  .toLowerCase()
+  .email('Please enter a valid email address')
+  .max(254, 'Email must be under 254 characters');
+const password = z.string({ required_error: 'Password is required' })
+  .min(8, 'Password must be at least 8 characters')
+  .max(200, 'Password must be under 200 characters');
 const uuidArr = z.array(z.string().uuid()).max(3);
 
 const schemas = {
   signup: z.object({
     email,
     password,
-    name: z.string().trim().min(1).max(60).optional(),
+    name: z.string().trim().min(1, 'Name cannot be empty').max(60, 'Name must be under 60 characters').optional(),
   }),
   login: z.object({ email, password }),
   createLeaderboard: z.object({

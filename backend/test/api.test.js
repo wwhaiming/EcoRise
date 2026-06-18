@@ -54,6 +54,7 @@ test('health', async () => {
 test('signup rejects weak password (validation)', async () => {
   const r = await request(app).post('/api/auth/signup').send({ email: 'a@b.dev', password: 'short' });
   assert.equal(r.status, 400);
+  assert.equal(r.body.details?.[0]?.message, 'Password must be at least 8 characters');
 });
 
 test('login does not leak token in body; cookie set', async () => {
