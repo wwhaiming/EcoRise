@@ -1,4 +1,4 @@
-/* GeoRise — Onboarding (Hero → Carousel → Auth) */
+/* EcoRise — Onboarding (Hero → Carousel → Auth) */
 import { useState } from 'react';
 import Icon from '../components/Icon';
 import { LogoMark, Wordmark, Orbs } from '../components/Shared';
@@ -35,7 +35,7 @@ export default function Onboarding({ onAuth }) {
     try {
       const body = mode === 'signup' ? { email, password, name } : { email, password };
       const data = mode === 'signup' ? await api.signup(body) : await api.login(body);
-      localStorage.setItem('georise_onboarded', '1'); // UI hint only (not auth)
+      localStorage.setItem('ecorise_onboarded', '1'); // UI hint only (not auth)
       onAuth(data.user);
     } catch (err) {
       // Surface server validation details when present.
@@ -49,7 +49,7 @@ export default function Onboarding({ onAuth }) {
   /* ----- HERO ----- */
   if (stage === 'hero') {
     return (
-      <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '52px 26px 49px' }}>
+      <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '52px 26px 62px' }}>
         <Orbs />
         <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 22, width: '100%' }}>
           <div className="floaty" style={{ filter: 'drop-shadow(0 16px 30px rgba(30,91,57,.16))' }}>

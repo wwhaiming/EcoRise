@@ -1,4 +1,4 @@
-/* GeoRise — Phase 3 eval-rigor unit tests (pure, hermetic).
+/* EcoRise — Phase 3 eval-rigor unit tests (pure, hermetic).
  * Retrieval metrics (Recall@k / MRR / Precision@k) + the numeric claim-verification
  * layer that backs the semantic-entailment gate. No DB, no env, no network. */
 const test = require('node:test');

@@ -1,4 +1,4 @@
-/* GeoRise — deterministic demo seeder for judging.
+/* EcoRise — deterministic demo seeder for judging.
  *
  *   node scripts/seedDemo.js        (or: npm run seed)
  *
@@ -15,8 +15,8 @@ const { getDb } = require('../db');
 const { calcNextReset } = require('../utils/seasons');
 
 const INVITE = 'DEMOECO';
-const DEMO_EMAIL = 'demo@georise.app';
-const DEMO_DOMAIN = '@demo.georise.app';
+const DEMO_EMAIL = 'demo@ecorise.app';
+const DEMO_DOMAIN = '@demo.ecorise.app';
 // Random per run (override with DEMO_PASSWORD) — never ship a hardcoded login.
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD || ('demo-' + crypto.randomBytes(4).toString('hex'));
 
@@ -104,7 +104,7 @@ function seed() {
     for (const q of QUESTS) insQuest.run(uuid(), demo.id, q.title, q.description, q.action_type, q.points_base, q.goal, q.progress, today);
   })();
 
-  console.log('\n🌱 GeoRise demo seeded.');
+  console.log('\n🌱 EcoRise demo seeded.');
   console.log('   Login:  ' + DEMO_EMAIL + '  /  ' + DEMO_PASSWORD);
   console.log('   Board:  Greenfield High   Invite code: ' + INVITE);
   console.log('   Open the app, log in, and you land on a populated board.\n');

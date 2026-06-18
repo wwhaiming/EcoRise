@@ -1,4 +1,4 @@
-/* GeoRise — Quests page (dedicated tab).
+/* EcoRise — Quests page (dedicated tab).
  *
  * Daily quests are AI-generated per user and the 2x bonus is granted ONLY by
  * logging a verified photo action — so this page leans into the AI + anti-cheat

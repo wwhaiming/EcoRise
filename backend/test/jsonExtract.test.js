@@ -1,4 +1,4 @@
-/* GeoRise — robust JSON extraction tests.
+/* EcoRise — robust JSON extraction tests.
  * Guards the single parser every aiClient model-response site now uses: code
  * fences, surrounding prose, trailing commas, and nested braces inside strings. */
 const test = require('node:test');

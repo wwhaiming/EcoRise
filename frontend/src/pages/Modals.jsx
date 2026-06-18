@@ -1,4 +1,4 @@
-/* GeoRise — Log Action + Trash Spotter modal sheets */
+/* EcoRise — Log Action + Trash Spotter modal sheets */
 import { useState } from 'react';
 import Icon from '../components/Icon';
 import { Sheet, UploadFrame, PhotoSources } from '../components/Shared';

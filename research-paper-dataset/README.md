@@ -1,7 +1,7 @@
 # Research Paper Dataset
 
 1000 environmental / sustainability research papers fetched from [OpenAlex](https://openalex.org)
-(open metadata, no API key). Powers the GeoRise AI Eco Coach's research features:
+(open metadata, no API key). Powers the EcoRise AI Eco Coach's research features:
 
 - **Ask the research** — `GET /api/coach/ask?q=` retrieves the most relevant paper
   abstracts by embedding similarity and answers the question grounded ONLY in them,
@@ -14,7 +14,7 @@
 - `papers.json` — `{ source, count, papers: [...] }`. Each paper:
   `openalexId, topic, title, abstract, authors[], year, doi, url, venue, openAccess, citedByCount`.
 
-## Topics (matched to GeoRise action categories)
+## Topics (matched to EcoRise action categories)
 transportation · food · waste · energy · climate_ed · sustainability · footprint · nature
 
 ## Ingest into the Coach corpus

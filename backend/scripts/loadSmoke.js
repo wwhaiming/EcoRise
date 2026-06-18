@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* GeoRise — retrieval smoke load test.
+/* EcoRise — retrieval smoke load test.
  *
  *   node scripts/loadSmoke.js [N]     (or: npm run loadtest)
  *

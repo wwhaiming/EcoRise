@@ -1,4 +1,4 @@
-/* GeoRise — Research corpus ingester.
+/* EcoRise — Research corpus ingester.
  *
  *   node scripts/ingestResearchCorpus.js      (or: npm run seed:research)
  *

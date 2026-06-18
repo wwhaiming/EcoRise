@@ -7,7 +7,7 @@ approved sources, retrieval, cited question generation, answer grading, point ca
 faithfulness checks, and backend tests. The broader ingestion plan for thousands of
 professor papers remains future scope and should not be represented as fully built.
 
-**Positioning:** GeoRise is already an AI-powered environmental-action app. The AI Eco
+**Positioning:** EcoRise is already an AI-powered environmental-action app. The AI Eco
 Coach turns it into a complete learning-to-action system: students learn from trusted
 climate sources, answer source-cited questions, receive practical guidance, and convert
 learning into small, capped leaderboard rewards — while verified real-world eco actions
@@ -28,7 +28,7 @@ Students who want to help the environment hit three linked problems:
    reports, and teacher resources.
 3. Leaderboard apps can reward activity without proving the user learned anything accurate.
 
-GeoRise AI Eco Coach adds a **retrieval-augmented learning layer** to the existing app. It:
+EcoRise AI Eco Coach adds a **retrieval-augmented learning layer** to the existing app. It:
 
 - Ingests approved environmental sources (professor PDFs, public papers, agency reports).
 - Retrieves relevant passages **before** generating any scientific explanation.
@@ -45,7 +45,7 @@ source -> retrieval -> cited question -> student answer -> capped points
        -> real-world action recommendation -> verified eco action
 ```
 
-This mirrors the pattern that already governs GeoRise: in `analyzeEcoAction` the model
+This mirrors the pattern that already governs EcoRise: in `analyzeEcoAction` the model
 *perceives* the photo, and `carbonEngine`/`pointsEngine` *decide* the impact and points.
 The Coach extends the same separation to education.
 
@@ -90,7 +90,7 @@ approved sample corpus.
 
 ## 4. Principles Reused From This Repo
 
-The strongest property of the current GeoRise codebase is that **the model is not trusted
+The strongest property of the current EcoRise codebase is that **the model is not trusted
 as the authority**. Keep that pattern.
 
 | Principle | Existing precedent | Coach reuse |
@@ -109,19 +109,19 @@ as the authority**. Keep that pattern.
 
 One clean student journey, not a feature tour.
 
-**Persona — Maya:** a high-school/undergraduate student on an GeoRise board who wants to
+**Persona — Maya:** a high-school/undergraduate student on an EcoRise board who wants to
 help her campus reduce waste but does not know which actions matter most.
 
 **Flow**
 
-1. Maya opens GeoRise and sees the new **Coach** entry.
+1. Maya opens EcoRise and sees the new **Coach** entry.
 2. The coach asks a cited question from a teacher-approved source:
    *"Which single-use item reduction has the most immediate plastic-waste impact in a school cafeteria?"*
 3. Maya answers.
 4. The app shows: correct/incorrect, a short explanation, **source citations**, **+2 learning
    points (capped)**, and the line *"Learning points are capped so real-world actions stay primary."*
 5. The coach recommends a next real action:
-   *"Bring a reusable bottle today. Log it with a photo and GeoRise can verify it as a real action."*
+   *"Bring a reusable bottle today. Log it with a photo and EcoRise can verify it as a real action."*
 6. Maya previews a daily tip: short, practical, cited, not guilt-based.
 7. The judge sees an **AI Evidence** panel: retrieved sources, faithfulness score, point-cap
    status, and corpus approval status.
@@ -464,7 +464,7 @@ only; never reveal another user's behavior; never shame the user.
 Tip:    Try carrying a reusable bottle today. Schools cut plastic waste quickly when common
         single-use items are replaced with reusables.
 Source: "Campus Waste Reduction Guide" (approved source).
-Action: Log a reusable bottle refill for verified GeoRise points.
+Action: Log a reusable bottle refill for verified EcoRise points.
 ```
 
 ---
@@ -536,7 +536,7 @@ answers grant at most capped points; repeats grant 0; backend tests prove no cap
 
 **Phase 4 — Guidance.** Build: a recommendation from recent action categories; a source-cited
 explanation; a CTA into the existing log-action flow. *Done when:* it names one concrete action,
-cites a source, and maps to a known GeoRise action category.
+cites a source, and maps to a known EcoRise action category.
 
 **Phase 5 — Daily tips.** Build: `coach_user_prefs`; opportunistic daily-tip delivery; quiet
 hours; `notifications` integration. *Done when:* one tip/day max by default; opt-out works;
@@ -558,7 +558,7 @@ style. Reuse the `AIEvidence` panel pattern for the responsible-AI proof.
 - **Coach screen:** Question card (prompt, choices, source badge, difficulty) -> Answer result
   (correct/incorrect, explanation, citations, points, cap status) -> Guidance card ("Try this
   today" + concrete action + link to log a photo) -> Responsible-AI panel (sources retrieved,
-  faithfulness status, "AI drafts; GeoRise validates").
+  faithfulness status, "AI drafts; EcoRise validates").
 - **Design rule:** citations are calm evidence chips, not flashy AI badges. Avoid a chatbot-first
   UI — the winning product is a learning/action loop, not another chat window.
 
@@ -577,7 +577,7 @@ snippets + faithfulness gate) -> Action loop (coach suggests a real action, link
 photo logging) -> Responsible AI (caps, citations, source approval, no AI point authority) ->
 Impact (schools turn environmental learning into measurable behavior).
 
-**One-line pitch:** *"GeoRise AI Eco Coach turns trusted climate sources into cited student
+**One-line pitch:** *"EcoRise AI Eco Coach turns trusted climate sources into cited student
 learning and small capped rewards, then guides users into verified real-world eco actions."*
 
 ---
@@ -635,7 +635,7 @@ The hackathon-winning version is not "thousands of papers fully ingested." It is
 - tests proving no hallucination / cap bypass in the demo path;
 - a pitch that maps cleanly to the official rubric.
 
-Implemented cleanly, GeoRise becomes a strong responsible-AI submission: environmental impact,
+Implemented cleanly, EcoRise becomes a strong responsible-AI submission: environmental impact,
 education, behavior change, safety, and measurable architecture in one product loop.
 
 ---

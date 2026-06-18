@@ -1,4 +1,4 @@
-/* GeoRise — Research screen.
+/* EcoRise — Research screen.
  *
  * Split out of the AI Eco Coach screen: this is the "research library and below"
  * half (the 1000-paper corpus: ask / browse / summarize / visualize) plus the

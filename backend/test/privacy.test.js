@@ -1,4 +1,4 @@
-/* GeoRise — Privacy / FERPA-COPPA integration tests (Phase 2).
+/* EcoRise — Privacy / FERPA-COPPA integration tests (Phase 2).
  * Run: npm test
  *
  * Proves the compliance surface end-to-end: the consent gate blocks uploads,

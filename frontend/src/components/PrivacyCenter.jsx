@@ -1,4 +1,4 @@
-/* GeoRise — Privacy Center (Phase 2).
+/* EcoRise — Privacy Center (Phase 2).
  *
  * One screen that makes the FERPA/COPPA posture visible and operable:
  *   - your consent state on the active board (self-attest if your class allows it)
@@ -77,7 +77,7 @@ export default function PrivacyCenter({ ctx }) {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'georise-export.json'; a.click();
+      a.href = url; a.download = 'ecorise-export.json'; a.click();
       URL.revokeObjectURL(url);
       showToast('Your data downloaded');
     } catch (e) { showToast(e.message || 'Export failed'); }
@@ -182,7 +182,7 @@ export default function PrivacyCenter({ ctx }) {
 
         {/* Model / data card */}
         {policy && (
-          <Section icon="sparkle" title="How GeoRise uses AI &amp; data" tint="#7C5CBF">
+          <Section icon="sparkle" title="How EcoRise uses AI &amp; data" tint="#7C5CBF">
             <div className="dim" style={{ fontSize: 12, fontWeight: 650, lineHeight: 1.45 }}>{policy.responsibleAi}</div>
             <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
               {(policy.models || []).map((m, i) => (

@@ -1,4 +1,4 @@
-/* GeoRise — Podium component (3 variants: Cards, Stand, Medals) */
+/* EcoRise — Podium component (3 variants: Cards, Stand, Medals) */
 import Avatar from './Avatar';
 import { RankBadge } from './UI';
 import { METAL } from './constants';

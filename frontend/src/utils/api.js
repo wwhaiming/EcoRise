@@ -1,4 +1,4 @@
-/* GeoRise — API utility (cookie session + CSRF, no token in localStorage) */
+/* EcoRise — API utility (cookie session + CSRF, no token in localStorage) */
 const DEFAULT_BASE = typeof window !== 'undefined'
   ? `${window.location.protocol}//${window.location.hostname}:3001`
   : 'http://localhost:3001';

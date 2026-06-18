@@ -1,7 +1,7 @@
 {
-  "name": "georise-backend",
+  "name": "ecorise-backend",
   "version": "1.0.0",
-  "description": "GeoRise API server",
+  "description": "EcoRise API server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

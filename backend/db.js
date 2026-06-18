@@ -1,8 +1,8 @@
-/* GeoRise — SQLite database initialization */
+/* EcoRise — SQLite database initialization */
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const DB_PATH = process.env.DATABASE_URL || path.join(__dirname, 'georise.db');
+const DB_PATH = process.env.DATABASE_URL || path.join(__dirname, 'ecorise.db');
 
 let db;
 

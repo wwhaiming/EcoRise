@@ -1,7 +1,7 @@
 {
-  "name": "georise",
+  "name": "ecorise",
   "version": "1.0.0",
-  "description": "GeoRise — AI-powered environmental leaderboard",
+  "description": "EcoRise — AI-powered environmental leaderboard",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",

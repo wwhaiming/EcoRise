@@ -1,4 +1,4 @@
-# GeoRise — Scale & operational honesty (Phase 5)
+# EcoRise — Scale & operational honesty (Phase 5)
 
 What we measured, what's a deliberate demo-scale choice, and the migration path. No
 hand-waving: the retrieval numbers below come from `npm run loadtest`, re-runnable.

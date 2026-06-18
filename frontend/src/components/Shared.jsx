@@ -1,4 +1,4 @@
-/* GeoRise — Sheet, UploadFrame, LogoMark, Wordmark, Orbs, ResetTimer */
+/* EcoRise — Sheet, UploadFrame, LogoMark, Wordmark, Orbs, ResetTimer */
 import { useRef, useEffect } from 'react';
 import Icon from './Icon';
 import useCountdown from '../hooks/useCountdown';

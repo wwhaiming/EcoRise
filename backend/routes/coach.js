@@ -1,4 +1,4 @@
-/* GeoRise — AI Eco Coach routes (Phases 0-5).
+/* EcoRise — AI Eco Coach routes (Phases 0-5).
  *
  * See docs/AI_ECO_COACH_PLAN.md. The retrieval-augmented learning layer:
  *   - the whole surface is dark unless COACH_ENABLED=true,

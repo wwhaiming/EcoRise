@@ -1,6 +1,6 @@
-# GeoRise Frontend
+# EcoRise Frontend
 
-React + Vite mobile-first client for GeoRise.
+React + Vite mobile-first client for EcoRise.
 
 ## Product Direction
 

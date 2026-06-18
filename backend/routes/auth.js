@@ -1,4 +1,4 @@
-/* GeoRise — Auth routes */
+/* EcoRise — Auth routes */
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { v4: uuid } = require('uuid');
@@ -12,7 +12,7 @@ const router = express.Router();
 // path so login timing is the same whether or not the email exists. A malformed
 // placeholder (e.g. zero-padded) makes bcrypt.compare short-circuit in microseconds,
 // which leaks account existence by timing — defeating the whole purpose.
-const DUMMY_PASSWORD_HASH = bcrypt.hashSync('georise-timing-equalizer-not-a-real-password', 12);
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('ecorise-timing-equalizer-not-a-real-password', 12);
 const COOKIE = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',

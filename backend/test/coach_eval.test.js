@@ -1,4 +1,4 @@
-/* GeoRise — AI Eco Coach eval gates (Phase 6).
+/* EcoRise — AI Eco Coach eval gates (Phase 6).
  * Runs the offline coach eval against the seeded corpus and asserts the plan's
  * responsible-AI thresholds: citations valid, answers faithful, off-topic prompts
  * refused, no hallucination, injection-resistant, and the spam cap holds. */

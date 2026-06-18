@@ -1,8 +1,8 @@
-# GeoRise — AI-Powered Environmental Learning + Action
+# EcoRise — AI-Powered Environmental Learning + Action
 
-GeoRise is a school and community platform where students learn environmental science, log real-world eco actions, and compete on leaderboards without letting AI invent impact or award unverified points.
+EcoRise is a school and community platform where students learn environmental science, log real-world eco actions, and compete on leaderboards without letting AI invent impact or award unverified points.
 
-**USAII Global AI Hackathon 2026 Direction B:** GeoRise is framed as "My School's Hidden Footprint." The AI Eco Coach is now the default product surface: it reads local school activity, retrieves approved environmental evidence, identifies action gaps, and converts those insights into verified student actions.
+**USAII Global AI Hackathon 2026 Direction B:** EcoRise is framed as "My School's Hidden Footprint." The AI Eco Coach is now the default product surface: it reads local school activity, retrieves approved environmental evidence, identifies action gaps, and converts those insights into verified student actions.
 
 **The pitch:** Duolingo-style environmental learning meets verified action tracking. The AI teaches and explains; deterministic code validates sources, carbon math, fraud checks, and points.
 
@@ -12,7 +12,7 @@ GeoRise is a school and community platform where students learn environmental sc
 
 ## Why Judges Should Care
 
-Most sustainability apps either teach passively or gamify actions without proof. GeoRise connects the full loop:
+Most sustainability apps either teach passively or gamify actions without proof. EcoRise connects the full loop:
 
 1. A student learns from a cited, teacher-approved source.
 2. The AI Eco Coach studies the school's local action pattern and identifies the weakest footprint category.
@@ -61,9 +61,9 @@ flowchart TD
 
 The LLM only appears in the *perceive* and *draft* boxes. Every box that touches a number, a point, or a published post is deterministic code with a citation or a gate.
 
-## How GeoRise compares
+## How EcoRise compares
 
-| | Typical eco app | Generic "AI" hackathon app | **GeoRise** |
+| | Typical eco app | Generic "AI" hackathon app | **EcoRise** |
 |---|---|---|---|
 | Impact number | self-reported / hardcoded | LLM guesses it | deterministic carbon engine, cited EPA/OWID factors + uncertainty band |
 | Points | client-trusted | LLM awards them | server-computed, capped, immutable ledger; LLM cannot mint |
@@ -109,7 +109,7 @@ The LLM only appears in the *perceive* and *draft* boxes. Every box that touches
 ### 1. Clone & Install
 
 ```bash
-cd georise
+cd ecorise
 
 # Install all dependencies
 npm run install:all
@@ -135,7 +135,7 @@ cd backend && COACH_ENABLED=true npm run seed:coach
 
 # OR — one-command judge demo: seed a populated board + login, then run
 npm run demo
-#   login: demo@georise.app / demo1234   (board "Greenfield High", invite DEMOECO)
+#   login: demo@ecorise.app / demo1234   (board "Greenfield High", invite DEMOECO)
 ```
 
 - **Frontend:** http://localhost:5173
@@ -157,7 +157,7 @@ cd frontend && npm run dev
 ## 📁 Architecture
 
 ```
-georise/
+ecorise/
 ├── frontend/              React + Vite app
 │   ├── src/
 │   │   ├── components/    Reusable UI components (Icon, Avatar, Podium, etc.)
@@ -243,7 +243,7 @@ georise/
 
 ## 🎨 Design System
 
-GeoRise uses a polished white/green system designed to feel like a field notebook crossed with a serious education product.
+EcoRise uses a polished white/green system designed to feel like a field notebook crossed with a serious education product.
 
 | Token | Value | Usage |
 |-------|-------|-------|

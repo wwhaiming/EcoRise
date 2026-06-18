@@ -1,4 +1,4 @@
-/* GeoRise — Small UI components: PointsChip, RankBadge, Streak, Toast, Switch */
+/* EcoRise — Small UI components: PointsChip, RankBadge, Streak, Toast, Switch */
 import Icon from './Icon';
 import { METAL } from './constants';
 

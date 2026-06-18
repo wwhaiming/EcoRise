@@ -1,4 +1,4 @@
-/* GeoRise — client-side image downscale.
+/* EcoRise — client-side image downscale.
  *
  * Shrinks a captured photo to <= maxPx on its longest side and re-encodes as JPEG
  * BEFORE upload. Cuts the upload payload (faster posts, less bandwidth) and strips

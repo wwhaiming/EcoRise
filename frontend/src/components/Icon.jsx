@@ -1,4 +1,4 @@
-/* GeoRise — SVG Icon set (38 icons, stroke-based, 24×24) */
+/* EcoRise — SVG Icon set (38 icons, stroke-based, 24×24) */
 const ICONS = {
   home:  'M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10',
   feed:  'M4 5h16M4 12h16M4 19h10',

@@ -1,4 +1,4 @@
-/* GeoRise — verify live trash detection through the real aiClient.
+/* EcoRise — verify live trash detection through the real aiClient.
  * Loads the same .env the server uses; runs several photos through
  * rateTrashSeverity and prints verdicts. Never prints the API key.
  * Run: node scripts/verifyDetection.js

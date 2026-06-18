@@ -1,4 +1,4 @@
-/* GeoRise — Research Library.
+/* EcoRise — Research Library.
  *
  * Three AI features over the 1000-paper research corpus:
  *  1. "Ask the research" — a free-form question whose answer is pulled out of the

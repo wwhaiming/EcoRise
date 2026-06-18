@@ -1,4 +1,4 @@
-/* GeoRise — backend integration tests (node:test + supertest).
+/* EcoRise — backend integration tests (node:test + supertest).
  * Run: npm test */
 const test = require('node:test');
 const assert = require('node:assert');

@@ -1,4 +1,4 @@
-/* GeoRise — Quest routes */
+/* EcoRise — Quest routes */
 const express = require('express');
 const { v4: uuid } = require('uuid');
 const { getDb } = require('../db');

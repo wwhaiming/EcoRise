@@ -1,4 +1,4 @@
-/* GeoRise — carbon engine unit tests (pure, deterministic).
+/* EcoRise — carbon engine unit tests (pure, deterministic).
  * Proves the grounded CO2 math: no model hallucination, cited factors, ranges. */
 const test = require('node:test');
 const assert = require('node:assert');

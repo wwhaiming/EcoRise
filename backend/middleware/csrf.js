@@ -1,4 +1,4 @@
-/* GeoRise — CSRF protection (double-submit cookie).
+/* EcoRise — CSRF protection (double-submit cookie).
  * Enforced for ANY state-changing request that carries a session cookie. A
  * Bearer-token request that also happens to send a cookie is still protected,
  * because a cross-site attacker cannot set the X-CSRF-Token header. Auth routes

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* GeoRise — AI Eco Coach eval harness.
+/* EcoRise — AI Eco Coach eval harness.
  *
  *   npm run test:coach-eval
  *

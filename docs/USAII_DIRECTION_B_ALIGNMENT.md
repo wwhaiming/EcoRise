@@ -4,7 +4,7 @@
 
 **Direction B: My School's Hidden Footprint**
 
-GeoRise is an AI-powered school footprint coach. It helps a class, club, or school board discover which everyday habits are creating hidden environmental impact, then turns that discovery into source-backed learning and verified action.
+EcoRise is an AI-powered school footprint coach. It helps a class, club, or school board discover which everyday habits are creating hidden environmental impact, then turns that discovery into source-backed learning and verified action.
 
 ## Core Demo Story
 
@@ -18,12 +18,12 @@ This gives judges a complete loop: **local input -> AI reasoning -> grounded ins
 
 ## Rubric Mapping
 
-| Rubric area | How GeoRise addresses it |
+| Rubric area | How EcoRise addresses it |
 | --- | --- |
 | Problem Understanding, 30% | The problem is local and specific: students usually cannot see the hidden footprint of school habits like commuting, lunch waste, energy use, and campus cleanup. |
 | AI Reasoning, 20% | AI is not decorative. It retrieves approved evidence, identifies weak local action categories, generates cited questions, and recommends next steps from the current school board data. |
 | Solution Design, 20% | The main screen explains the system as input, AI reasoning, insight, and action. The app includes onboarding, coach, evidence panel, logging, feed, quests, and leaderboard. |
-| Impact and Insight, 20% | GeoRise moves beyond awareness by tying insight to verified photo submissions, CO2e math, capped learning points, and visible leaderboard progress. |
+| Impact and Insight, 20% | EcoRise moves beyond awareness by tying insight to verified photo submissions, CO2e math, capped learning points, and visible leaderboard progress. |
 | Responsible AI, 10% | Citations are visible, learning points are capped, source approval is human controlled, impact math is deterministic, and organizers moderate boards and posts. |
 
 ## Responsible AI Controls
@@ -37,4 +37,4 @@ This gives judges a complete loop: **local input -> AI reasoning -> grounded ins
 
 ## Judge-Facing One-Liner
 
-GeoRise uses AI to reveal a school's hidden environmental footprint, teach students from cited sources, and convert recommendations into verified local action.
+EcoRise uses AI to reveal a school's hidden environmental footprint, teach students from cited sources, and convert recommendations into verified local action.

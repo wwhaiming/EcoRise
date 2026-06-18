@@ -1,4 +1,4 @@
-/* GeoRise — School Hidden-Footprint digest (Direction B core).
+/* EcoRise — School Hidden-Footprint digest (Direction B core).
  *
  * Shows the school's ESTIMATED institutional footprint by category (the "hidden"
  * emissions a school doesn't see), the biggest emitter, how much student action

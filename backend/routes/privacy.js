@@ -1,4 +1,4 @@
-/* GeoRise — Privacy / FERPA-COPPA routes (Phase 2).
+/* EcoRise — Privacy / FERPA-COPPA routes (Phase 2).
  *
  * The compliance surface for a product used by minors:
  *   - consent state (read + record), enforced at upload time by posts/trashspotter
@@ -35,7 +35,7 @@ function organizerOf(db, lbId, userId) {
 // ── Privacy-by-design + model/data card (public; what we collect, retain, and run) ──
 router.get('/policy', (_req, res) => {
   res.json({
-    product: 'GeoRise',
+    product: 'EcoRise',
     audience: 'Students and teachers at a school (minors may participate).',
     updated: '2026-06',
     principles: [
@@ -228,7 +228,7 @@ router.get('/export', authMiddleware, (req, res) => {
     const data = P.exportUserData(db, req.userId);
     if (!data.user) return res.status(404).json({ error: 'User not found' });
     P.auditLog(db, { actorUserId: req.userId, action: 'account.export', targetType: 'user', targetId: req.userId });
-    res.setHeader('Content-Disposition', 'attachment; filename="georise-export.json"');
+    res.setHeader('Content-Disposition', 'attachment; filename="ecorise-export.json"');
     res.json(data);
   } catch (err) {
     console.error('Export error:', err);

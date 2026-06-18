@@ -1,4 +1,4 @@
-/* GeoRise — School hidden-footprint model unit tests (pure, hermetic, no DB/env). */
+/* EcoRise — School hidden-footprint model unit tests (pure, hermetic, no DB/env). */
 const test = require('node:test');
 const assert = require('node:assert');
 const { estimateFootprint, actionLeverage, FACTORS } = require('../utils/footprintModel');

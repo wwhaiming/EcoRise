@@ -1,6 +1,6 @@
-# GeoRise — Privacy, FERPA & COPPA (Phase 2)
+# EcoRise — Privacy, FERPA & COPPA (Phase 2)
 
-GeoRise is used by students, some of whom are minors. Privacy is built as an engine,
+EcoRise is used by students, some of whom are minors. Privacy is built as an engine,
 not a settings page. This document is the design + the model/data card. The live,
 machine-readable version is served at `GET /api/privacy/policy` and rendered in-app
 under **Profile → Privacy & data**.

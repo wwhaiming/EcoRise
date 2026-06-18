@@ -1,4 +1,4 @@
-/* GeoRise — Image upload middleware */
+/* EcoRise — Image upload middleware */
 const multer = require('multer');
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
