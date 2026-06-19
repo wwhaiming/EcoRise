@@ -22,6 +22,7 @@ const { awardPoints } = require('../utils/pointsEngine');
 const { detectAnomalies, baselineSeries } = require('../utils/anomalyEngine');
 const { forecastNextMonth } = require('../utils/forecastEngine');
 const { recommend } = require('../utils/interventionModel');
+const { evalModel } = require('../utils/modelEval');
 const { auditLog } = require('../utils/privacy');
 const LINCOLN = require('../data/lincolnHigh');
 const fs = require('fs');
@@ -572,8 +573,13 @@ function safeJsonArr(t) { try { const a = JSON.parse(t); return Array.isArray(a)
 // Falls back to the named "Lincoln High" sample when a board has not entered real data, so
 // the local, specific demo always works. Environmental scope only (no food/cafeteria).
 function ensureInsightTables(db) {
-  db.prepare("CREATE TABLE IF NOT EXISTS school_utility (leaderboard_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT DEFAULT (datetime('now')))").run();
-  db.prepare("CREATE TABLE IF NOT EXISTS action_plan_items (leaderboard_id TEXT NOT NULL, item_key TEXT NOT NULL, status TEXT DEFAULT 'proposed', approved_by TEXT, approved_at TEXT, expected_kg REAL, verify_by TEXT, payload TEXT, PRIMARY KEY (leaderboard_id, item_key))").run();
+  db.prepare("CREATE TABLE IF NOT EXISTS school_utility (leaderboard_id TEXT PRIMARY KEY, data TEXT NOT NULL, source TEXT DEFAULT 'imported', updated_at TEXT DEFAULT (datetime('now')))").run();
+  db.prepare("CREATE TABLE IF NOT EXISTS action_plan_items (leaderboard_id TEXT NOT NULL, item_key TEXT NOT NULL, status TEXT DEFAULT 'proposed', approved_by TEXT, approved_at TEXT, expected_kg REAL, verify_by TEXT, payload TEXT, before_value REAL, after_value REAL, actual_pct REAL, metric TEXT, PRIMARY KEY (leaderboard_id, item_key))").run();
+  // Additive migration for DBs created before the measured-outcome columns existed.
+  for (const col of ['before_value REAL', 'after_value REAL', 'actual_pct REAL', 'metric TEXT']) {
+    try { db.prepare(`ALTER TABLE action_plan_items ADD COLUMN ${col}`).run(); } catch { /* already present */ }
+  }
+  try { db.prepare("ALTER TABLE school_utility ADD COLUMN source TEXT DEFAULT 'imported'").run(); } catch { /* present */ }
 }
 function loadUtilitySeries(db, lb) {
   if (lb) {
@@ -616,9 +622,15 @@ router.get('/insights', authMiddleware, (req, res) => {
     const upcoming = sample ? LINCOLN.upcoming : (series[series.length - 1] || {});
     const forecast = forecastNextMonth(series, upcoming);
     const recs = recommend(footprint, anomalies, { budget: 'any', maxItems: 3 });
-    const approvals = lb ? db.prepare('SELECT item_key, status, approved_at, verify_by, expected_kg FROM action_plan_items WHERE leaderboard_id = ?').all(lb) : [];
+    const approvals = lb ? db.prepare('SELECT item_key, status, approved_at, verify_by, before_value, after_value, actual_pct, metric FROM action_plan_items WHERE leaderboard_id = ?').all(lb) : [];
     const aMap = Object.fromEntries(approvals.map(a => [a.item_key, a]));
-    const recommendations = recs.map(r => ({ ...r, status: aMap[r.key] ? aMap[r.key].status : 'proposed', approvedAt: aMap[r.key] ? aMap[r.key].approved_at : null, verifyBy: aMap[r.key] ? aMap[r.key].verify_by : null }));
+    const recommendations = recs.map(r => {
+      const a = aMap[r.key];
+      return { ...r, status: a ? a.status : 'proposed', approvedAt: a ? a.approved_at : null, verifyBy: a ? a.verify_by : null,
+        measured: a && a.actual_pct != null ? { beforeValue: a.before_value, afterValue: a.after_value, actualPct: a.actual_pct, metric: a.metric } : null };
+    });
+    const sourceRow = lb ? db.prepare('SELECT source FROM school_utility WHERE leaderboard_id = ?').get(lb) : null;
+    const dataSource = sample ? 'Sample — Lincoln High School (synthetic demo data)' : (sourceRow && sourceRow.source === 'real' ? 'Real utility data imported by the school' : 'School data loaded onto this board');
     const school = sample ? LINCOLN.profile.name : ((db.prepare('SELECT name FROM leaderboards WHERE id = ?').get(lb) || {}).name || 'your school');
     // Evidence chart for the top anomaly's category (observed vs the learned baseline + band).
     const top = anomalies[0] || null;
@@ -639,8 +651,9 @@ router.get('/insights', authMiddleware, (req, res) => {
     };
     res.json({
       school, sampleData: sample, profile: sample ? LINCOLN.profile : null,
-      schoolContext: sample ? LINCOLN.context : null, scope,
+      schoolContext: sample ? LINCOLN.context : null, scope, dataSource,
       pipeline, anomalies, evidence, forecast, recommendations,
+      evaluation: evalModel(series),
       footprint: { biggestEmitter: footprint.biggestEmitter, totalKgPerMonth: footprint.totalKgPerMonth, overallConfidence: footprint.overallConfidence },
       summary: summarizeInsights(school, anomalies, recommendations),
       humanInLoop: 'AI flags anomalies and ranks interventions; a human (facilities/teacher) approves any action. The AI never changes building settings or assigns blame.',
@@ -721,6 +734,57 @@ router.post('/insights/status', authMiddleware, (req, res) => {
     auditLog(db, { actorUserId: req.userId, action: 'insights.status', targetType: 'action_plan_item', targetId: itemKey, leaderboardId: lb, detail: { status } });
     res.json({ success: true, itemKey, status });
   } catch (err) { console.error('coach /insights/status error:', err.message); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// Real Data Mode: import a school's actual monthly utility readings (organizer only).
+// Replaces the synthetic sample so insights run on real data. Numbers are whitelisted + coerced.
+router.post('/insights/import', authMiddleware, (req, res) => {
+  try {
+    const db = getDb();
+    const lb = boardForUser(db, req);
+    if (!lb) return res.status(403).json({ error: 'Join or organize this board.' });
+    if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) return res.status(403).json({ error: 'Only the board organizer can import school data.' });
+    const rowsIn = Array.isArray(req.body && req.body.readings) ? req.body.readings : null;
+    if (!rowsIn || !rowsIn.length) return res.status(400).json({ error: 'readings[] is required.' });
+    if (rowsIn.length > 60) return res.status(400).json({ error: 'Too many rows (max 60 months).' });
+    const numKeys = ['schoolDays', 'hdd', 'cdd', 'electricityKwh', 'gasTherms', 'waterGallons', 'busMiles', 'recyclingRatePct', 'contaminationPct'];
+    const series = [];
+    for (const r of rowsIn) {
+      const month = String((r && r.month) || '').trim().slice(0, 16);
+      if (!month) continue;
+      const out = { month };
+      let hasUtility = false;
+      for (const k of numKeys) { if (Number.isFinite(+r[k])) { out[k] = +r[k]; if (['electricityKwh', 'gasTherms', 'waterGallons'].includes(k)) hasUtility = true; } }
+      if (hasUtility) series.push(out);
+    }
+    if (series.length < 4) return res.status(400).json({ error: 'Need at least 4 months with a utility value (electricity/gas/water).' });
+    ensureInsightTables(db);
+    db.prepare("INSERT INTO school_utility (leaderboard_id, data, source, updated_at) VALUES (?, ?, 'real', datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, source='real', updated_at=datetime('now')").run(lb, JSON.stringify(series));
+    auditLog(db, { actorUserId: req.userId, action: 'insights.import', targetType: 'leaderboard', targetId: lb, leaderboardId: lb, detail: { months: series.length } });
+    res.json({ success: true, months: series.length });
+  } catch (err) { console.error('coach /insights/import error:', err.message); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// Record a MEASURED before/after for an approved action (organizer only). Turns a projected
+// recommendation into a verified outcome; the percentage is computed server-side, audit-logged.
+router.post('/insights/verify', authMiddleware, (req, res) => {
+  try {
+    const db = getDb();
+    const lb = boardForUser(db, req);
+    if (!lb) return res.status(403).json({ error: 'Join or organize this board.' });
+    if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) return res.status(403).json({ error: 'Only the board organizer can record a measured outcome.' });
+    const itemKey = String((req.body && req.body.itemKey) || '').trim();
+    const before = Number(req.body && req.body.before);
+    const after = Number(req.body && req.body.after);
+    const metric = String((req.body && req.body.metric) || '').slice(0, 160);
+    if (!itemKey || !Number.isFinite(before) || !Number.isFinite(after) || before <= 0) return res.status(400).json({ error: 'itemKey, a positive before value, and an after value are required.' });
+    ensureInsightTables(db);
+    if (!db.prepare('SELECT 1 FROM action_plan_items WHERE leaderboard_id = ? AND item_key = ?').get(lb, itemKey)) return res.status(404).json({ error: 'Approve this action before recording an outcome.' });
+    const actualPct = Math.round(((before - after) / before) * 1000) / 10;
+    db.prepare("UPDATE action_plan_items SET before_value = ?, after_value = ?, actual_pct = ?, metric = ?, status = 'confirmed' WHERE leaderboard_id = ? AND item_key = ?").run(before, after, actualPct, metric, lb, itemKey);
+    auditLog(db, { actorUserId: req.userId, action: 'insights.verify', targetType: 'action_plan_item', targetId: itemKey, leaderboardId: lb, detail: { before, after, actualPct, metric } });
+    res.json({ success: true, itemKey, status: 'confirmed', actualPct });
+  } catch (err) { console.error('coach /insights/verify error:', err.message); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 module.exports = router;

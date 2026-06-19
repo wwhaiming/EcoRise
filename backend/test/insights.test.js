@@ -165,3 +165,52 @@ test('action status lifecycle: advance-before-approve 404, organizer advances, i
   const bad = await request(app).post('/api/coach/insights/status').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, status: 'hacked' });
   assert.strictEqual(bad.status, 400, 'invalid status rejected');
 });
+
+test('GET /insights includes a holdout backtest (model validation)', async () => {
+  const t = await signup('ins-eval@t.co', 'E');
+  const r = await request(app).get('/api/coach/insights').set('Cookie', t.cookie);
+  assert.ok(r.body.evaluation && Array.isArray(r.body.evaluation.perUtility) && r.body.evaluation.perUtility.length >= 1);
+  assert.ok(typeof r.body.evaluation.avgMapePct === 'number');
+  assert.ok(typeof r.body.dataSource === 'string' && /sample/i.test(r.body.dataSource));
+});
+
+test('Real Data Mode: organizer imports utility readings; flips data source; short import rejected', async () => {
+  const t = await signup('ins-imp@t.co', 'Org');
+  const board = await request(app).post('/api/leaderboards').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ name: 'Real' });
+  const lb = board.body.id;
+  const imp = await request(app).post('/api/coach/insights/import').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, readings: LINCOLN.series });
+  assert.strictEqual(imp.status, 200);
+  assert.strictEqual(imp.body.months, LINCOLN.series.length);
+  const ins = await request(app).get('/api/coach/insights?leaderboardId=' + lb).set('Cookie', t.cookie);
+  assert.strictEqual(ins.body.sampleData, false);
+  assert.ok(/real/i.test(ins.body.dataSource));
+  const short = await request(app).post('/api/coach/insights/import').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, readings: [{ month: 'x', gasTherms: 5 }] });
+  assert.strictEqual(short.status, 400, 'needs >= 4 months');
+  // non-member cannot import
+  const s = await signup('ins-imp2@t.co', 'S');
+  const blocked = await request(app).post('/api/coach/insights/import').set('Cookie', s.cookie).set('x-csrf-token', s.csrf).send({ leaderboardId: lb, readings: LINCOLN.series });
+  assert.strictEqual(blocked.status, 403);
+});
+
+test('Measured outcome: approve -> verify computes actual % reduction and confirms; guards enforced', async () => {
+  const t = await signup('ins-ver@t.co', 'Org');
+  const board = await request(app).post('/api/leaderboards').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ name: 'Ver' });
+  const lb = board.body.id;
+  await request(app).post('/api/coach/insights/load-demo').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb });
+  const ins = await request(app).get('/api/coach/insights?leaderboardId=' + lb).set('Cookie', t.cookie);
+  const key = ins.body.recommendations[0].key;
+  // verify before approve -> 404
+  const pre = await request(app).post('/api/coach/insights/verify').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, before: 18.4, after: 15.9 });
+  assert.strictEqual(pre.status, 404);
+  await request(app).post('/api/coach/insights/approve').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key });
+  const v = await request(app).post('/api/coach/insights/verify').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, before: 18.4, after: 15.9, metric: 'weekend therms/HDD' });
+  assert.strictEqual(v.status, 200);
+  assert.strictEqual(v.body.actualPct, 13.6);
+  assert.strictEqual(v.body.status, 'confirmed');
+  const ins2 = await request(app).get('/api/coach/insights?leaderboardId=' + lb).set('Cookie', t.cookie);
+  const rec = ins2.body.recommendations.find(r => r.key === key);
+  assert.ok(rec.measured && rec.measured.actualPct === 13.6 && rec.status === 'confirmed');
+  // bad before value -> 400
+  const badv = await request(app).post('/api/coach/insights/verify').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, before: 0, after: 5 });
+  assert.strictEqual(badv.status, 400);
+});
