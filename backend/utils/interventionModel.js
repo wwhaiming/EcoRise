@@ -6,9 +6,13 @@
  * the "which action has the highest impact" the rubric asks for — and it is deliberately
  * conservative: it prefers no-cost operational fixes over capital projects.
  *
- * HUMAN-IN-THE-LOOP: every recommendation is requiresApproval=true with a named human
- * approver. The AI ranks and explains; it NEVER enacts a change, sets a thermostat, or
- * assigns blame. Environmental scope only — no cafeteria/food-waste interventions.
+ * Each recommendation closes the loop with a NAMED human approver, a role-specific call to
+ * action, a verification metric (turns "advice" into measurable school operations), an
+ * expected-impact band, cost, effort, and time-to-impact.
+ *
+ * HUMAN-IN-THE-LOOP: every recommendation is requiresApproval=true. The AI ranks and
+ * explains; it NEVER enacts a change, sets a thermostat, or assigns blame. Environmental
+ * scope only — no cafeteria/food-waste interventions.
  */
 const round = (n, d = 1) => { const f = 10 ** d; return Math.round((Number(n) || 0) * f) / f; };
 
@@ -19,36 +23,51 @@ const CAT_MAP = { gas: 'natural_gas', electricity: 'electricity', water: 'water'
 const CATALOG = [
   { key: 'hvac_setback', categories: ['electricity', 'natural_gas'], label: 'After-hours HVAC schedule setback',
     action: 'Set back heating/cooling on nights, weekends and breaks via the building automation system.',
-    estKgPerMonth: [150, 600], costTier: 'none', effortTier: 'low', approver: 'Facilities manager', verifyByDays: 30,
+    estKgPerMonth: [150, 600], costTier: 'none', effortTier: 'low', approver: 'Facilities manager',
+    cta: 'Request facilities review', verificationMetric: 'After-hours kWh + therms per degree-day, next 2 billing cycles',
+    timeToImpactWeeks: '2-4', evidenceStrength: 'high', verifyByDays: 30,
     rationale: 'No-cost operational change; the single highest-leverage lever when after-hours load is high.' },
   { key: 'boiler_weekend_zones', categories: ['natural_gas'], label: 'Weekend boiler zone setback',
     action: 'Disable or set back heating zones that run on unoccupied weekends.',
-    estKgPerMonth: [120, 450], costTier: 'none', effortTier: 'low', approver: 'Facilities manager', verifyByDays: 30,
+    estKgPerMonth: [120, 450], costTier: 'none', effortTier: 'low', approver: 'Facilities manager',
+    cta: 'Request boiler-zone audit', verificationMetric: 'Weekend gas therms per heating degree-day, next 2 billing cycles',
+    timeToImpactWeeks: '2-4', evidenceStrength: 'high', verifyByDays: 30,
     rationale: 'Targets weekend/zone heating that degree-day-adjusted gas anomalies usually point to.' },
   { key: 'plugload_night_shutdown', categories: ['electricity'], label: 'Night plug-load shutdown',
     action: 'Add smart power strips / scheduled shutdown for labs, AV carts and vending.',
-    estKgPerMonth: [40, 160], costTier: 'low', effortTier: 'low', approver: 'Facilities manager', verifyByDays: 30,
+    estKgPerMonth: [40, 160], costTier: 'low', effortTier: 'low', approver: 'Facilities manager',
+    cta: 'Assign plug-load shutdown', verificationMetric: 'Overnight baseload kWh (midnight–5am)',
+    timeToImpactWeeks: '1-2', evidenceStrength: 'medium', verifyByDays: 30,
     rationale: 'Low-cost cut to always-on baseload.' },
   { key: 'led_retrofit', categories: ['electricity'], label: 'LED lighting retrofit (hallways/gym)',
     action: 'Replace fluorescent fixtures in high-use areas with LED.',
-    estKgPerMonth: [60, 220], costTier: 'capital', effortTier: 'medium', approver: 'Facilities + budget owner', verifyByDays: 60,
+    estKgPerMonth: [60, 220], costTier: 'capital', effortTier: 'medium', approver: 'Facilities + budget owner',
+    cta: 'Propose LED retrofit (budget)', verificationMetric: 'Lighting-circuit kWh vs prior year',
+    timeToImpactWeeks: '6-10', evidenceStrength: 'high', verifyByDays: 60,
     rationale: 'Durable savings but capital cost; sequence after no-cost scheduling fixes.' },
   { key: 'recycling_placement', categories: ['landfill_waste'], label: 'Paired-bin recycling + signage',
     action: 'Place recycling beside every trash bin near high-traffic exits and add teacher-reviewed signage.',
-    estKgPerMonth: [30, 120], costTier: 'low', effortTier: 'low', approver: 'Operations staff', verifyByDays: 45,
+    estKgPerMonth: [30, 120], costTier: 'low', effortTier: 'low', approver: 'Operations staff',
+    cta: 'Approve recycling-station pilot', verificationMetric: 'Recycling contamination % + diverted weight',
+    timeToImpactWeeks: '3-6', evidenceStrength: 'medium', verifyByDays: 45,
     rationale: 'Cuts landfill diversion losses where contamination spikes.' },
   { key: 'late_activity_bus', categories: ['commuting'], label: 'Late activity bus (mode shift)',
     action: 'Pilot one late bus route twice weekly so after-school students stop being car-picked-up.',
-    estKgPerMonth: [50, 200], costTier: 'low', effortTier: 'medium', approver: 'Transportation coordinator', verifyByDays: 45,
+    estKgPerMonth: [50, 200], costTier: 'low', effortTier: 'medium', approver: 'Transportation coordinator',
+    cta: 'Send transport survey', verificationMetric: 'Car-pickup count + bus ridership on pilot days',
+    timeToImpactWeeks: '4-8', evidenceStrength: 'medium', verifyByDays: 45,
     rationale: 'Shifts car trips to shared transit using aggregated distance bands, not individual tracking.' },
   { key: 'irrigation_audit', categories: ['water'], label: 'Irrigation schedule + leak audit',
     action: 'Audit irrigation timers and read the meter on a closed day to catch leaks.',
-    estKgPerMonth: [10, 60], costTier: 'none', effortTier: 'low', approver: 'Facilities manager', verifyByDays: 30,
+    estKgPerMonth: [10, 60], costTier: 'none', effortTier: 'low', approver: 'Facilities manager',
+    cta: 'Request irrigation/leak check', verificationMetric: 'Closed-day water flow (gallons)',
+    timeToImpactWeeks: '1-2', evidenceStrength: 'high', verifyByDays: 30,
     rationale: 'No-cost; a non-zero closed-day flow is almost always a leak.' },
 ];
 
 const COST_WEIGHT = { none: 1.0, low: 0.85, capital: 0.55 };
 const EFFORT_WEIGHT = { low: 1.0, medium: 0.85, high: 0.65 };
+const COST_BAND = { none: '$0 (operational)', low: '$', capital: '$$$' };
 
 /* recommend(footprint, anomalies, constraints) -> ranked intervention[] (top N).
  * constraints: { budget: 'none'|'low'|'any' (max acceptable cost tier), maxItems }. */
@@ -60,7 +79,7 @@ function recommend(footprint, anomalies = [], constraints = {}) {
   const tierRank = { none: 0, low: 1, capital: 2 };
   const budgetCap = budget === 'none' ? 0 : budget === 'low' ? 1 : 2;
 
-  const scored = CATALOG
+  return CATALOG
     .filter(iv => tierRank[iv.costTier] <= budgetCap)
     .map(iv => {
       const mid = (iv.estKgPerMonth[0] + iv.estKgPerMonth[1]) / 2;
@@ -71,15 +90,15 @@ function recommend(footprint, anomalies = [], constraints = {}) {
       return {
         key: iv.key, label: iv.label, action: iv.action, categories: iv.categories,
         estKgPerMonth: iv.estKgPerMonth, expectedKgPerMonth: round(mid),
-        costTier: iv.costTier, effortTier: iv.effortTier, approver: iv.approver, verifyByDays: iv.verifyByDays,
+        costTier: iv.costTier, costBand: COST_BAND[iv.costTier], effortTier: iv.effortTier,
+        approver: iv.approver, cta: iv.cta, verificationMetric: iv.verificationMetric,
+        timeToImpactWeeks: iv.timeToImpactWeeks, evidenceStrength: iv.evidenceStrength, verifyByDays: iv.verifyByDays,
         rationale: iv.rationale, addressesAnomaly, addressesBiggestEmitter: !!addressesBiggest,
         requiresApproval: true, score: round(score, 1),
       };
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, maxItems);
-
-  return scored;
 }
 
 module.exports = { recommend, CATALOG, CAT_MAP };

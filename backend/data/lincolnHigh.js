@@ -48,4 +48,26 @@ const series = [
 // Expected predictors for the next month to forecast (2026-07, summer break).
 const upcoming = { month: '2026-07', schoolDays: 5, hdd: 5, cdd: 330 };
 
-module.exports = { profile, baseline, series, upcoming };
+// School Context Packet — makes the analysis unmistakably local + scoped (Direction B).
+const context = {
+  district: 'Columbus City Schools',
+  city: 'Columbus',
+  state: 'OH',
+  buildingSqFt: 142000,
+  gradeLevels: '9-12',
+  climateStation: 'NOAA — Columbus/Port Columbus Intl (HDD/CDD basis)',
+  schoolCalendarSource: 'District 2025-26 academic calendar',
+  scope: {
+    included: ['Electricity', 'Heating (natural gas)', 'Water', 'Trash & recycling', 'Transportation / commuting'],
+    excluded: ['Food / cafeteria (that is Direction A — food-waste)', 'Procurement', 'Construction'],
+    why: "Direction B: My School's Hidden Footprint — operational environmental impact only.",
+  },
+  transportation: {
+    nearestTransitRoutes: ['COTA 31', 'COTA 10'],
+    studentDropoffPattern: '~45% car drop-off/pickup; buses cover most rural routes',
+    lateActivityBusDays: ['Tue', 'Thu'],
+  },
+  dataNote: 'Synthetic demonstration dataset modeled on a typical 800-student US high school. Replace with real bills + calendar to raise confidence.',
+};
+
+module.exports = { profile, baseline, series, upcoming, context };

@@ -8,7 +8,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const request = require('supertest');
 
-const { detectAnomalies, ols } = require('../utils/anomalyEngine');
+const { detectAnomalies, baselineSeries, ols } = require('../utils/anomalyEngine');
 const { forecastNextMonth } = require('../utils/forecastEngine');
 const { recommend } = require('../utils/interventionModel');
 const { estimateFootprint } = require('../utils/footprintModel');
@@ -116,4 +116,52 @@ test('load-demo + approve: human-in-the-loop action plan, audit-logged, authz en
   const s = await signup('ins-stranger@t.co', 'Stranger');
   const blocked = await request(app).post('/api/coach/insights/approve').set('Cookie', s.cookie).set('x-csrf-token', s.csrf).send({ leaderboardId: lb, itemKey: key });
   assert.strictEqual(blocked.status, 403);
+});
+
+// ── Explainability + payload tests (the 100/100 UX surface) ──────────────────
+test('anomaly results are explainable: features, expected band, confidence %, not-enough-evidence', () => {
+  const a = detectAnomalies(LINCOLN.series, { zThresh: 2 })[0];
+  assert.ok(Array.isArray(a.featuresUsed) && a.featuresUsed.length >= 2);
+  assert.ok(a.expectedLow <= a.expected && a.expected <= a.expectedHigh, 'expected within its band');
+  assert.ok(a.modelConfidencePct >= 50 && a.modelConfidencePct <= 99);
+  assert.ok(Array.isArray(a.notEnoughEvidenceFor) && a.notEnoughEvidenceFor.length >= 1);
+});
+
+test('baselineSeries returns observed vs expected + band with the anomaly flagged', () => {
+  const bs = baselineSeries(LINCOLN.series, 'gas', { zThresh: 2 });
+  assert.ok(bs.length >= 12);
+  const p = bs.find(x => x.anomaly);
+  assert.ok(p && p.observed > p.high, 'flagged month observed sits above its expected band');
+});
+
+test('recommendations carry CTA, verification metric, time-to-impact, cost band', () => {
+  const recs = recommend(estimateFootprint(LINCOLN.baseline), detectAnomalies(LINCOLN.series, { zThresh: 2 }), { budget: 'any', maxItems: 3 });
+  assert.ok(recs.every(r => r.cta && r.verificationMetric && r.timeToImpactWeeks && r.costBand));
+});
+
+test('GET /insights carries the full reasoning payload (pipeline, evidence, scope, responsible-AI)', async () => {
+  const t = await signup('ins-rich@t.co', 'Rich');
+  const r = await request(app).get('/api/coach/insights').set('Cookie', t.cookie);
+  assert.strictEqual(r.body.pipeline.length, 4);
+  assert.ok(r.body.evidence.series.length >= 2);
+  assert.ok(r.body.scope.excluded.join(' ').toLowerCase().includes('food'), 'scope explicitly excludes food');
+  assert.ok(r.body.schoolContext && r.body.schoolContext.district);
+  assert.ok(r.body.responsibleAI.length >= 3 && r.body.limitations.length >= 3 && r.body.statusFlow.length === 6);
+});
+
+test('action status lifecycle: advance-before-approve 404, organizer advances, invalid 400', async () => {
+  const t = await signup('ins-life@t.co', 'Org');
+  const board = await request(app).post('/api/leaderboards').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ name: 'Life' });
+  const lb = board.body.id;
+  await request(app).post('/api/coach/insights/load-demo').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb });
+  const ins = await request(app).get('/api/coach/insights?leaderboardId=' + lb).set('Cookie', t.cookie);
+  const key = ins.body.recommendations[0].key;
+  const pre = await request(app).post('/api/coach/insights/status').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, status: 'in_progress' });
+  assert.strictEqual(pre.status, 404, 'cannot advance status before approval');
+  await request(app).post('/api/coach/insights/approve').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key });
+  const ok = await request(app).post('/api/coach/insights/status').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, status: 'in_progress' });
+  assert.strictEqual(ok.status, 200);
+  assert.strictEqual(ok.body.status, 'in_progress');
+  const bad = await request(app).post('/api/coach/insights/status').set('Cookie', t.cookie).set('x-csrf-token', t.csrf).send({ leaderboardId: lb, itemKey: key, status: 'hacked' });
+  assert.strictEqual(bad.status, 400, 'invalid status rejected');
 });

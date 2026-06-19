@@ -95,6 +95,7 @@ export const api = {
   coachInsights: (leaderboardId) => apiFetch(`/api/coach/insights${leaderboardId ? `?leaderboardId=${encodeURIComponent(leaderboardId)}` : ''}`),
   coachInsightsLoadDemo: (leaderboardId) => apiFetch('/api/coach/insights/load-demo', { method: 'POST', body: JSON.stringify({ leaderboardId }) }),
   coachInsightsApprove: (leaderboardId, itemKey) => apiFetch('/api/coach/insights/approve', { method: 'POST', body: JSON.stringify({ leaderboardId, itemKey }) }),
+  coachInsightsStatus: (leaderboardId, itemKey, status) => apiFetch('/api/coach/insights/status', { method: 'POST', body: JSON.stringify({ leaderboardId, itemKey, status }) }),
 
   // Privacy / FERPA-COPPA (Phase 2)
   privacyPolicy: () => apiFetch('/api/privacy/policy'),
