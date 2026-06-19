@@ -117,7 +117,7 @@ npm run install:all
 
 ```bash
 # Copy the template
-cp .env.example .env
+cp backend/.env.example .env
 
 # Edit .env and add your OpenAI API key (optional — mock mode works without it)
 ```
@@ -181,6 +181,7 @@ ecorise/
 │   └── index.html
 │
 ├── backend/               Express API server
+│   ├── .env.example       Template with required keys
 │   ├── routes/            REST endpoints
 │   │   ├── auth.js        Signup, login, logout, me
 │   │   ├── coach.js       AI Eco Coach: footprint, questions, report card
@@ -212,7 +213,7 @@ ecorise/
 │   │   ├── jsonExtract.js     Robust JSON extraction from LLM output
 │   │   ├── seasons.js         Leaderboard season reset scheduler
 │   │   └── validate.js        Zod validation schemas
-│   ├── scripts/           seedDemo.js · seedCoachCorpus.js · loadSmoke.js
+│   ├── scripts/           seedDemo.js · seedCoachCorpus.js · ingestResearchCorpus.js · loadSmoke.js · seedPostImages.js · verifyDetection.js
 │   ├── test/              91 tests (api · coach · privacy · carbon · eval)
 │   ├── db.js              SQLite schema + initialization (sqlite-vec extension)
 │   └── server.js          Express entry point
@@ -220,7 +221,6 @@ ecorise/
 ├── docs/                  PRIVACY.md · SCALE.md · AI_ECO_COACH_PLAN.md
 ├── datasets/              ONNX model training scripts + metadata
 ├── .env                   Local secrets (never commit)
-├── .env.example           Template with required keys
 └── package.json           Root scripts
 ```
 
@@ -247,17 +247,20 @@ ecorise/
 | PUT    | `/api/leaderboards/:id`      | Update settings (organizer)               |
 | POST   | `/api/leaderboards/join`     | Join via invite code (no board id needed) |
 | POST   | `/api/leaderboards/:id/join` | Join via invite code (legacy form)        |
+| GET    | `/api/leaderboards/:id/seasons` | Get archived season standings          |
 
 ### Posts (Feed)
 
-| Method | Endpoint                 | Description                           |
-| ------ | ------------------------ | ------------------------------------- |
-| POST   | `/api/posts`             | Create post (image → AI → points)     |
-| GET    | `/api/posts`             | Get feed (optional `?leaderboardId=`) |
-| POST   | `/api/posts/:id/like`    | Toggle like                           |
-| POST   | `/api/posts/:id/comment` | Add comment                           |
-| POST   | `/api/posts/:id/report`  | Report post                           |
-| DELETE | `/api/posts/:id`         | Remove post (organizer)               |
+| Method | Endpoint                  | Description                           |
+| ------ | ------------------------- | ------------------------------------- |
+| POST   | `/api/posts`              | Create post (image → AI → points)     |
+| GET    | `/api/posts`              | Get feed (optional `?leaderboardId=`) |
+| POST   | `/api/posts/:id/like`     | Toggle like                           |
+| POST   | `/api/posts/:id/comment`  | Add comment                           |
+| GET    | `/api/posts/:id/comments` | Get post comments                     |
+| POST   | `/api/posts/:id/report`   | Report post                           |
+| POST   | `/api/posts/:id/resolve`  | Resolve reported post (organizer)     |
+| DELETE | `/api/posts/:id`          | Remove post (owner or organizer)      |
 
 ### Quests
 
@@ -275,20 +278,33 @@ ecorise/
 
 ### Users
 
-| Method | Endpoint                       | Description               |
-| ------ | ------------------------------ | ------------------------- |
-| GET    | `/api/users/:id`               | Get user profile + badges |
-| PUT    | `/api/users/:id`               | Update profile            |
-| GET    | `/api/users/:id/notifications` | Get notifications         |
+| Method | Endpoint                            | Description               |
+| ------ | ----------------------------------- | ------------------------- |
+| GET    | `/api/users/:id`                    | Get user profile + badges |
+| PUT    | `/api/users/:id`                    | Update profile            |
+| GET    | `/api/users/:id/notifications`      | Get notifications         |
+| POST   | `/api/users/:id/notifications/read` | Mark notifications read   |
 
 ### Coach (AI Eco Coach)
 
-| Method | Endpoint                 | Description                               |
-| ------ | ------------------------ | ----------------------------------------- |
-| GET    | `/api/coach/footprint`   | School hidden-footprint digest            |
-| GET    | `/api/coach/question`    | Retrieve a cited question + guidance      |
-| GET    | `/api/coach/eval-report` | In-app AI report card (live eval metrics) |
-| GET    | `/api/coach/research`    | Browse the approved research corpus       |
+| Method | Endpoint                             | Description                               |
+| ------ | ------------------------------------ | ----------------------------------------- |
+| GET    | `/api/coach/status`                  | Get Coach feature status and tip trigger  |
+| GET    | `/api/coach/eval-report`             | In-app AI report card (live eval metrics) |
+| GET    | `/api/coach/sources`                 | List approved learning sources            |
+| POST   | `/api/coach/sources`                 | Propose a new source (teacher/admin)      |
+| POST   | `/api/coach/sources/:id/approve`     | Approve/reject a source (teacher/admin)   |
+| GET    | `/api/coach/question`                | Retrieve a cited question                 |
+| POST   | `/api/coach/question/:id/answer`     | Submit answer to a coach question         |
+| GET    | `/api/coach/guidance`                | Retrieve weak action category guidance    |
+| GET    | `/api/coach/tip`                     | Retrieve today's personalized tip        |
+| POST   | `/api/coach/preferences`             | Update Coach notification preferences     |
+| GET    | `/api/coach/ask`                     | RAG Q&A query over research papers        |
+| GET    | `/api/coach/papers`                  | Browse and search research papers         |
+| GET    | `/api/coach/papers/:id/summary`      | Get AI-generated paper summary            |
+| GET    | `/api/coach/papers/:id/visual`       | Get AI-generated paper infographic visual |
+| POST   | `/api/coach/school-footprint`        | Set school footprint baseline inputs      |
+| GET    | `/api/coach/school-insight`          | Get hidden footprint digest & leverage    |
 
 ### Privacy (FERPA/COPPA)
 
