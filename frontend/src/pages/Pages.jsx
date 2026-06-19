@@ -194,14 +194,10 @@ export function Feed({ ctx }) {
    ============================================================ */
 export function Leaderboard({ ctx }) {
   const { members, bump, resetTarget, leaderboard } = ctx;
-  // Rank by engagement points OR by real CO2e avoided (the deterministic impact metric).
-  const [metric, setMetric] = useState('points');
-  const ranked = metric === 'co2'
-    ? [...members].sort((a, b) => (b.co2 || 0) - (a.co2 || 0)).map((m, i) => ({ ...m, rank: i + 1 }))
-    : members;
+  // ce77219 revert: rank by engagement points only (no CO2 metric / team-impact card).
+  const ranked = members;
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
-  const teamCo2 = Math.round(members.reduce((s, m) => s + (m.co2 || 0), 0) * 10) / 10;
 
   return (
     <div className="screen-in" style={{ paddingBottom: 24 }}>
@@ -215,36 +211,8 @@ export function Leaderboard({ ctx }) {
         </button>
       </div>
 
-      {/* team impact: the board's total verified CO2e avoided — ties the leaderboard to the school's hidden footprint */}
-      <div style={{ padding: '8px 16px 0' }}>
-        <div className="card" style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 12, border: '1px solid rgba(46,125,79,.18)' }}>
-          <span style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(46,125,79,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="leaf" size={22} color="var(--green)" />
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="eyebrow" style={{ color: 'var(--green)' }}>Team impact · this season</div>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 18, lineHeight: 1.1 }}>{teamCo2} kg CO₂e avoided together</div>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 650, marginTop: 2 }}>Verified across {members.length} members. See where your school&rsquo;s hidden footprint is biggest →</div>
-          </div>
-          <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Footprint coach" onClick={() => ctx.go('coach')}><Icon name="sparkle" size={18} color="var(--green)" /></button>
-        </div>
-      </div>
-
-      {/* rank metric toggle: points (engagement) vs CO2e avoided (real, deterministic impact) */}
-      <div style={{ padding: '10px 16px 0' }}>
-        <div style={{ display: 'flex', gap: 6, background: 'var(--navy-800)', padding: 5, borderRadius: 9999 }}>
-          {[['points', 'Points'], ['co2', 'CO₂e avoided']].map(([k, l]) => (
-            <button key={k} onClick={() => setMetric(k)} className="btn btn-sm" style={{
-              flex: 1, fontFamily: 'var(--display)', fontWeight: 600, fontSize: 14,
-              background: metric === k ? 'linear-gradient(180deg,var(--navy-800),var(--navy-700))' : 'transparent',
-              color: metric === k ? 'var(--green-d)' : 'var(--text-dim)', boxShadow: metric === k ? '0 4px 12px rgba(30,91,57,.12)' : 'none',
-            }}>{l}</button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ padding: '8px 16px 0' }}>
-        <Podium top3={top3} variant={ctx.podiumVariant || 'cards'} bump={bump} metric={metric} />
+      <div style={{ padding: '14px 16px 0' }}>
+        <Podium top3={top3} variant={ctx.podiumVariant || 'cards'} bump={bump} metric="points" />
       </div>
 
       <div style={{ padding: '14px 16px 0', display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
@@ -280,8 +248,8 @@ export function Leaderboard({ ctx }) {
                 <Streak n={p.streak || 0} size={12} />
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div className={bump === p.user_id ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>{metric === 'co2' ? (p.co2 || 0) : (p.points || 0).toLocaleString()}</div>
-                <div className="dim" style={{ fontSize: 10, fontWeight: 800, letterSpacing: .5 }}>{metric === 'co2' ? 'KG' : 'PTS'}</div>
+                <div className={bump === p.user_id ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>{(p.points || 0).toLocaleString()}</div>
+                <div className="dim" style={{ fontSize: 10, fontWeight: 800, letterSpacing: .5 }}>PTS</div>
               </div>
             </div>
           ))}

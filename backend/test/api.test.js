@@ -249,14 +249,16 @@ test('ledger is idempotent per source (no double-credit on replay)', async () =>
   assert.equal(pts, 50, 'points credited exactly once');
 });
 
-test('join by invite code via /join (no board id): bad/missing code rejected, valid works', async () => {
+test('join by invite code via /:id/join (ce77219 revert): bad/missing code rejected, valid works', async () => {
   const a = await newUser('CodeOwner'); const b = await newUser('CodeJoiner');
   const board = await makeBoard(a, 'Code Cup');
-  const bad = await request(app).post('/api/leaderboards/join').set(...auth(b.token)).send({ inviteCode: 'NOPE' });
+  // ce77219 revert: there is no POST /join. Join-by-code goes through POST /:id/join
+  // (the invite code in the body resolves the board; the :id slug is ignored).
+  const bad = await request(app).post('/api/leaderboards/NOPE/join').set(...auth(b.token)).send({ inviteCode: 'NOPE' });
   assert.equal(bad.status, 404, 'invalid invite code must be 404');
-  const missing = await request(app).post('/api/leaderboards/join').set(...auth(b.token)).send({});
-  assert.equal(missing.status, 400, 'missing invite code must be 400');
-  const ok = await request(app).post('/api/leaderboards/join').set(...auth(b.token)).send({ inviteCode: board.inviteCode });
+  const missing = await request(app).post(`/api/leaderboards/${board.id}/join`).set(...auth(b.token)).send({});
+  assert.equal(missing.status, 403, 'no code + non-organizer must be 403 (raw-id join is organizer-only)');
+  const ok = await request(app).post(`/api/leaderboards/${board.id}/join`).set(...auth(b.token)).send({ inviteCode: board.inviteCode });
   assert.equal(ok.status, 200, 'valid invite code joins');
   assert.equal(ok.body.leaderboardId, board.id);
 });
