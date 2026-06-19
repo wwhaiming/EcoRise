@@ -101,7 +101,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('tras
     // dedup hash/phash were taken from the full image above, so fraud screens hold.
     const priv = boardPrivacy(db, leaderboardId);
     const reviewRequired = priv ? priv.reviewRequired : false;
-    const ret = await applyRetention(priv ? priv.retentionMode : 'minimize', image);
+    const ret = await applyRetention(priv ? priv.retentionMode : 'standard', image);
     const derivedLabel = `Trash report — severity ${severity.score}/10`;
     // The dup check above runs BEFORE the awaited AI call, so two concurrent reports
     // of the same photo can both pass it. Re-check inside the (synchronous, serialized)

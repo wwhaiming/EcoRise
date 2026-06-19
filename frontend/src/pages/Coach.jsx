@@ -220,7 +220,7 @@ function CoachCommandCenter({ footprint, openLog }) {
   );
 }
 
-export default function Coach({ ctx }) {
+export default function Coach({ ctx, isCombined }) {
   const { leaderboardId, leaderboard, posts, go, openLog, showToast } = ctx;
   const [enabled, setEnabled] = useState(null); // null = loading
   const [q, setQ] = useState(null);
@@ -270,20 +270,8 @@ export default function Coach({ ctx }) {
 
   const footprint = footprintFrom(posts, leaderboard);
 
-  return (
-    <div className="screen-in">
-      {/* header */}
-      <div style={{ padding: '16px 18px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(46,125,79,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="sparkle" size={22} color="var(--green)" />
-        </span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 19, lineHeight: 1 }}>Coach</div>
-        </div>
-        <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Back" onClick={() => go('leaderboard')}>
-          <Icon name="home" size={18} />
-        </button>
-      </div>
+  const content = (
+    <>
 
       <div style={{ padding: '8px 16px 0' }}><ClimateFact /></div>
 
@@ -410,6 +398,26 @@ export default function Coach({ ctx }) {
       )}
 
       <div style={{ height: 110 }} />
+    </>
+  );
+
+  if (isCombined) return content;
+
+  return (
+    <div className="screen-in">
+      {/* header */}
+      <div style={{ padding: '16px 18px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(46,125,79,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="sparkle" size={22} color="var(--green)" />
+        </span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 19, lineHeight: 1 }}>Coach</div>
+        </div>
+        <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Back" onClick={() => go('home')}>
+          <Icon name="home" size={18} />
+        </button>
+      </div>
+      {content}
     </div>
   );
 }

@@ -1,21 +1,17 @@
-/* EcoRise — Home / Dashboard page */
+/* EcoRise — Home page (combining Board and Quests) */
 import { useState } from 'react';
 import Icon from '../components/Icon';
 import Avatar from '../components/Avatar';
-import { Streak } from '../components/UI';
+import { Leaderboard } from './Pages';
+import Quests from './Quests';
 
 export default function Home({ ctx }) {
-  const { user, members, bump, notifications, unreadCount, markNotificationsRead } = ctx;
+  const { user, notifications, unreadCount, markNotificationsRead } = ctx;
   const [notifOpen, setNotifOpen] = useState(false);
-  const you = members.find(m => m.isYou) || { points: 0, rank: members.length || 1, streak: 0 };
-
-  const nextRankPts = you.rank > 1 ? (members[you.rank - 2]?.points || 0) : you.points;
-  const gap = Math.max(0, nextRankPts - (you.points || 0));
-  const prog = you.rank > 1 && nextRankPts > 0 ? Math.min(100, ((you.points || 0) / nextRankPts) * 100) : 100;
 
   return (
-    <div className="screen-in">
-      {/* header */}
+    <div className="screen-in" style={{ paddingBottom: 24 }}>
+      {/* Header with welcome and notifications */}
       <div style={{ padding: '16px 18px 6px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <Avatar src={user.avatar} name={user.name} size={46} ring="var(--green)" />
         <div style={{ flex: 1 }}>
@@ -40,35 +36,14 @@ export default function Home({ ctx }) {
         </div>
       </div>
 
-      {/* hero stat card */}
-      <div style={{ padding: '8px 16px 0' }}>
-        <div className="card card-glow" style={{ padding: 18, background: 'radial-gradient(200px 120px at 85% -20%, rgba(117,183,123,.20), transparent), linear-gradient(180deg,var(--navy-800),var(--navy-700))' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-            <div>
-              <div className="eyebrow" style={{ color: 'var(--green)', marginBottom: 4 }}>Your points</div>
-              <div className={bump === 'you' ? 'count-flash' : ''} style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 46, lineHeight: 1, letterSpacing: 0 }}>
-                {(you.points || 0).toLocaleString()}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,.06)', padding: '6px 12px', borderRadius: 9999 }}>
-                <Icon name="trophy" size={16} color="var(--yellow)" />
-                <span style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16 }}>#{you.rank}</span>
-              </div>
-              <Streak n={you.streak || 0} />
-            </div>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-              <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>{gap > 0 ? `${gap} pts to rank #${you.rank - 1}` : 'You’re #1 — defend it!'}</span>
-              <span className="dim" style={{ fontSize: 13, fontWeight: 700 }}>{Math.round(prog)}%</span>
-            </div>
-            <div className="bar"><i style={{ width: prog + '%' }} /></div>
-          </div>
-        </div>
-      </div>
+      {/* Board (Leaderboard) Section */}
+      <Leaderboard ctx={ctx} isCombined={true} />
 
-      <div style={{ height: 110 }} />
+      {/* Visual Section Divider */}
+      <div style={{ margin: '28px 16px 14px', borderTop: '2px dashed rgba(46,125,79,.12)', paddingTop: 12 }} />
+
+      {/* Quests Section */}
+      <Quests ctx={ctx} isCombined={true} />
     </div>
   );
 }

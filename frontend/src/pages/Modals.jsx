@@ -71,7 +71,7 @@ export function LogAction({ ctx }) {
     <>
       <Sheet title="Log an eco action" onClose={ctx.closeModal}>
         <div style={{ padding: '4px 20px 24px', display: 'grid', gap: 16 }}>
-          <UploadFrame phase={phase} label="Add a photo to log your action" onCapture={() => setPicker(true)} />
+          <UploadFrame phase={phase} label="Add a photo to log your action" onCapture={() => setPicker(true)} imageData={imageData} />
 
           {phase === 'capture' && (
             <div className="muted" style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 600 }}>
@@ -182,7 +182,7 @@ export function TrashSpotter({ ctx }) {
     <>
       <Sheet title="Trash Spotter" onClose={ctx.closeModal} accent="var(--coral)">
         <div style={{ padding: '4px 20px 24px', display: 'grid', gap: 16 }}>
-          <UploadFrame phase={phase} label="Photograph the litter or hotspot" accent="var(--coral)" onCapture={() => setPicker(true)} />
+          <UploadFrame phase={phase} label="Photograph the litter or hotspot" accent="var(--coral)" onCapture={() => setPicker(true)} imageData={imageData} />
 
           {phase === 'capture' && (
             <div className="muted" style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 600 }}>

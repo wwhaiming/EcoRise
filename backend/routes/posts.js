@@ -184,7 +184,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     // The dedup hash/phash were already computed from the FULL image above, so
     // anti-fraud is unaffected by what we choose to persist.
     const priv = boardPrivacy(db, lbId);
-    const ret = await applyRetention(priv ? priv.retentionMode : 'minimize', image);
+    const ret = await applyRetention(priv ? priv.retentionMode : 'standard', image);
     const derivedLabel = [aiResult.actionType, aiResult.specificAction].filter(Boolean).join(' — ').slice(0, 120);
     const reviewRequired = priv ? priv.reviewRequired : false;
 

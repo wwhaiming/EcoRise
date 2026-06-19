@@ -81,11 +81,16 @@ export function Sheet({ title, children, onClose, accent = 'var(--green)' }) {
 }
 
 // ── Upload frame (3 phases: capture → analyzing → result) ──
-export function UploadFrame({ phase, label, accent = 'var(--green)', onCapture }) {
+export function UploadFrame({ phase, label, accent = 'var(--green)', onCapture, imageData }) {
+  const bgStyle = phase === 'capture'
+    ? { background: 'var(--navy-800)' }
+    : imageData
+      ? { backgroundImage: `url(${imageData})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      : { background: 'linear-gradient(135deg,#2E7D4F,#75B77B)' };
   return (
     <div onClick={phase === 'capture' ? onCapture : undefined} style={{
       position: 'relative', height: 200, borderRadius: 22, overflow: 'hidden', cursor: phase === 'capture' ? 'pointer' : 'default',
-      background: phase === 'capture' ? 'var(--navy-800)' : 'linear-gradient(135deg,#2E7D4F,#75B77B)',
+      ...bgStyle,
       border: phase === 'capture' ? '2px dashed var(--navy-500)' : 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10,
     }}>

@@ -19,11 +19,10 @@ function mention(text) {
 }
 
 function copyInvite(code, ctx) {
-  const url = `${location.origin}/j/${code || ''}`;
   if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(url).then(() => ctx.showToast('Invite link copied!')).catch(() => ctx.showToast(url));
+    navigator.clipboard.writeText(code || '').then(() => ctx.showToast('Invite code copied!')).catch(() => ctx.showToast(code));
   } else {
-    ctx.showToast(url);
+    ctx.showToast(code);
   }
 }
 
@@ -97,7 +96,8 @@ function FeedCard({ post, ctx }) {
   const [imgErr, setImgErr] = useState(false);
   const ago = (() => {
     if (!post.created_at) return '';
-    const mins = Math.round((nowMs() - new Date(post.created_at).getTime()) / 60000);
+    const ts = post.created_at.endsWith('Z') ? post.created_at : post.created_at + 'Z';
+    const mins = Math.round((nowMs() - new Date(ts).getTime()) / 60000);
     return mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`;
   })();
 
@@ -192,7 +192,7 @@ export function Feed({ ctx }) {
 /* ============================================================
    LEADERBOARD
    ============================================================ */
-export function Leaderboard({ ctx }) {
+export function Leaderboard({ ctx, isCombined }) {
   const { members, bump, resetTarget, leaderboard } = ctx;
   const [metric, setMetric] = useState('points');
   const [joinCode, setJoinCode] = useState('');
@@ -221,8 +221,8 @@ export function Leaderboard({ ctx }) {
   const more = ranked.slice(5);
   const teamCo2 = Math.round(members.reduce((s, m) => s + (m.co2 || 0), 0) * 10) / 10;
 
-  return (
-    <div className="screen-in" style={{ paddingBottom: 24 }}>
+  const content = (
+    <>
       <div style={{ padding: '18px 18px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div className="eyebrow" style={{ color: 'var(--green)' }}>{leaderboard?.name || 'EcoRise'}</div>
@@ -244,7 +244,7 @@ export function Leaderboard({ ctx }) {
             <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 18, lineHeight: 1.1 }}>{teamCo2} kg CO₂e avoided together</div>
             <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Verified across {members.length} member{members.length !== 1 ? 's' : ''}</div>
           </div>
-          <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Footprint coach" onClick={() => ctx.go('coach')}><Icon name="sparkle" size={18} color="var(--green)" /></button>
+          <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Footprint coach" onClick={() => ctx.go('learning')}><Icon name="sparkle" size={18} color="var(--green)" /></button>
         </div>
       </div>
 
@@ -328,6 +328,14 @@ export function Leaderboard({ ctx }) {
           </button>
         </form>
       </div>
+    </>
+  );
+
+  return isCombined ? (
+    <div style={{ paddingBottom: 12 }}>{content}</div>
+  ) : (
+    <div className="screen-in" style={{ paddingBottom: 24 }}>
+      {content}
     </div>
   );
 }
@@ -392,7 +400,7 @@ export function Profile({ ctx }) {
         )}
       </div>
       <div style={{ padding: '18px 16px 100px', display: 'grid', gap: 12 }}>
-        <button className="btn btn-primary btn-block" onClick={() => ctx.go('leaderboard')}><Icon name="trophy" size={18} color="#fff" /> View leaderboard</button>
+        <button className="btn btn-primary btn-block" onClick={() => ctx.go('home')}><Icon name="trophy" size={18} color="#fff" /> View leaderboard</button>
         <button className="btn btn-purple btn-block" onClick={() => ctx.go('organizer')}><Icon name="plus" size={18} color="#fff" strokeWidth={3} /> Create a leaderboard</button>
         <button className="btn btn-secondary btn-block" onClick={() => ctx.go('privacy')}><Icon name="check" size={18} /> Privacy &amp; data</button>
         <button className="btn btn-secondary btn-block" onClick={ctx.logout}>Log out</button>
@@ -417,7 +425,7 @@ export function Organizer({ ctx }) {
   return (
     <div className="screen-in" style={{ paddingBottom: 110 }}>
       <div style={{ padding: '16px 18px 6px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Back" onClick={() => ctx.go('leaderboard')}><Icon name="chevL" size={20} /></button>
+        <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Back" onClick={() => ctx.go('home')}><Icon name="chevL" size={20} /></button>
         <div>
           <div className="eyebrow" style={{ color: 'var(--green)' }}>Organizer</div>
           <div className="h1" style={{ fontSize: 24 }}>Manage board</div>
@@ -479,16 +487,16 @@ export function Organizer({ ctx }) {
             <Switch on={includeSelf} onChange={setIncludeSelf} label="Include myself" />
           </div>
           <div>
-            <label className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>Invite link</label>
+            <label className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>Invite code</label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <div className="field" style={{ flex: 1, display: 'flex', alignItems: 'center', color: 'var(--green)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>ecorise.app/j/{ctx.leaderboard?.invite_code || 'INVITE'}</div>
-              <button className="btn btn-primary" style={{ padding: '0 18px' }} aria-label="Copy invite link" onClick={() => copyInvite(ctx.leaderboard?.invite_code, ctx)}><Icon name="share" size={18} color="#fff" /></button>
+              <div className="field" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--green)', fontWeight: 700, fontSize: 18, letterSpacing: 2 }}>{ctx.leaderboard?.invite_code || 'INVITE'}</div>
+              <button className="btn btn-primary" style={{ padding: '0 18px' }} aria-label="Copy invite code" onClick={() => copyInvite(ctx.leaderboard?.invite_code, ctx)}><Icon name="copy" size={18} color="#fff" /></button>
             </div>
           </div>
           <button className="btn btn-purple btn-block btn-lg" onClick={async () => {
             await ctx.updateLeaderboard({ name, resetInterval: interval, prize: prizeOn ? prize : '', includeSelf });
             ctx.showToast('Leaderboard saved!');
-            ctx.go('leaderboard');
+            ctx.go('home');
           }}>Save changes</button>
         </div>
       )}

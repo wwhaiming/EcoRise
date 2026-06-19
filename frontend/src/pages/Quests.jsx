@@ -52,13 +52,13 @@ function QuestCard({ q, ctx }) {
   );
 }
 
-export default function Quests({ ctx }) {
+export default function Quests({ ctx, isCombined }) {
   const quests = ctx.quests || [];
   const done = quests.filter(q => q.progress >= q.goal).length;
   const pct = quests.length ? Math.round((done / quests.length) * 100) : 0;
 
-  return (
-    <div className="screen-in">
+  const content = (
+    <>
       <div style={{ padding: '18px 18px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div className="h1" style={{ fontSize: 27 }}>Quests</div>
         <span style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 14, color: 'var(--yellow)', background: 'rgba(255,210,63,.12)', padding: '6px 13px', borderRadius: 9999 }}>{done}/{quests.length}</span>
@@ -109,6 +109,14 @@ export default function Quests({ ctx }) {
       </div>
 
       <div style={{ height: 110 }} />
+    </>
+  );
+
+  return isCombined ? (
+    <div style={{ paddingBottom: 12 }}>{content}</div>
+  ) : (
+    <div className="screen-in">
+      {content}
     </div>
   );
 }

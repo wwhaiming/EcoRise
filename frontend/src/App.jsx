@@ -9,12 +9,10 @@ import { fireConfetti } from './components/Confetti';
 import Onboarding from './pages/Onboarding';
 import SetupBoard from './pages/SetupBoard';
 import Home from './pages/Home';
-import Quests from './pages/Quests';
-import { Feed, Leaderboard, Profile, Organizer } from './pages/Pages';
+import Learning from './pages/Learning';
+import { Feed, Profile, Organizer } from './pages/Pages';
 import { LogAction, TrashSpotter } from './pages/Modals';
 import AIEvidence from './components/AIEvidence';
-import Coach from './pages/Coach';
-import Research from './pages/Research';
 import PrivacyCenter from './components/PrivacyCenter';
 
 import api from './utils/api';
@@ -152,7 +150,7 @@ export default function App() {
       if (!live) return;
       setUser(data.user);
       setAuthed(true);
-      setScreen('coach');
+      setScreen('learning');
       setMembers([]);
       setPosts([]);
       await loadData();
@@ -286,7 +284,7 @@ export default function App() {
     setPosts([]);
 
     if (PENDING_INVITE) {
-      setScreen('coach');
+      setScreen('learning');
       await consumePendingInvite();
       return;
     }
@@ -303,7 +301,7 @@ export default function App() {
       setLeaderboard(board);
     } catch { /* offline */ }
 
-    setScreen('coach');
+    setScreen('learning');
     await loadData();
   };
 
@@ -409,17 +407,14 @@ export default function App() {
   const renderScreen = () => {
     if (isOnboarding) return <Onboarding onAuth={onAuth} />;
     switch (screen) {
-      case 'setup': return <SetupBoard ctx={ctx} onComplete={() => { loadData(); go('coach'); }} />;
+      case 'setup': return <SetupBoard ctx={ctx} onComplete={() => { loadData(); go('learning'); }} />;
       case 'home': return <Home ctx={ctx} />;
       case 'feed': return <Feed ctx={ctx} />;
-      case 'quests': return <Quests ctx={ctx} />;
-      case 'leaderboard': return <Leaderboard ctx={ctx} />;
+      case 'learning': return <Learning ctx={ctx} />;
       case 'profile': return <Profile ctx={ctx} />;
-      case 'coach': return <Coach ctx={ctx} />;
-      case 'research': return <Research ctx={ctx} />;
       case 'privacy': return <PrivacyCenter ctx={ctx} />;
       case 'organizer': return <Organizer ctx={ctx} />;
-      default: return <Coach ctx={ctx} />;
+      default: return <Learning ctx={ctx} />;
     }
   };
 

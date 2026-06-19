@@ -50,72 +50,87 @@ describe('App Shell Integration', () => {
   it('bootstraps to authenticated state and loads Coach page', async () => {
     const mockUser = { id: 'you', name: 'Eco Champion', handle: '@you' };
     const mockBoard = { id: 'b1', name: 'Greenfield High', invite_code: 'GRNFLD-7K2', prize: 'A tree planted' };
+    const mockMembers = [
+      { user_id: 'you', name: 'You', points: 100, isYou: true },
+      { user_id: 'user2', name: 'User 2', points: 90 },
+      { user_id: 'user3', name: 'User 3', points: 80 },
+      { user_id: 'user4', name: 'User 4', points: 70 },
+      { user_id: 'user5', name: 'User 5', points: 60 },
+      { user_id: 'user6', name: 'User 6', points: 50 },
+    ];
 
     vi.mocked(api.me).mockResolvedValue({ user: mockUser });
     vi.mocked(api.listLeaderboards).mockResolvedValue({ leaderboards: [mockBoard] });
-    vi.mocked(api.getLeaderboard).mockResolvedValue({ members: [{ user_id: 'you', name: 'You', points: 100, isYou: true }] });
+    vi.mocked(api.getLeaderboard).mockResolvedValue({ members: mockMembers });
     vi.mocked(api.getPosts).mockResolvedValue({ posts: [] });
     vi.mocked(api.getQuests).mockResolvedValue({ quests: [] });
     vi.mocked(api.getNotifications).mockResolvedValue({ notifications: [], unread: 0 });
 
     render(<App />);
 
-    // Wait for the Coach screen contents to load
+    // Wait for the Learning screen contents (AI Coach sub-tab) to load
     await waitFor(() => {
-      expect(screen.getByText(/AI Footprint Coach/i)).toBeInTheDocument();
-      expect(screen.getByText(/AI drafts from trusted sources/i)).toBeInTheDocument();
+      expect(screen.getByText(/Footprint Coach/i)).toBeInTheDocument();
+      expect(screen.getByText('AI-verified · capped points')).toBeInTheDocument();
     });
 
     // Check that navigation bar is present
-    expect(screen.getByRole('button', { name: 'AI Eco Coach' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Board' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Quests' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Learning' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
   });
 
   it('navigates to different screens when tabs are clicked', async () => {
     const mockUser = { id: 'you', name: 'Eco Champion', handle: '@you' };
     const mockBoard = { id: 'b1', name: 'Greenfield High', invite_code: 'GRNFLD-7K2', prize: 'A tree planted' };
+    const mockMembers = [
+      { user_id: 'you', name: 'You', points: 100, isYou: true },
+      { user_id: 'user2', name: 'User 2', points: 90 },
+      { user_id: 'user3', name: 'User 3', points: 80 },
+      { user_id: 'user4', name: 'User 4', points: 70 },
+      { user_id: 'user5', name: 'User 5', points: 60 },
+      { user_id: 'user6', name: 'User 6', points: 50 },
+    ];
 
     vi.mocked(api.me).mockResolvedValue({ user: mockUser });
     vi.mocked(api.listLeaderboards).mockResolvedValue({ leaderboards: [mockBoard] });
-    vi.mocked(api.getLeaderboard).mockResolvedValue({ members: [{ user_id: 'you', name: 'You', points: 100, isYou: true }] });
+    vi.mocked(api.getLeaderboard).mockResolvedValue({ members: mockMembers });
     vi.mocked(api.getPosts).mockResolvedValue({ posts: [] });
     vi.mocked(api.getQuests).mockResolvedValue({ quests: [] });
     vi.mocked(api.getNotifications).mockResolvedValue({ notifications: [], unread: 0 });
 
     render(<App />);
 
-    // Verify initial load on Coach page
+    // Verify initial load on Learning page
     await waitFor(() => {
-      expect(screen.getByText(/AI Footprint Coach/i)).toBeInTheDocument();
+      expect(screen.getByText(/Footprint Coach/i)).toBeInTheDocument();
     });
 
-    // Navigate to "Board" screen (Home.jsx)
-    const boardTab = screen.getByRole('button', { name: 'Board' });
-    fireEvent.click(boardTab);
+    // Navigate to "Home" screen (which renders welcome header, board, and quests)
+    const homeTab = screen.getByRole('button', { name: 'Home' });
+    fireEvent.click(homeTab);
     await waitFor(() => {
       // Home page renders user dashboard info
       expect(screen.getByText('Eco Champion')).toBeInTheDocument();
+      // It also renders the board title
+      expect(screen.getByText('Leaderboard')).toBeInTheDocument();
     });
 
-    // Navigate to the full Leaderboard page from the home widget
+    // Navigate to the full Leaderboard page members expansion from the home screen
     const seeAllButton = screen.getByRole('button', { name: /See all/i });
     fireEvent.click(seeAllButton);
     await waitFor(() => {
       expect(screen.getByText('Greenfield High')).toBeInTheDocument();
     });
 
-    // Navigate to "Quests" screen
-    const questsTab = screen.getByRole('button', { name: 'Quests' });
-    fireEvent.click(questsTab);
+    // Navigate back to "Learning" screen and toggle to Research Library sub-tab
+    const learningTab = screen.getByRole('button', { name: 'Learning' });
+    fireEvent.click(learningTab);
     await waitFor(() => {
-      expect(screen.getByText(/Daily Quests/i)).toBeInTheDocument();
-      expect(screen.getByText(/refreshes daily/i)).toBeInTheDocument();
+      expect(screen.getByText(/Footprint Coach/i)).toBeInTheDocument();
     });
 
-    // Navigate to "Research" screen
-    const researchTab = screen.getByRole('button', { name: 'Research library' });
-    fireEvent.click(researchTab);
+    const researchSubTab = screen.getByRole('button', { name: 'Research Library' });
+    fireEvent.click(researchSubTab);
     await waitFor(() => {
       expect(screen.getByText(/Research library · 1,000 papers/i)).toBeInTheDocument();
     });

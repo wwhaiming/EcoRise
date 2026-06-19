@@ -2,17 +2,15 @@
 import Icon from './Icon';
 
 const NAV = [
-  { key: 'coach', label: 'AI', ariaLabel: 'AI Eco Coach', icon: 'sparkle' },
-  { key: 'research', label: 'Research', ariaLabel: 'Research library', icon: 'folder' },
-  { key: 'leaderboard', label: 'Board', icon: 'home' },
-  { key: 'quests', label: 'Quests', icon: 'bolt' },
+  { key: 'home', label: 'Home', icon: 'home' },
+  { key: 'learning', label: 'Learning', icon: 'sparkle' },
   { key: 'feed', label: 'Feed', icon: 'feed' },
   { key: 'profile', label: 'Profile', icon: 'user' },
 ];
 
-// Two balanced halves around the centered FAB: 3 tabs left, 3 tabs right.
-const LEFT = NAV.slice(0, 3);
-const RIGHT = NAV.slice(3);
+// Two balanced halves around the centered FAB: 2 tabs left, 2 tabs right.
+const LEFT = NAV.slice(0, 2);
+const RIGHT = NAV.slice(2);
 
 export default function BottomNav({ screen, go, onFab }) {
   const renderItem = (n) => (
