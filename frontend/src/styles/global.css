@@ -28,6 +28,25 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* ── Desktop: phone-in-browser shell ── */
+@media (min-width: 600px) {
+  html, body { overflow: auto; height: 100%; }
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a2520;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 30% 20%, rgba(46,125,79,.08), transparent),
+      radial-gradient(ellipse 50% 40% at 80% 80%, rgba(93,143,134,.07), transparent);
+    padding: 32px 24px;
+    box-sizing: border-box;
+  }
+}
+
 ::selection { background: rgba(46,125,79,.20); color: var(--text); }
 
 /* ============================================================
@@ -129,19 +148,43 @@ html, body, #root {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* Responsive: float the device as a quiet slab on desktop */
-@media (min-width: 768px) {
-  body { background: var(--navy-950); }
-  /* Center the device frame and let it hug its content (capped at 92vh), so a
-     short page no longer leaves an empty void above the bottom nav. */
-  #root { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 4vh 0; box-sizing: border-box; }
+/* Responsive: phone-frame on desktop */
+@media (min-width: 600px) {
   .app {
-    border-radius: 34px;
-    height: auto;
-    max-height: 92vh;
+    width: 390px;
+    max-width: 390px;
+    height: min(844px, calc(100vh - 64px));
+    max-height: min(844px, calc(100vh - 64px));
+    border-radius: 50px;
+    border-left: none;
+    border-right: none;
+    margin: 0;
+    flex-shrink: 0;
     box-shadow:
-      0 40px 100px rgba(30,91,57,.20),
-      0 0 0 1px rgba(45,91,57,.12);
+      0 0 0 10px #0c110e,
+      0 0 0 12px #253320,
+      0 0 0 13.5px #0c110e,
+      0 50px 140px rgba(0,0,0,.65),
+      0 10px 40px rgba(0,0,0,.45);
+  }
+
+  /* Dynamic island */
+  .app::before {
+    inset: unset;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 36px;
+    background: #0c110e;
+    border-radius: 22px;
+    z-index: 100;
+    animation: none;
+  }
+
+  .scroll {
+    border-radius: inherit;
+    padding-top: 58px;
   }
 }
 
