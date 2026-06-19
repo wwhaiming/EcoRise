@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>School footprint coach — zeroed mockup</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" />
+  <style>
+    :root {
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #eef3ea;
+      --color-text-primary: #1a2417;
+      --color-text-secondary: #5a6655;
+      --color-text-tertiary: #8a958380;
+      --color-border-tertiary: rgba(26, 36, 23, 0.12);
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-xl: 16px;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 16px;
+      background: #dce7d6;
+      font-family: var(--font-sans);
+      color: var(--color-text-primary);
+      display: flex;
+      justify-content: center;
+    }
+    .wrap { width: 100%; max-width: 680px; }
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 12px 16px;
+      border: 0.5px solid rgba(26, 36, 23, 0.3);
+      border-radius: var(--border-radius-md);
+      background: transparent;
+      color: var(--color-text-primary);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+    button:hover { background: var(--color-background-secondary); }
+    button:active { transform: scale(0.98); }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0 0 0 0);
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-xl); padding: 20px;">
+  <h2 class="sr-only">School footprint coach card with all emission values reset to zero.</h2>
+
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+    <div style="width: 44px; height: 44px; border-radius: var(--border-radius-md); background: #C0DD97; display: flex; align-items: center; justify-content: center;">
+      <i class="ti ti-sparkles" style="font-size: 22px; color: #173404;" aria-hidden="true"></i>
+    </div>
+    <div>
+      <p style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #3B6D11;">AI-first workspace</p>
+      <p style="margin: 0; font-size: 20px; font-weight: 500; color: var(--color-text-primary);">School footprint coach</p>
+    </div>
+  </div>
+
+  <div style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+      <p style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary);">Direction B &middot; your school's hidden footprint</p>
+      <span style="flex-shrink: 0; font-size: 12px; padding: 4px 12px; border-radius: var(--border-radius-md); background: #FCEBEB; color: #791F1F;">low confidence</span>
+    </div>
+
+    <div style="display: flex; align-items: baseline; gap: 8px; margin: 10px 0 6px;">
+      <span style="font-size: 40px; font-weight: 500; color: #3B6D11;">0t</span>
+      <span style="font-size: 15px; color: var(--color-text-secondary);">CO&#8322;e / month (est.)</span>
+    </div>
+    <p style="margin: 0 0 18px; font-size: 14px; line-height: 1.6; color: var(--color-text-secondary);">Coarse national-average estimate from student count only. Enter real utility bills, bus miles, and meals served to make this your school's actual footprint.</p>
+
+    <div id="footprint-rows"></div>
+
+    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 16px; margin-top: 18px;">
+      <p style="margin: 0 0 6px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #3B6D11;">Action leverage</p>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: var(--color-text-secondary);">Logged actions this week saved ~0 kg CO2e &mdash; about 0% of the school's estimated electricity emissions (~0 kg/week). The biggest lever is institutional, not individual.</p>
+    </div>
+
+    <button style="width: 100%; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <i class="ti ti-recycle" style="font-size: 18px;" aria-hidden="true"></i> Enter real school data (raises confidence)
+    </button>
+  </div>
+</div>
+</div>
+
+<script>
+  const rows = [
+    { label: "Electricity", value: 0, fire: true },
+    { label: "Cafeteria food", value: 0 },
+    { label: "Student/staff commuting", value: 0 },
+    { label: "Landfill waste", value: 0 },
+    { label: "Heating (natural gas)", value: 0 },
+    { label: "Water", value: 0 }
+  ];
+  document.getElementById("footprint-rows").innerHTML = rows.map(r => `
+    <div style="margin-bottom: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 15px; font-weight: 500; color: var(--color-text-primary);">${r.fire ? '<i class="ti ti-flame" style="font-size:16px;color:#993C1D;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>' : ''}${r.label}</span>
+        <span style="font-size: 15px; font-weight: 500; color: var(--color-text-primary);">${Math.round(r.value)} kg/mo</span>
+      </div>
+      <div style="height: 8px; border-radius: 4px; background: #e4ece0; overflow: hidden;">
+        <div style="height: 100%; width: 0%; border-radius: 4px; background: #639922;"></div>
+      </div>
+    </div>
+  `).join("");
+</script>
+</body>
+</html>
