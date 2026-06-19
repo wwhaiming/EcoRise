@@ -41,13 +41,13 @@ const MOCK_MEMBERS = [
 const MOCK_POSTS = [
   { id: 'p1', user_id: 'maya', user_name: 'Maya Chen', user_handle: '@mayagrows', user_avatar: 'https://i.pravatar.cc/200?img=47', image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&q=60&auto=format&fit=crop', action_type: 'Transport', action_desc: 'Biked to campus instead of driving', co2_saved: 2.4, points: 60, caption: 'Morning ride was unreal 🚲 beat my record. Who else is car-free this week? @devonp', like_count: 48, liked: false, comment_count: 6, created_at: new Date(Date.now() - 14 * 60000).toISOString() },
   { id: 'p2', user_id: 'aria', user_name: 'Aria Nasser', user_handle: '@aria.eco', user_avatar: 'https://i.pravatar.cc/200?img=45', image: 'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?w=800&q=60&auto=format&fit=crop', action_type: 'Waste', action_desc: 'Refilled 5 bottles at the hydration station', co2_saved: 0.9, points: 25, caption: 'Single-use is so last season 💧', like_count: 31, liked: true, comment_count: 3, created_at: new Date(Date.now() - 52 * 60000).toISOString() },
-  { id: 'p3', user_id: 'devon', user_name: 'Devon Park', user_handle: '@devonp', user_avatar: 'https://i.pravatar.cc/200?img=12', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=60&auto=format&fit=crop', action_type: 'Food', action_desc: 'Composted this week\'s food scraps', co2_saved: 1.6, points: 40, caption: 'Dorm compost bin is officially thriving 🌱', like_count: 27, liked: false, comment_count: 4, created_at: new Date(Date.now() - 96 * 60000).toISOString() },
-  { id: 'p4', user_id: 'leo', user_name: 'Leo Martins', user_handle: '@leomar', user_avatar: 'https://i.pravatar.cc/200?img=15', image: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&q=60&auto=format&fit=crop', action_type: 'Cleanup', action_desc: 'Picked up litter at Riverside Park', co2_saved: 0.5, points: 35, caption: 'Filled two bags before lunch. Severity was a solid 7/10 down there 🧤', like_count: 52, liked: false, comment_count: 9, created_at: new Date(Date.now() - 140 * 60000).toISOString() },
+  { id: 'p3', user_id: 'devon', user_name: 'Devon Park', user_handle: '@devonp', user_avatar: 'https://i.pravatar.cc/200?img=12', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=60&auto=format&fit=crop', action_type: 'Energy', action_desc: 'Set lab computers to auto-sleep after class', co2_saved: 1.6, points: 40, caption: 'Found 30 machines left on overnight. Not anymore 💡', like_count: 27, liked: false, comment_count: 4, created_at: new Date(Date.now() - 96 * 60000).toISOString() },
+  { id: 'p4', user_id: 'leo', user_name: 'Leo Martins', user_handle: '@leomar', user_avatar: 'https://i.pravatar.cc/200?img=15', image: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&q=60&auto=format&fit=crop', action_type: 'Cleanup', action_desc: 'Picked up litter at Riverside Park', co2_saved: 0.5, points: 35, caption: 'Filled two bags before first period. Severity was a solid 7/10 down there 🧤', like_count: 52, liked: false, comment_count: 9, created_at: new Date(Date.now() - 140 * 60000).toISOString() },
 ];
 
 const MOCK_QUESTS = [
   { id: 'q1', title: 'Two-Wheel Tuesday', description: 'Log a bike or walk commute', action_type: 'transportation', points_base: 60, goal: 1, progress: 1 },
-  { id: 'q2', title: 'Zero-Waste Lunch', description: 'Post a meal with no single-use plastic', action_type: 'waste', points_base: 40, goal: 1, progress: 0 },
+  { id: 'q2', title: 'Single-Use Free Day', description: 'Go a full school day with no single-use plastic', action_type: 'waste', points_base: 40, goal: 1, progress: 0 },
   { id: 'q3', title: 'Bottle Streak', description: 'Refill a reusable bottle 3 times', action_type: 'waste', points_base: 45, goal: 3, progress: 2 },
   { id: 'q4', title: 'Spot the Trash', description: 'Report one litter hotspot near you', action_type: 'nature', points_base: 50, goal: 1, progress: 0 },
   { id: 'q5', title: 'Bring a Friend', description: 'Invite someone to your leaderboard', action_type: 'community', points_base: 75, goal: 1, progress: 0 },
@@ -144,20 +144,22 @@ export default function App() {
 
   // ── Init: check session (cookie) on mount ──
   useEffect(() => {
+    // didBootstrap (a ref) guards against the double-invoke of StrictMode/dev so me()
+    // runs once. We intentionally do NOT gate the success handler on a per-run `live`
+    // flag: StrictMode tears down the first run before me() resolves, and an `if (!live)
+    // return` there discarded a perfectly valid session — leaving an authenticated user
+    // stranded on onboarding after every reload. The ref alone is the correct guard.
     if (didBootstrap.current) return;
     didBootstrap.current = true;
-    let live = true;
     api.me().then(async data => {
-      if (!live) return;
       setUser(data.user);
       setAuthed(true);
       setScreen('coach');
       setMembers([]);
       setPosts([]);
       await loadData();
-      if (live) await consumePendingInvite();
+      await consumePendingInvite();
     }).catch(() => { /* not signed in — show onboarding */ });
-    return () => { live = false; };
   }, [loadData, consumePendingInvite]);
 
   const markNotificationsRead = useCallback(async () => {

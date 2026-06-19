@@ -21,7 +21,8 @@ router.get('/', authMiddleware, async (req, res) => {
         SELECT action_type AS actionType, COUNT(*) AS count, MAX(created_at) AS lastDoneAt
         FROM posts WHERE user_id = ? AND created_at > datetime('now','-30 days')
         GROUP BY action_type ORDER BY count DESC`).all(req.userId);
-      const ALL_CATS = ['transportation', 'waste', 'energy', 'food', 'nature'];
+      // Direction B environmental categories only (food/cafeteria = Direction A, excluded).
+      const ALL_CATS = ['transportation', 'waste', 'energy', 'water', 'nature'];
       const done = new Set(recentActions.map(r => r.actionType));
       const weakSpots = ALL_CATS.filter(c => !done.has(c));
       const topCategory = recentActions[0]?.actionType || null;

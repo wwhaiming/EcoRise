@@ -71,8 +71,9 @@ export default function Insights({ leaderboardId, showToast }) {
 
   const { anomalies = [], forecast = {}, recommendations = [], summary, school, sampleData, profile,
     schoolContext, scope = {}, pipeline = [], evidence = {}, humanInLoop, responsibleAI = [], limitations = [],
-    statusFlow = [], evaluation = {}, dataSource } = data;
+    statusFlow = [], evaluation = {}, dataSource, judgeEvidence = {}, dataMode = 'synthetic' } = data;
   const top = anomalies[0] || null;
+  const isReal = (judgeEvidence.dataMode || dataMode) === 'real';
 
   const call = async (fn, label) => {
     if (!leaderboardId) { showToast && showToast('Open your board first.'); return; }
@@ -112,6 +113,12 @@ export default function Insights({ leaderboardId, showToast }) {
   const Chip = ({ children, tone }) => (
     <span className="chip" style={{ fontSize: 10, background: tone === 'excl' ? 'rgba(182,111,77,.14)' : 'rgba(46,125,79,.12)', color: tone === 'excl' ? 'var(--coral-d)' : 'var(--green-d)' }}>{children}</span>
   );
+  const EvRow = ({ k, v }) => (
+    <div style={{ minWidth: 0 }}>
+      <div className="dim" style={{ fontWeight: 700, fontSize: 10 }}>{k}</div>
+      <div style={{ fontWeight: 650, fontSize: 11.5, lineHeight: 1.3 }}>{v}</div>
+    </div>
+  );
 
   return (
     <div style={{ padding: '16px 16px 0' }}>
@@ -129,6 +136,26 @@ export default function Insights({ leaderboardId, showToast }) {
           <Chip tone="excl">Food excluded — Direction B</Chip>
         </div>
         <div className="muted" style={{ fontSize: 13, fontWeight: 650, lineHeight: 1.5, marginTop: 10 }}>{summary}</div>
+
+        {/* Judge evidence — one-stop transparency: what's real, what's modeled, how it's validated */}
+        <div style={{ marginTop: 12, padding: 12, borderRadius: 12, border: '1px solid rgba(46,125,79,.16)', background: 'rgba(46,125,79,.05)' }}>
+          <div className="eyebrow" style={{ color: 'var(--green)', marginBottom: 8 }}>Judge evidence</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px 12px' }}>
+            <EvRow k="Data" v={isReal ? 'Real import' : 'Synthetic sandbox'} />
+            <EvRow k="AI mode" v={judgeEvidence.aiMode || '—'} />
+            <EvRow k="Model" v={judgeEvidence.model || (evaluation && evaluation.model) || 'OLS (interpretable)'} />
+            <EvRow k="Backtest MAPE" v={judgeEvidence.holdoutMapePct != null ? `${judgeEvidence.holdoutMapePct}%` : '—'} />
+            <EvRow k="Anomaly rule" v={judgeEvidence.anomalyThreshold || 'residual z ≥ 2'} />
+            <EvRow k="Features" v={(judgeEvidence.features || []).join(', ') || '—'} />
+            <EvRow k="Human approval" v="required (named adult)" />
+            <EvRow k="Tests" v={judgeEvidence.tests ? `${judgeEvidence.tests.passed}/${judgeEvidence.tests.total} ${judgeEvidence.tests.status || 'passing'}${judgeEvidence.tests.generatedAt ? ` · ${String(judgeEvidence.tests.generatedAt).slice(0, 10)}` : ''}` : (judgeEvidence.testCommand || 'npm test')} />
+          </div>
+          <div style={{ marginTop: 10, fontSize: 11.5, fontWeight: 700, lineHeight: 1.4, color: isReal ? 'var(--green-d)' : 'var(--coral-d)' }}>
+            {isReal
+              ? 'Running on real imported utility data.'
+              : 'Synthetic sandbox — not a pilot. Imports real utility CSVs (sample provided). A verified pathway to savings; no real-world savings claimed yet.'}
+          </div>
+        </div>
 
         {/* input -> AI -> insight -> action */}
         {pipeline.length === 4 && (

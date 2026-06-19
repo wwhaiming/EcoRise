@@ -9,14 +9,14 @@ import { METAL } from '../components/constants';
 const CLIMATE_FACTS = [
   'Transportation is ~29% of U.S. greenhouse-gas emissions — the single largest source.',
   'One tree absorbs roughly 21 kg of CO₂ per year.',
-  'Producing 1 kg of beef emits ~60 kg of CO₂ — about 10× a plant-based meal.',
+  'Heating and cooling are ~50% of a typical school building’s energy use.',
   'A reusable bottle can prevent ~150 single-use plastic bottles a year.',
   'Biking 10 miles instead of driving saves about 4 kg of CO₂.',
-  'Food waste causes ~8% of global greenhouse-gas emissions.',
-  'Air-drying one load of laundry saves ~1 kg of CO₂ vs. a dryer.',
+  'A single dripping faucet can waste ~11,000 liters of water a year.',
+  'Setting back HVAC overnight and on weekends can cut building energy ~10-20%.',
   'LED bulbs use ~75% less energy and last ~25× longer than incandescent.',
   'Recycling one aluminum can saves enough energy to run a TV for ~3 hours.',
-  'Skipping meat one day a week ~= taking your car off the road for a month each year.',
+  'Idling school buses burn fuel and emit CO₂ while moving no one — a no-idle policy helps.',
 ];
 
 function ClimateFact() {

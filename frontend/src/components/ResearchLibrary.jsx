@@ -11,7 +11,8 @@ import { useState, useCallback } from 'react';
 import Icon from './Icon';
 import api from '../utils/api';
 
-const TOPICS = ['transportation', 'food', 'waste', 'energy', 'climate_ed', 'sustainability', 'footprint', 'nature'];
+// Direction B environmental topics (food = Direction A, omitted from the filter chips).
+const TOPICS = ['transportation', 'waste', 'energy', 'water', 'climate_ed', 'sustainability', 'footprint', 'nature'];
 
 function Cite({ sources }) {
   if (!sources || !sources.length) return null;

@@ -19,8 +19,14 @@ function Sources({ sources }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
       {sources.map((s, i) => (
-        <span key={i} className="chip chip-dim" title={s.snippet || ''} style={{ fontSize: 11 }}>
-          <Icon name="leaf" size={11} color="var(--green)" /> {s.title}{s.pubYear ? ` (${s.pubYear})` : ''}
+        <span key={i} className="chip chip-dim"
+          title={`${s.title || 'source'}${s.pubYear ? ` (${s.pubYear})` : ''}`}
+          style={{ fontSize: 12.5, maxWidth: '100%', minWidth: 0, whiteSpace: 'normal', alignItems: 'flex-start', lineHeight: 1.3, paddingTop: 7, paddingBottom: 7 }}>
+          <Icon name="leaf" size={12} color="var(--green)" style={{ flexShrink: 0, marginTop: 2 }} />
+          {/* wrap long paper titles to two lines (larger font) instead of overflowing or 1-line ellipsis */}
+          <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minWidth: 0, textAlign: 'center' }}>
+            {s.title}{s.pubYear ? ` (${s.pubYear})` : ''}
+          </span>
         </span>
       ))}
     </div>
@@ -33,8 +39,8 @@ const CATEGORY_LABELS = {
   waste: 'waste',
   recycling: 'waste',
   energy: 'energy',
-  food: 'food',
-  consumption: 'food',
+  consumption: 'waste',
+  water: 'water',
   nature: 'nature',
   cleanup: 'nature',
   community: 'community',
@@ -43,9 +49,9 @@ const CATEGORY_LABELS = {
 
 const ACTION_MAP = {
   transport: 'Run a car-free arrival challenge for one hallway or club.',
-  waste: 'Audit one lunch period for single-use plastic, then test one refill or reuse fix.',
+  waste: 'Audit one corridor or classroom for single-use plastic, then test one refill or reuse fix.',
   energy: 'Measure one classroom energy habit and log a low-cost switch-off action.',
-  food: 'Pilot a plant-forward lunch or compost reminder with one table group.',
+  water: 'Track one week of faucet or irrigation use and test a low-flow or schedule fix.',
   nature: 'Map a litter hotspot, clean it, and report whether the hotspot returns.',
   community: 'Recruit two classmates to test the recommended action and compare results.',
   learning: 'Answer one cited question, then convert it into one verified action.',
@@ -67,7 +73,7 @@ function footprintFrom(posts = [], leaderboard) {
     if (post.accepted !== false && post.rejected !== true) verified += 1;
   });
 
-  const categories = ['transport', 'waste', 'energy', 'food', 'nature', 'community'];
+  const categories = ['transport', 'waste', 'energy', 'water', 'nature', 'community'];
   const ranked = categories.map(category => ({ category, count: counts[category] || 0 }))
     .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category));
   const strongest = ranked[0] || { category: 'learning', count: 0 };
