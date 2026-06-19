@@ -4,94 +4,140 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>School footprint coach — zeroed mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" />
   <style>
+    /* Tokens mirror frontend/src/styles/tokens.css — "Editorial Eco" paper theme */
     :root {
-      --color-background-primary: #ffffff;
-      --color-background-secondary: #eef3ea;
-      --color-text-primary: #1a2417;
-      --color-text-secondary: #5a6655;
-      --color-text-tertiary: #8a958380;
-      --color-border-tertiary: rgba(26, 36, 23, 0.12);
-      --border-radius-md: 8px;
-      --border-radius-lg: 12px;
-      --border-radius-xl: 16px;
-      --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --navy-950: #DDE8DE;   /* desktop surround */
+      --navy-900: #F7FAF5;   /* app background */
+      --navy-800: #FFFFFF;   /* card base */
+      --navy-700: #F1F7EF;   /* raised / inset */
+      --navy-600: #E5EEE3;
+      --navy-500: #C9D8CA;   /* border */
+      --glass:        rgba(255, 255, 255, 0.86);
+      --glass-strong: rgba(247, 250, 245, 0.95);
+      --glass-edge-soft: rgba(45, 91, 57, 0.10);
+      --green:   #2E7D4F;
+      --green-2: #75B77B;
+      --green-d: #1E5B39;
+      --coral-d: #8C5035;    /* clay — warning/caution only */
+      --text:       #183226;
+      --text-muted: #526B5C;
+      --text-dim:   #5E7268;
+      --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --body:    'Hanken Grotesk', system-ui, sans-serif;
+      --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 32px 16px;
-      background: #dce7d6;
-      font-family: var(--font-sans);
-      color: var(--color-text-primary);
-      display: flex;
-      justify-content: center;
+    html, body {
+      margin: 0; padding: 0;
+      font-family: var(--body); color: var(--text);
+      background: var(--navy-950);
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
     }
-    .wrap { width: 100%; max-width: 680px; }
-    button {
-      font-family: inherit;
-      font-size: 14px;
-      padding: 12px 16px;
-      border: 0.5px solid rgba(26, 36, 23, 0.3);
-      border-radius: var(--border-radius-md);
-      background: transparent;
-      color: var(--color-text-primary);
-      cursor: pointer;
-      transition: background 0.15s ease, transform 0.05s ease;
+    body { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 5vh 16px; }
+    .device {
+      width: 100%; max-width: 600px;
+      background: var(--navy-900);
+      border-radius: var(--r-xl);
+      border: 1px solid rgba(45,91,57,.10);
+      padding: 22px;
     }
-    button:hover { background: var(--color-background-secondary); }
-    button:active { transform: scale(0.98); }
-    .sr-only {
-      position: absolute; width: 1px; height: 1px;
-      overflow: hidden; clip: rect(0 0 0 0);
+    .tnum { font-variant-numeric: tabular-nums; }
+    .eyebrow {
+      font-family: var(--body); font-weight: 700; font-size: 11px; letter-spacing: 1.6px;
+      text-transform: uppercase; color: var(--text-dim); margin: 0;
     }
+    .h2 { font-family: var(--display); font-optical-sizing: auto; font-weight: 600; font-size: 22px; letter-spacing: 0; margin: 0; }
+
+    .card {
+      position: relative;
+      background: linear-gradient(180deg, var(--glass), var(--glass-strong));
+      border-radius: var(--r-lg);
+      border: 1px solid var(--glass-edge-soft);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.70), 0 16px 30px -20px rgba(30,91,57,.30);
+      padding: 22px;
+    }
+    .card::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,.64), transparent 24%);
+    }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--body); font-weight: 700; font-size: 12px; letter-spacing: 0;
+      padding: 5px 11px; border-radius: 9999px; white-space: nowrap;
+    }
+    .chip-warn { color: var(--coral-d); background: rgba(140,80,53,.12); box-shadow: inset 0 0 0 1px rgba(140,80,53,.22); }
+
+    .bar { height: 8px; border-radius: 9999px; overflow: hidden; background: rgba(30,91,57,.10); }
+    .bar > i { display: block; height: 100%; border-radius: 9999px; background: linear-gradient(90deg, var(--green-d), var(--green)); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+
+    .btn {
+      font-family: var(--body); font-weight: 700; font-size: 16px;
+      border: none; border-radius: 9999px; cursor: pointer;
+      padding: 14px 24px; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      transition: transform .14s cubic-bezier(.2,.7,.3,1), filter .2s; width: 100%;
+    }
+    .btn:active { transform: translateY(1px) scale(.99); }
+    .btn-primary {
+      color: #F7FAF5; background: linear-gradient(180deg, var(--green), var(--green-d));
+      box-shadow: 0 10px 22px rgba(30,91,57,.22), inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    .btn-primary:hover { filter: brightness(1.03); }
+
+    .leaf-tile { width: 44px; height: 44px; border-radius: 9999px; background: rgba(46,125,79,.10); box-shadow: inset 0 0 0 1px rgba(46,125,79,.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .leverage { background: var(--navy-700); border: 1px solid var(--glass-edge-soft); border-radius: var(--r-md); padding: 15px 16px; margin-top: 18px; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   </style>
 </head>
 <body>
-<div class="wrap">
-<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-xl); padding: 20px;">
+<div class="device">
   <h2 class="sr-only">School footprint coach card with all emission values reset to zero.</h2>
 
-  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-    <div style="width: 44px; height: 44px; border-radius: var(--border-radius-md); background: #C0DD97; display: flex; align-items: center; justify-content: center;">
-      <i class="ti ti-sparkles" style="font-size: 22px; color: #173404;" aria-hidden="true"></i>
-    </div>
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+    <div class="leaf-tile"><i class="ti ti-leaf" style="font-size: 22px; color: var(--green-d);" aria-hidden="true"></i></div>
     <div>
-      <p style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #3B6D11;">AI-first workspace</p>
-      <p style="margin: 0; font-size: 20px; font-weight: 500; color: var(--color-text-primary);">School footprint coach</p>
+      <p class="eyebrow">AI-first workspace</p>
+      <p class="h2">School footprint coach</p>
     </div>
   </div>
 
-  <div style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-      <p style="margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary);">Direction B &middot; your school's hidden footprint</p>
-      <span style="flex-shrink: 0; font-size: 12px; padding: 4px 12px; border-radius: var(--border-radius-md); background: #FCEBEB; color: #791F1F;">low confidence</span>
+  <div class="card">
+    <div style="position: relative; z-index: 1;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <p class="eyebrow" style="padding-top: 3px;">Direction B &middot; your school's hidden footprint</p>
+        <span class="chip chip-warn">low confidence</span>
+      </div>
+
+      <div style="display: flex; align-items: baseline; gap: 9px; margin: 12px 0 6px;">
+        <span class="tnum" style="font-family: var(--display); font-optical-sizing: auto; font-weight: 600; font-size: 44px; line-height: 1; color: var(--green-d);">0t</span>
+        <span style="font-size: 15px; font-weight: 600; color: var(--text-muted);">CO&#8322;e / month (est.)</span>
+      </div>
+      <p style="margin: 0 0 18px; font-size: 14px; line-height: 1.6; color: var(--text-muted);">Coarse national-average estimate from student count only. Enter real utility bills, bus miles, and meals served to make this your school's actual footprint.</p>
+
+      <div id="footprint-rows"></div>
+
+      <div class="leverage">
+        <p class="eyebrow" style="color: var(--green-d); margin-bottom: 6px;">Action leverage</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-muted);">Logged actions this week saved ~0 kg CO2e &mdash; about 0% of the school's estimated electricity emissions (~0 kg/week). The biggest lever is institutional, not individual.</p>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top: 16px;">
+        <i class="ti ti-leaf" style="font-size: 18px;" aria-hidden="true"></i> Enter real school data
+      </button>
     </div>
-
-    <div style="display: flex; align-items: baseline; gap: 8px; margin: 10px 0 6px;">
-      <span style="font-size: 40px; font-weight: 500; color: #3B6D11;">0t</span>
-      <span style="font-size: 15px; color: var(--color-text-secondary);">CO&#8322;e / month (est.)</span>
-    </div>
-    <p style="margin: 0 0 18px; font-size: 14px; line-height: 1.6; color: var(--color-text-secondary);">Coarse national-average estimate from student count only. Enter real utility bills, bus miles, and meals served to make this your school's actual footprint.</p>
-
-    <div id="footprint-rows"></div>
-
-    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 16px; margin-top: 18px;">
-      <p style="margin: 0 0 6px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: #3B6D11;">Action leverage</p>
-      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: var(--color-text-secondary);">Logged actions this week saved ~0 kg CO2e &mdash; about 0% of the school's estimated electricity emissions (~0 kg/week). The biggest lever is institutional, not individual.</p>
-    </div>
-
-    <button style="width: 100%; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-      <i class="ti ti-recycle" style="font-size: 18px;" aria-hidden="true"></i> Enter real school data (raises confidence)
-    </button>
   </div>
-</div>
 </div>
 
 <script>
   const rows = [
-    { label: "Electricity", value: 0, fire: true },
+    { label: "Electricity", value: 0, icon: "flame", warm: true },
     { label: "Cafeteria food", value: 0 },
     { label: "Student/staff commuting", value: 0 },
     { label: "Landfill waste", value: 0 },
@@ -100,13 +146,11 @@
   ];
   document.getElementById("footprint-rows").innerHTML = rows.map(r => `
     <div style="margin-bottom: 14px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <span style="font-size: 15px; font-weight: 500; color: var(--color-text-primary);">${r.fire ? '<i class="ti ti-flame" style="font-size:16px;color:#993C1D;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>' : ''}${r.label}</span>
-        <span style="font-size: 15px; font-weight: 500; color: var(--color-text-primary);">${Math.round(r.value)} kg/mo</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
+        <span style="font-size: 15px; font-weight: 700; color: var(--text);">${r.icon ? `<i class="ti ti-${r.icon}" style="font-size:16px;color:var(--coral-d);vertical-align:-2px;margin-right:5px" aria-hidden="true"></i>` : ''}${r.label}</span>
+        <span class="tnum" style="font-size: 15px; font-weight: 700; color: var(--text);">${Math.round(r.value)} kg/mo</span>
       </div>
-      <div style="height: 8px; border-radius: 4px; background: #e4ece0; overflow: hidden;">
-        <div style="height: 100%; width: 0%; border-radius: 4px; background: #639922;"></div>
-      </div>
+      <div class="bar"><i style="width: 0%;"></i></div>
     </div>
   `).join("");
 </script>
