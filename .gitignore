@@ -20,3 +20,6 @@ ecorise-current-source.tar.gz
 ECORISE_COMPLETE_SOURCE*.txt
 research-corpus-*.json
 research-corpus-viewer.html
+
+# council query cache (local only)
+.claude/council-cache/
