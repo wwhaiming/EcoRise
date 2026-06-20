@@ -85,7 +85,17 @@ async function gate(q, retrievedChunks, { simFloor = SIM_FLOOR } = {}) {
   const unsupported = unsupportedNumbers(`${q.correct || ''} ${q.explanation || ''}`, evidence);
   if (unsupported.length) return { ok: false, reason: 'unsupported_number', faithfulness: f, unsupportedNumbers: unsupported };
 
-  // Learned Semantic Entailment Gate
+  // Learned Semantic Entailment Gate — TIERED for performance. The deterministic checks
+  // (citation, lexical floor, unsupported-number scan) have already passed. The LLM
+  // entailment judge is a SECOND serial model round-trip, so only pay it when the
+  // deterministic signal is BORDERLINE (within JUDGE_MARGIN of the floor) or when forced
+  // via COACH_LLM_JUDGE=always. A comfortably-supported answer ships on the deterministic
+  // result alone — this halves latency + model cost on /question, /guidance, /school-insight
+  // (the file's own contract: the LLM judge is never required to ship a question).
+  const JUDGE_MARGIN = 0.15;
+  if (process.env.COACH_LLM_JUDGE !== 'always' && f >= simFloor + JUDGE_MARGIN) {
+    return { ok: true, reason: 'ok', faithfulness: f };
+  }
   const judgeResult = await judgeEntailment(`${q.correct || ''} ${q.explanation || ''}`, evidence);
   if (!judgeResult.entailment) {
     return { ok: false, reason: 'semantic_contradiction', faithfulness: judgeResult.score, details: judgeResult.reasoning };

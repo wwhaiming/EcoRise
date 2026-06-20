@@ -283,6 +283,12 @@ router.get('/ask', authMiddleware, async (req, res) => {
     const q = String(req.query.q || '').trim();
     if (q.length < 4) return res.status(400).json({ error: 'Ask a question (at least 4 characters).' });
     const db = getDb();
+    // Cache grounded answers by normalized query: same question + fixed corpus -> same
+    // answer, so a repeated ask reuses the prior result instead of re-embedding +
+    // re-retrieving + re-billing the model (mirrors the per-paper _paperCache).
+    const askKey = `ask:${q.toLowerCase().replace(/\s+/g, ' ').slice(0, 200)}`;
+    const askHit = paperCacheGet(askKey);
+    if (askHit) return res.json(askHit);
     const chunks = await retrieve(db, q, { k: 6 });
     if (!chunks.length) return res.status(503).json({ error: 'No approved learning sources yet', reason: 'no_corpus' });
     const draft = await answerFromSources(q, chunks);
@@ -295,7 +301,9 @@ router.get('/ask', authMiddleware, async (req, res) => {
     // Fall back to the top retrieved chunk if the model cited nothing valid, so the
     // answer is always shown WITH its source (never an uncited claim).
     const citeIds = used.length ? used : [chunks[0].id];
-    res.json({ answer: String(draft.answer || ''), isMock: !!draft.isMock, sources: snippetsForChunks(db, citeIds) });
+    const payload = { answer: String(draft.answer || ''), isMock: !!draft.isMock, sources: snippetsForChunks(db, citeIds) };
+    paperCacheSet(askKey, payload); // only successful, grounded answers are cached (refusals fall through above)
+    res.json(payload);
   } catch (err) {
     console.error('coach /ask error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
