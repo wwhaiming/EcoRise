@@ -180,7 +180,7 @@ export default function Insights({ leaderboardId, showToast }) {
           <div style={{ marginTop: 16 }}>
             <div className="eyebrow" style={{ color: 'var(--coral-d)', marginBottom: 6 }}>Primary finding · anomaly detection</div>
             <div className="h1" style={{ fontSize: 19, lineHeight: 1.2 }}>
-              {cap(top.category === 'gas' ? 'heating gas' : top.category)} in {top.month} ran <span style={{ color: 'var(--coral-d)' }}>+{top.percentAboveExpected}%</span> above the weather-adjusted baseline
+              {cap(top.category === 'gas' ? 'heating gas' : top.category)} in {top.month} ran <span style={{ color: 'var(--coral-d)' }}>{top.percentAboveExpected != null ? `+${top.percentAboveExpected}%` : 'measurably'}</span> above the weather-adjusted baseline
             </div>
             <div className="dim" style={{ fontSize: 11.5, fontWeight: 700, marginTop: 4 }}>
               ~{fmt(top.excessKgCO2ePerMonth)} kg CO₂e likely avoidable · {top.modelConfidencePct}% model confidence · {top.confidence} · review owner: facilities

@@ -7,7 +7,7 @@
  */
 const { fitCategory, SPEC } = require('./anomalyEngine');
 
-const round = (n, d = 1) => { const f = 10 ** d; return Math.round((Number(n) || 0) * f) / f; };
+const round = (n, d = 1) => { const x = Number(n); if (!Number.isFinite(x)) return 0; const f = 10 ** d; return Math.round(x * f) / f; };
 function designRow(reading, predictors) { return [1, ...predictors.map(k => Number(reading[k]) || 0)]; }
 
 /* evalModel(series, holdout) -> { perUtility:[{category,mapePct,trainMonths,testMonths}], avgMapePct, note }

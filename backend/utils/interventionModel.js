@@ -14,7 +14,7 @@
  * explains; it NEVER enacts a change, sets a thermostat, or assigns blame. Environmental
  * scope only — no cafeteria/food-waste interventions.
  */
-const round = (n, d = 1) => { const f = 10 ** d; return Math.round((Number(n) || 0) * f) / f; };
+const round = (n, d = 1) => { const x = Number(n); if (!Number.isFinite(x)) return 0; const f = 10 ** d; return Math.round(x * f) / f; };
 
 // anomaly/category -> footprint category key
 const CAT_MAP = { gas: 'natural_gas', electricity: 'electricity', water: 'water', waste: 'landfill_waste', commuting: 'commuting' };

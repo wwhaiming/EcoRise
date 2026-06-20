@@ -18,7 +18,7 @@
  */
 const { FACTORS } = require('./footprintModel');
 
-const round = (n, d = 1) => { const f = 10 ** d; return Math.round((Number(n) || 0) * f) / f; };
+const round = (n, d = 1) => { const x = Number(n); if (!Number.isFinite(x)) return 0; const f = 10 ** d; return Math.round(x * f) / f; };
 const Z80 = 1.2816; // ~80% interval
 
 // Per-category linear model: which predictors explain normal usage, and the cited CO2e factor.

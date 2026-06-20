@@ -22,7 +22,7 @@
  *  - Our World in Data / Poore & Nemecek 2018 (food): https://ourworldindata.org/environmental-impacts-of-food
  */
 
-const round = (n, d = 1) => { const f = 10 ** d; return Math.round((Number(n) || 0) * f) / f; };
+const round = (n, d = 1) => { const x = Number(n); if (!Number.isFinite(x)) return 0; const f = 10 ** d; return Math.round(x * f) / f; };
 
 // Published, citable factors. value = central estimate; low/high = uncertainty band.
 // These are intentionally coarse; confidence is downgraded when a default is used.
@@ -140,7 +140,9 @@ function estimateFootprint(baseline = {}) {
     disclaimer: providedCount === 0
       ? 'Coarse national-average estimate from student count only. Enter real utility bills, bus miles, and meals served to make this your school\'s actual footprint.'
       : `${providedCount}/6 categories use your real inputs; the rest are labeled estimates.`,
-    biggestEmitter: cats[0] || null,
+    // No real inputs -> footprint is all zeros, so there is no real "biggest emitter"
+    // to recommend against (prevents a 0 kg category driving an insight/recommendation).
+    biggestEmitter: providedCount === 0 ? null : (cats[0] || null),
     categories: cats,
   };
 }

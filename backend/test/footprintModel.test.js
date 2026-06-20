@@ -17,7 +17,7 @@ test('no real inputs => 5 environmental categories, all zero (Named School Mode)
   assert.strictEqual(f.overallConfidence, 'low');             // no provided inputs
   assert.strictEqual(f.totalKgPerMonth, 0, 'shows 0 until real data is entered');
   assert.ok(f.categories.every(c => c.kgCO2ePerMonth === 0), 'every default category is zero');
-  assert.strictEqual(f.biggestEmitter, f.categories[0]);
+  assert.strictEqual(f.biggestEmitter, null, 'no biggest emitter on an all-zero footprint (prevents a 0 kg category driving a recommendation)');
   const sum = f.categories.reduce((s, c) => s + c.kgCO2ePerMonth, 0);
   assert.ok(Math.abs(sum - f.totalKgPerMonth) < 0.5, 'total must equal the category sum');
 });

@@ -400,10 +400,10 @@ router.get('/school-insight', authMiddleware, async (req, res) => {
     if (lb) {
       const row = db.prepare('SELECT data FROM school_baselines WHERE leaderboard_id = ?').get(lb);
       if (row) { try { baseline = JSON.parse(row.data) || {}; } catch { baseline = {}; } }
-      if (baseline.students == null) {
-        const m = db.prepare('SELECT COUNT(*) c FROM leaderboard_members WHERE leaderboard_id = ?').get(lb).c;
-        if (m > 0) baseline.students = m;
-      }
+      // NOTE: do NOT substitute the leaderboard member count for student headcount —
+      // app members are unrelated to a school's real population and would silently
+      // distort per-capita/commuting footprint math. estimateFootprint defaults
+      // students to a labeled estimate when it is absent.
     }
     const footprint = estimateFootprint(baseline);
     // Student action savings this week on the board (the offsetting side).
@@ -528,9 +528,13 @@ async function ensureDailyTip(db, userId) {
   const top = chunks[1] || chunks[0];
   const body = top.text.slice(0, 220);
   const id = uuid();
-  db.prepare('INSERT INTO coach_daily_tips (id, user_id, body, source_ids, deliver_date, topic) VALUES (?, ?, ?, ?, ?, ?)')
+  // OR IGNORE + re-select: the UNIQUE(user_id, deliver_date) index makes a concurrent
+  // second insert a no-op, so two simultaneous requests converge on one row instead of
+  // creating duplicate daily tips (the read-then-insert race across the embed await).
+  db.prepare('INSERT OR IGNORE INTO coach_daily_tips (id, user_id, body, source_ids, deliver_date, topic) VALUES (?, ?, ?, ?, ?, ?)')
     .run(id, userId, body, JSON.stringify([top.id]), today, category);
-  return tipShape(db, { id, body, source_ids: JSON.stringify([top.id]), topic: category });
+  const row = db.prepare('SELECT id, body, source_ids, topic FROM coach_daily_tips WHERE user_id = ? AND deliver_date = ?').get(userId, today);
+  return tipShape(db, row || { id, body, source_ids: JSON.stringify([top.id]), topic: category });
 }
 
 function tipShape(db, row) {
@@ -544,7 +548,9 @@ async function runDueCoachTips(db, userId) {
   const prefs = db.prepare('SELECT * FROM coach_user_prefs WHERE user_id = ?').get(userId);
   if (!prefs || !prefs.opted_in) return { delivered: false, reason: 'not_opted_in' };
   if (inQuietHours(new Date().getHours(), prefs.quiet_start, prefs.quiet_end)) return { delivered: false, reason: 'quiet_hours' };
-  const cadence = Math.max(1, Math.min(3, prefs.cadence || 1));
+  // cadence 0 is a valid "no push" opt-out (schema allows min 0); use ?? so a stored 0
+  // is honored instead of `|| 1` coercing it back to 1.
+  const cadence = Math.min(3, Math.max(0, Number.isFinite(prefs.cadence) ? prefs.cadence : 1));
   const todayCount = db.prepare("SELECT COUNT(*) c FROM notifications WHERE user_id = ? AND type = 'coach_tip' AND date(created_at) = date('now')").get(userId).c;
   if (todayCount >= cadence) return { delivered: false, reason: 'cadence_reached' };
   const tip = await ensureDailyTip(db, userId);
@@ -617,7 +623,7 @@ function summarizeInsights(school, anomalies, recs) {
   if (anomalies.length) {
     const a = anomalies[0];
     const what = a.category === 'gas' ? 'heating gas' : a.category === 'electricity' ? 'electricity' : 'water';
-    parts.push(`At ${school}, ${what} use in ${a.month} ran ~${a.percentAboveExpected}% above the weather-and-occupancy baseline (~${a.excessKgCO2ePerMonth} kg CO2e of likely-avoidable emissions).`);
+    parts.push(`At ${school}, ${what} use in ${a.month} ran ${a.percentAboveExpected != null ? `~${a.percentAboveExpected}%` : 'measurably'} above the weather-and-occupancy baseline (~${a.excessKgCO2ePerMonth} kg CO2e of likely-avoidable emissions).`);
   } else {
     parts.push(`At ${school}, utility use is within the expected weather-and-occupancy baseline — no anomalies above threshold.`);
   }
@@ -660,7 +666,7 @@ router.get('/insights', authMiddleware, (req, res) => {
     const pipeline = [
       { step: 'Input', detail: 'Utility bills (electricity, gas, water), school calendar, local weather (degree-days), waste + transport logs.' },
       { step: 'AI reasoning', detail: 'Learn a weather-and-occupancy-adjusted expected baseline per utility (OLS), flag residual anomalies, forecast next month, rank interventions under cost/effort/confidence constraints.' },
-      { step: 'Insight', detail: top ? `${top.category === 'gas' ? 'Heating gas' : top.category} in ${top.month} ran ~${top.percentAboveExpected}% above expected (~${top.excessKgCO2ePerMonth} kg CO2e likely avoidable).` : 'No utility anomalies above threshold this period.' },
+      { step: 'Insight', detail: top ? `${top.category === 'gas' ? 'Heating gas' : top.category} in ${top.month} ran ${top.percentAboveExpected != null ? `~${top.percentAboveExpected}%` : 'measurably'} above expected (~${top.excessKgCO2ePerMonth} kg CO2e likely avoidable).` : 'No utility anomalies above threshold this period.' },
       { step: 'Action', detail: topRec ? `${topRec.cta}: ${topRec.label} (~${topRec.expectedKgPerMonth} kg/mo), pending ${topRec.approver} approval.` : 'No action required right now.' },
     ];
     const scope = sample ? LINCOLN.context.scope : {
@@ -723,7 +729,9 @@ router.post('/insights/load-demo', authMiddleware, (req, res) => {
     if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) return res.status(403).json({ error: 'Only the board organizer can load demo data.' });
     ensureFootprintTable(db); ensureInsightTables(db);
     db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(lb, JSON.stringify(LINCOLN.baseline));
-    db.prepare("INSERT INTO school_utility (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(lb, JSON.stringify(LINCOLN.series));
+    // Set source='demo' (and reset it on conflict) so loading the synthetic sample over a
+    // board that previously imported real data cannot leave dataMode falsely reading 'real'.
+    db.prepare("INSERT INTO school_utility (leaderboard_id, data, source, updated_at) VALUES (?, ?, 'demo', datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, source='demo', updated_at=datetime('now')").run(lb, JSON.stringify(LINCOLN.series));
     auditLog(db, { actorUserId: req.userId, action: 'insights.load_demo', targetType: 'leaderboard', targetId: lb, leaderboardId: lb, detail: { school: LINCOLN.profile.name } });
     res.json({ success: true, school: LINCOLN.profile.name });
   } catch (err) { console.error('coach /insights/load-demo error:', err.message); res.status(500).json({ error: 'Internal server error' }); }

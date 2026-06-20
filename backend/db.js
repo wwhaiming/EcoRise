@@ -361,7 +361,9 @@ function createIndexes() {
     CREATE INDEX IF NOT EXISTS idx_sources_status  ON eco_sources(status, course_id);
     CREATE INDEX IF NOT EXISTS idx_cquestions_topic ON coach_questions(topic, difficulty, approved);
     CREATE INDEX IF NOT EXISTS idx_canswers_user   ON coach_answers(user_id, created_at);
-    CREATE INDEX IF NOT EXISTS idx_ctips_date      ON coach_daily_tips(user_id, deliver_date);
+    DROP INDEX IF EXISTS idx_ctips_date;
+    DELETE FROM coach_daily_tips WHERE rowid NOT IN (SELECT MIN(rowid) FROM coach_daily_tips GROUP BY user_id, deliver_date);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ctips_uniq ON coach_daily_tips(user_id, deliver_date);
     CREATE INDEX IF NOT EXISTS idx_posts_status    ON posts(leaderboard_id, status, created_at);
     CREATE INDEX IF NOT EXISTS idx_posts_co2        ON posts(user_id, leaderboard_id, status, co2_saved);
     CREATE INDEX IF NOT EXISTS idx_posts_expiry    ON posts(image_expires_at) WHERE image_expires_at IS NOT NULL;
