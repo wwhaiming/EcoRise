@@ -39,6 +39,25 @@ export default function Home({ ctx }) {
       {/* Board (Leaderboard) Section */}
       <Leaderboard ctx={ctx} isCombined={true} />
 
+      {/* School Footprint Insights entry point (Direction B) */}
+      <div style={{ padding: '16px 16px 0' }}>
+        <button
+          onClick={() => ctx.go('footprint')}
+          className="card"
+          style={{ width: '100%', textAlign: 'left', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, border: '1.5px solid rgba(46,125,79,.22)', cursor: 'pointer', background: 'linear-gradient(135deg,rgba(46,125,79,.07),rgba(46,125,79,.03))' }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(140deg,var(--green-2),var(--green-d))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon name="sparkle" size={22} color="#fff" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--green)' }}>Direction B · AI Insights</div>
+            <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 15, marginTop: 1 }}>School Hidden Footprint</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 1 }}>Anomalies · Predictions · Recommendations</div>
+          </div>
+          <Icon name="home" size={18} color="var(--green-d)" />
+        </button>
+      </div>
+
       {/* Visual Section Divider */}
       <div style={{ margin: '28px 16px 14px', borderTop: '2px dashed rgba(46,125,79,.12)', paddingTop: 12 }} />
 

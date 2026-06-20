@@ -43,6 +43,15 @@ try {
 } catch (e) { console.error('startup purge error:', e.message); }
 console.log('✅ Database initialized');
 
+// Auto-seed footprint synthetic data if tables are empty (Direction B demo).
+try {
+  const fpCount = getDb().prepare('SELECT COUNT(*) as c FROM fp_cafeteria').get();
+  if (!fpCount || fpCount.c === 0) {
+    require('./scripts/seedFootprint');
+    console.log('✅ Footprint seed ran on startup');
+  }
+} catch (e) { console.error('footprint seed error:', e.message); }
+
 // Startup self-check: when the coach is enabled, log (loudly) whether its corpus is
 // actually retrievable, so a misconfigured deploy is visible in the boot logs instead
 // of failing silently per request. Non-fatal by design — the coach surface 404s
@@ -61,6 +70,7 @@ if (process.env.COACH_ENABLED === 'true' && process.env.NODE_ENV !== 'test') {
 
 app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/coach', require('./routes/coach'));   // gated behind COACH_ENABLED (see docs/AI_ECO_COACH_PLAN.md)
+app.use('/api/footprint', require('./routes/footprint')); // Direction B: School Hidden Footprint Insights
 app.use('/api/leaderboards', require('./routes/leaderboard'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/quests', require('./routes/quests'));

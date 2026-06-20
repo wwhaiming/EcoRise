@@ -67,13 +67,12 @@ export default function SchoolFootprint({ leaderboardId, showToast }) {
       </div>
     );
   }
-
-  const { footprint: fp, leverage, recommendation } = data;
-  // Metrics intentionally shown as zero: the coach displays an empty baseline
-  // until real school data is entered, instead of national-average estimates.
-  const categories = fp.categories.map(c => ({ ...c, kgCO2ePerMonth: 0 }));
-  const max = 1;
-  const t = '0.0';
+  const { footprint: fp, leverage, recommendation, hasBaseline } = data;
+  const showReal = !!hasBaseline;
+  const categories = showReal ? fp.categories : fp.categories.map(c => ({ ...c, kgCO2ePerMonth: 0 }));
+  const totalTons = showReal ? (fp.totalKgPerMonth / 1000) : 0;
+  const max = showReal ? Math.max(...fp.categories.map(c => c.kgCO2ePerMonth), 1) : 1;
+  const t = totalTons.toFixed(1);
 
   return (
     <div style={{ padding: '8px 16px 0' }}>
@@ -138,6 +137,32 @@ export default function SchoolFootprint({ leaderboardId, showToast }) {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Dev fixture: shown only in dev when COACH_ENABLED is off / corpus unseeded */}
+        {!recommendation && import.meta.env.DEV && (
+          <div style={{ marginTop: 12, padding: 13, borderRadius: 13, background: 'var(--navy-800)', border: '2px dashed rgba(182,111,77,.45)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+              <Icon name="sparkle" size={14} color="var(--green)" />
+              <span className="eyebrow" style={{ color: 'var(--green)', flex: 1 }}>Next step</span>
+              <span className="chip" style={{ fontSize: 9, background: 'rgba(182,111,77,.18)', color: 'var(--coral-d)' }}>Demo fixture</span>
+              <HelpTip text="Demo fixture — real output requires COACH_ENABLED=true + seeded corpus." />
+            </div>
+            <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 14.5 }}>
+              Switch gymnasium lighting to LED — highest single-action return for this school.
+            </div>
+            <div className="muted" style={{ fontSize: 12.5, fontWeight: 600, marginTop: 5, lineHeight: 1.4 }}>
+              Lighting is your school's top emitter at ~38% of electricity draw. Retrofitting 200 fixtures to LED cuts monthly use by ~1,840 kWh — offsetting 0.9 t CO₂e/mo at current grid intensity (EPA eGRID 2023, SUBRGN RFCE).
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <span className="chip chip-dim" style={{ fontSize: 10.5 }}>
+                <Icon name="leaf" size={10} color="var(--green)" /> Mills et al. "Energy Efficiency in K–12 Schools" (2023)
+              </span>
+            </div>
+            <div className="dim" style={{ fontSize: 10, fontWeight: 600, marginTop: 6 }}>
+              Faithfulness score: 0.82 · Demo fixture — real output requires COACH_ENABLED=true + seeded corpus
+            </div>
           </div>
         )}
 

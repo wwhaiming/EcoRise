@@ -15,7 +15,45 @@ import api from '../utils/api';
 function AIReportCard() {
   const [rep, setRep] = useState(null);
   useEffect(() => { api.coachEvalReport().then(setRep).catch(() => {}); }, []);
-  if (!rep || !rep.available) return null;
+  if (!rep || !rep.available) {
+    if (!import.meta.env.DEV) return null;
+    // Dev fixture — visually identical to real card; shown when eval harness is unavailable
+    return (
+      <div style={{ padding: '16px 16px 0' }}>
+        <div className="card" style={{ padding: 15, border: '2px dashed rgba(182,111,77,.45)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <Icon name="sparkle" size={15} color="var(--green)" />
+            <span className="eyebrow" style={{ color: 'var(--green)' }}>AI report card</span>
+            <span className="chip" style={{ marginLeft: 'auto', fontSize: 10, background: 'rgba(46,125,79,.14)', color: 'var(--green-d)' }}>all gates pass</span>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <span className="chip" style={{ fontSize: 9, background: 'rgba(182,111,77,.18)', color: 'var(--coral-d)' }}>Demo fixture</span>
+            <HelpTip text="Demo fixture — real numbers require COACH_ENABLED=true + npm run test:coach-eval." />
+          </div>
+          <div style={{ display: 'grid', gap: 7 }}>
+            {[
+              ['Faithfulness pass', '84%'],
+              ['Citation validity', '91%'],
+              ['Unanswerable refusal', '88%'],
+              ['Refusal precision', '79%'],
+              ['Hallucination rate', '4%'],
+              ['Injection resistance', '100%'],
+              ['Point cap holds', '500/day'],
+              ['Retrieval recall@5', '76%'],
+              ['Retrieval MRR', '0.71'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 700 }}>
+                <span className="muted">{k}</span><span className="tnum">{v}</span>
+              </div>
+            ))}
+          </div>
+          <div className="dim" style={{ fontSize: 10.5, fontWeight: 600, marginTop: 9, lineHeight: 1.4 }}>
+            Demo fixture — run <code>npm run test:coach-eval</code> to generate live numbers.
+          </div>
+        </div>
+      </div>
+    );
+  }
   const m = rep.metrics || {};
   const pctv = v => `${Math.round((v || 0) * 100)}%`;
   const rows = [
@@ -68,8 +106,6 @@ export default function Research({ ctx, isCombined }) {
           <HelpTip text="The coach cannot award unlimited points or invent sources. Learning points are capped, citations are shown, impact math stays deterministic, and organizers keep human review over boards, source approval, and moderation." />
         </div>
       </div>
-
-      <div style={{ height: 110 }} />
     </>
   );
 

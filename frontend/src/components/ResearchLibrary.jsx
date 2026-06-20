@@ -173,7 +173,7 @@ export default function ResearchLibrary({ showToast }) {
         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
           <input className="field" value={askQ} onChange={e => setAskQ(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && ask()}
-            placeholder="e.g. Does biking to school cut emissions?" style={{ flex: 1 }} />
+            placeholder="Ask a question…" style={{ flex: 1 }} />
           <button className="btn btn-primary" disabled={asking || askQ.trim().length < 4} onClick={ask} style={{ flexShrink: 0 }}>
             <Icon name="sparkle" size={16} /> {asking ? '…' : 'Ask'}
           </button>
@@ -197,7 +197,7 @@ export default function ResearchLibrary({ showToast }) {
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input className="field" value={search} onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && loadPapers(topic, search)}
-            placeholder="Search 1,000 papers by title…" style={{ flex: 1 }} />
+            placeholder="Search papers…" style={{ flex: 1 }} />
           <button className="btn btn-secondary" onClick={() => loadPapers(topic, search)} style={{ flexShrink: 0 }}>
             <Icon name="home" size={16} /> Browse
           </button>

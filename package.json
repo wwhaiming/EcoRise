@@ -10,7 +10,8 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm run build",
     "seed": "cd backend && node scripts/seedDemo.js",
-    "demo": "npm run seed && npm run dev",
+    "seed:footprint": "node synthetic_data/gen.js && cd backend && node scripts/seedFootprint.js",
+    "demo": "npm run seed && npm run seed:footprint && npm run dev",
     "test:frontend": "cd frontend && npm run test"
   },
   "devDependencies": {

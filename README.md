@@ -2,11 +2,73 @@
 
 EcoRise is a school and community platform where students learn environmental science, log real-world eco actions, and compete on leaderboards without letting AI invent impact or award unverified points.
 
-**USAII Global AI Hackathon 2026 Direction B:** EcoRise is framed as "My School's Hidden Footprint." The AI Eco Coach is now the default product surface: it reads local school activity, retrieves approved environmental evidence, identifies action gaps, and converts those insights into verified student actions.
+**USAII Global AI Hackathon 2026 Direction B:** EcoRise is framed as "My School's Hidden Footprint." The AI Eco Coach is the main learning surface; the new **School Footprint Insights** dashboard is the core Direction B showcase — it ingests five institutional datasets, detects anomalies, forecasts cafeteria waste with an OLS regression model, ranks impact-ranked recommendations, and generates a plain-language weekly digest via OpenAI — all with a human approval gate before any recommendation becomes active.
 
 **The pitch:** Duolingo-style environmental learning meets verified action tracking. The AI teaches and explains; deterministic code validates sources, carbon math, fraud checks, and points.
 
 ![Status](https://img.shields.io/badge/status-hackathon%20MVP-brightgreen)
+
+---
+
+## Direction B: School Footprint in 5 Steps
+
+This is the submission centerpiece. A judge who sees only this section will understand what makes EcoRise different.
+
+1. **Open Home** → tap "School Hidden Footprint" card → dashboard loads with 59 days of institutional data (energy, water, trash, transportation, cafeteria) already ingested.
+2. **Section ① Anomaly detection** — rolling 14-day z-score flags any building reading > 1.5σ above normal. Example card: _"Main Building used 111% more electricity than normal on 2026-04-14 (2.1σ above normal)."_ No LLM. Fully auditable.
+3. **Section ② Cafeteria forecast** — OLS regression (implemented from scratch, normal equations via Gaussian elimination) predicts next week's food waste with a confidence band. Example: _"Friday: 57.2 lbs predicted · Range: 48–66 lbs · ⓘ ±16%, based on 59 days · OLS model."_ A range, not a false-precision single number.
+4. **Section ③ Ranked recommendations** — up to 4 candidate actions sorted by estimated impact (CO₂e, lbs waste, kWh). Each has a one-sentence reason derived from the data so the approver can sanity-check it. Click **"✓ Approve — Make Active Goal"** → status moves from `proposed` to `approved` and becomes visible school-wide. **The AI cannot do this itself.**
+5. **Section ④ Generative AI weekly digest** — OpenAI produces one plain-language paragraph for eco-club students, clearly labelled "Generative AI — Weekly Digest" and visually separated from the deterministic cards. Falls back to a deterministic template with no API key.
+
+> **The line that matters:** _The AI never awards a point or invents a kilogram. It perceives and drafts; a deterministic, cited engine decides._
+
+---
+
+## School Footprint Insights — AI Architecture (copy to Devpost)
+
+### Inputs / AI Capability / Processing / Outputs
+
+| Layer | Detail |
+|-------|--------|
+| **Inputs** | 5 synthetic school datasets (energy kWh/day per building, water gallons/day, trash/recycling lbs/day, transportation mode splits, cafeteria food waste lbs/day). 59 school days of data ingested from CSV into SQLite on server startup. |
+| **AI Capability 1 — Anomaly Detection** | Deterministic rolling-14-day z-score per building per metric. Flags any day where usage exceeded mean + 1.5 standard deviations. No LLM involved — pure statistical detection, fully auditable. Surfaced as "Unusual activity detected" cards with building, date, % above normal, and σ deviation. |
+| **AI Capability 2 — Predictive Modeling** | OLS linear regression (normal equations via Gaussian elimination, implemented from scratch in `utils/footprintInsights.js`). Features: intercept + 4 day-of-week dummies (Monday = reference category) + binary `post_holiday` flag. Trained on all available cafeteria records. Outputs: predicted food waste lbs per day for the next school week, plus a ±confidence band (RMSE-derived). Every prediction card shows its assumptions inline: training data size, RMSE, feature set. |
+| **AI Capability 3 — Recommendation Engine** | Ranks up to 4 candidate actions by estimated impact (food waste reduction lbs, energy excess kWh, CO₂e avoided, water saved). Each recommendation includes a single-sentence reasoning string derived from the underlying data. Top 3 are stored per week in `fp_recommendations` with status = `proposed`. |
+| **AI Capability 4 — Generative AI (plain-language summary)** | Uses the existing OpenAI client (`utils/aiClient.js` → `generateFootprintSummary()`) to produce one plain-language paragraph for eco-club students from the structured anomaly + prediction + recommendation data. Cached per week. Falls back to a deterministic template when no API key is set. Visually separated from the deterministic AI cards so judges can see all four AI capability categories distinctly. |
+| **Processing** | `backend/utils/footprintInsights.js` — anomaly detection + OLS regression + recommendation ranking. `backend/routes/footprint.js` — REST API. `backend/utils/aiClient.js` — generative summary. All deterministic math is server-side; LLM is used only for the final plain-language narrative layer. |
+| **Outputs** | Anomaly cards (building, date, σ, % above), prediction cards (lbs ± confidence per day), ranked recommendation list (proposed → approved two-step), AI plain-language weekly summary paragraph. |
+
+---
+
+## Responsible AI — Risk & Mitigation (copy to Devpost)
+
+| Risk | Mitigation |
+|------|-----------|
+| **Inaccurate predictions cause operational decisions** (e.g., cafeteria under-orders food, students go hungry) | Every AI-generated number shows its assumptions inline via `ⓘ` tags (training data size, RMSE, confidence %). A human must approve before any recommendation becomes operational. |
+| **Anomaly detection false positives disrupt school operations** | Threshold is 1.5σ, not a hard alert — labelled "Unusual activity detected" not "Emergency." Only surfaced for human review, never auto-acted. |
+| **LLM summary hallucinates numbers** | `generateFootprintSummary` is explicitly told "Do NOT invent numbers not in the data" and receives only the structured insight objects, not raw records. A "Flag as inaccurate" button on every AI card logs flags to `fp_insight_feedback` for model improvement. |
+| **Lack of data diversity (synthetic data)** | Prominently labelled as synthetic/demo data. The seed script and CSV files are open-source; a school can replace them with real readings via the same schema. |
+
+---
+
+## Human-in-the-Loop Design (copy to Devpost)
+
+**Decision the AI does NOT make:** approving a recommendation for public display or operational action (e.g., ordering less food, adjusting cafeteria prep quantities, emailing parents about transportation, auto-scheduling HVAC changes).
+
+**A human must remain in control here because:** the AI's cafeteria waste predictions carry ±15% uncertainty derived from the model's RMSE on 59 days of training data. Acting automatically on a prediction that is within the normal confidence band could cause the cafeteria to under-order food, leaving students with inadequate meals, or over-alert facilities staff with false-positive energy anomalies, eroding trust in the system. A named role — the **Sustainability Coordinator** or **Cafeteria Manager** — must explicitly click "Approve — Make Active Goal" before a recommendation moves from `proposed` to `approved` status and becomes visible as the school-wide goal on the leaderboard feed. This two-step gate is implemented as a real state machine in `fp_recommendations.status` (`proposed → approved`), not a checkbox or a comment.
+
+**Code comment (backend/routes/footprint.js line 1–17):**
+```
+Decision the AI does NOT make: approving a recommendation for public display
+or operational action. The AI proposes; a named human role —
+sustainability_coordinator or cafeteria_manager — must click "Approve" to
+move the recommendation from "proposed" to "approved". Only approved
+recommendations are shown on the school-wide public leaderboard feed as
+a school-wide goal. A human must remain in control here because: the AI's
+predictions carry ±15% uncertainty and could cause real operational problems
+(under-ordering food leading to hungry students, over-alerting staff) if acted
+upon automatically without review.
+```
 
 ---
 
@@ -76,19 +138,25 @@ The LLM only appears in the _perceive_ and _draft_ boxes. Every box that touches
 
 | Feature                       | Description                                                                                                                                                                                                                                                                                                |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AI Eco Coach**              | Main app experience. Retrieval-augmented coach that uses approved environmental sources plus local board activity to identify hidden footprint gaps, generate cited questions, explain answers, and recommend practical next actions.                                                                      |
-| **AI Evidence Panel**         | After **every** submission: which model decided, its confidence, the **grounded** CO₂ math (formula + cited source + uncertainty range), the full point breakdown, the deterministic tool pipeline that ran, and every anti-fraud gate cleared (or why it was rejected) — the AI's reasoning, made visible |
-| **AI Action Analysis**        | Upload a photo → OpenAI vision **perceives** the action + measurable attributes; it never invents the impact                                                                                                                                                                                               |
+| **School Footprint Insights** | Direction B centerpiece. Ingests 5 institutional datasets, detects anomalies (rolling z-score), forecasts cafeteria waste (OLS regression, from scratch), ranks impact-weighted recommendations, generates a plain-language digest via OpenAI. Human approval gate before any recommendation goes live. |
+| **AI Eco Coach**              | Retrieval-augmented coach over an approved teacher corpus. Generates cited questions, explains answers, identifies the school's weakest footprint category, recommends next actions. Citation + faithfulness + numeric-claim gates; withholds rather than hallucinating. |
+| **AI Evidence Panel**         | After **every** submission: which model decided, its confidence, the **grounded** CO₂ math (formula + cited source + uncertainty range), the full point breakdown, the deterministic tool pipeline that ran, and every anti-fraud gate cleared (or why it was rejected). |
+| **AI Action Analysis**        | Upload a photo → OpenAI vision **perceives** the action + measurable attributes; it never invents the impact.                                                                                                                                                                                               |
 | **Grounded Carbon Engine**    | Deterministic kg CO₂e from **published emission factors** (EPA GHG Hub, EPA WARM, OWID/Poore-Nemecek) with formula + uncertainty range — the LLM cannot fabricate the number ([`utils/carbonEngine.js`](backend/utils/carbonEngine.js))                                                                    |
-| **Measured Eval Gate**        | The eco-action classifier is measured, not asserted: accuracy / FP / FN / adversarial-rejection / calibration ([`test/eco_eval/`](backend/test/eco_eval/), `npm run test:eval`); coach retrieval eval at `npm run test:coach-eval`                                                                         |
-| **Adversarial Fraud Screen**  | A second vision pass flags photo-of-screen / stock / AI-generated images; high suspicion rejects, low suspicion halves points ([`utils/integrityGates.js`](backend/utils/integrityGates.js))                                                                                                               |
-| **Points Rubric Engine**      | Comprehensive **server-side** scoring across transport, waste, energy, food, nature, and learning; the LLM cannot award points                                                                                                                                                                             |
-| **Social Feed**               | Instagram-style cards with likes, comments, @mentions, reporting                                                                                                                                                                                                                                           |
-| **Personalized Daily Quests** | 5 quests/day generated from your **real last-30-day behavior** (targets neglected categories), 2× multiplier on completion                                                                                                                                                                                 |
-| **Leaderboard**               | Animated podium (3 styles), real-time ranking, reset timers                                                                                                                                                                                                                                                |
-| **Trash Spotter**             | Report litter, AI rates severity 0-10, earn bonus points                                                                                                                                                                                                                                                   |
-| **Organizer Dashboard**       | Create/manage leaderboards, moderation queue, invite links                                                                                                                                                                                                                                                 |
-| **Badges & Streaks**          | Automated badge awards, streak tracking, bonus multipliers                                                                                                                                                                                                                                                 |
+| **Measured Eval Gate**        | Eco-action classifier is measured, not asserted: accuracy / FP / FN / adversarial-rejection / calibration ([`test/eco_eval/`](backend/test/eco_eval/), `npm run test:eval`); coach retrieval eval at `npm run test:coach-eval`                                                                         |
+| **Adversarial Fraud Screen**  | Second vision pass flags photo-of-screen / stock / AI-generated images; high suspicion rejects, low suspicion halves points ([`utils/integrityGates.js`](backend/utils/integrityGates.js))                                                                                                               |
+| **Points Rubric Engine**      | Comprehensive **server-side** scoring across transport, waste, energy, food, nature, and learning; the LLM cannot award points.                                                                                                                                                                             |
+
+### Additional Features
+
+| Feature                       | Description                                                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Social Feed**               | Instagram-style cards with likes, comments, @mentions, reporting                                                                    |
+| **Personalized Daily Quests** | 5 quests/day generated from real last-30-day behavior (targets neglected categories), 2× multiplier on completion                   |
+| **Leaderboard**               | Animated podium (3 styles), real-time ranking, reset timers                                                                         |
+| **Trash Spotter**             | Report litter, AI rates severity 0-10, earn bonus points                                                                            |
+| **Organizer Dashboard**       | Create/manage leaderboards, moderation queue, invite links                                                                          |
+| **Badges & Streaks**          | Automated badge awards, streak tracking, bonus multipliers                                                                          |
 
 ---
 

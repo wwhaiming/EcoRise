@@ -1,8 +1,7 @@
 /* EcoRise — API utility (cookie session + CSRF, no token in localStorage) */
-const DEFAULT_BASE = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${window.location.hostname}:3001`
-  : 'http://localhost:3001';
-const BASE = (import.meta.env && import.meta.env.VITE_API_BASE) || DEFAULT_BASE;
+// In the browser, use relative paths so the Vite proxy (dev) or same-origin
+// backend (prod) handles routing without cross-origin cookie friction.
+const BASE = (import.meta.env && import.meta.env.VITE_API_BASE) || '';
 
 function getCookie(name) {
   return document.cookie.split('; ').find(c => c.startsWith(name + '='))?.split('=')[1] || '';
@@ -88,6 +87,21 @@ export const api = {
   // School hidden-footprint (Direction B)
   coachSchoolInsight: (leaderboardId) => apiFetch(`/api/coach/school-insight${leaderboardId ? `?leaderboardId=${encodeURIComponent(leaderboardId)}` : ''}`),
   coachSetFootprint: (body) => apiFetch('/api/coach/school-footprint', { method: 'POST', body: JSON.stringify(body) }),
+
+  // AI Insights (Direction B reasoning layer)
+  coachInsights: (leaderboardId) => apiFetch(`/api/coach/insights${leaderboardId ? `?leaderboardId=${encodeURIComponent(leaderboardId)}` : ''}`),
+  coachInsightsLoadDemo: (leaderboardId) => apiFetch('/api/coach/insights/load-demo', { method: 'POST', body: JSON.stringify({ leaderboardId }) }),
+  coachInsightsApprove: (leaderboardId, itemKey) => apiFetch('/api/coach/insights/approve', { method: 'POST', body: JSON.stringify({ leaderboardId, itemKey }) }),
+  coachInsightsStatus: (leaderboardId, itemKey, status) => apiFetch('/api/coach/insights/status', { method: 'POST', body: JSON.stringify({ leaderboardId, itemKey, status }) }),
+  coachInsightsImport: (leaderboardId, readings) => apiFetch('/api/coach/insights/import', { method: 'POST', body: JSON.stringify({ leaderboardId, readings }) }),
+  coachInsightsVerify: (leaderboardId, itemKey, before, after, metric) => apiFetch('/api/coach/insights/verify', { method: 'POST', body: JSON.stringify({ leaderboardId, itemKey, before, after, metric }) }),
+
+  // School Footprint Insights — Direction B core (new dedicated route /api/footprint/*)
+  footprintInsights: () => apiFetch('/api/footprint/insights'),
+  footprintApprove: (id) => apiFetch(`/api/footprint/recommendations/${id}/approve`, { method: 'POST' }),
+  footprintAssign: (id, body) => apiFetch(`/api/footprint/recommendations/${id}/assign`, { method: 'POST', body: JSON.stringify(body) }),
+  footprintFlag: (body) => apiFetch('/api/footprint/flag', { method: 'POST', body: JSON.stringify(body) }),
+  footprintRefresh: () => apiFetch('/api/footprint/refresh', { method: 'POST' }),
 
   // Privacy / FERPA-COPPA (Phase 2)
   privacyPolicy: () => apiFetch('/api/privacy/policy'),

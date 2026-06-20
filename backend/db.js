@@ -302,6 +302,88 @@ function initTables() {
       detail TEXT DEFAULT '',              -- JSON
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    -- School Footprint Insights (Direction B: My School's Hidden Footprint).
+    -- Raw sensor/record tables — one row per school day per building/category.
+    CREATE TABLE IF NOT EXISTS fp_energy (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      building TEXT NOT NULL,
+      kwh REAL NOT NULL,
+      UNIQUE (date, building)
+    );
+    CREATE TABLE IF NOT EXISTS fp_water (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      building TEXT NOT NULL,
+      gallons REAL NOT NULL,
+      UNIQUE (date, building)
+    );
+    CREATE TABLE IF NOT EXISTS fp_trash (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      total_lbs REAL NOT NULL,
+      recycled_lbs REAL NOT NULL,
+      landfill_lbs REAL NOT NULL,
+      compost_lbs REAL NOT NULL,
+      UNIQUE (date)
+    );
+    CREATE TABLE IF NOT EXISTS fp_transportation (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      bus_riders INTEGER NOT NULL,
+      car_riders INTEGER NOT NULL,
+      bike_walkers INTEGER NOT NULL,
+      total_students INTEGER NOT NULL,
+      UNIQUE (date)
+    );
+    CREATE TABLE IF NOT EXISTS fp_cafeteria (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      day_of_week INTEGER NOT NULL,
+      meals_served INTEGER NOT NULL,
+      food_waste_lbs REAL NOT NULL,
+      post_holiday INTEGER DEFAULT 0,
+      UNIQUE (date)
+    );
+
+    -- AI-generated recommendations: proposed → approved two-step gate.
+    -- Decision the AI does NOT make: approving a recommendation for public display.
+    -- A human (sustainability_coordinator or cafeteria_manager) must explicitly
+    -- approve before the recommendation becomes Active or appears on the school feed.
+    CREATE TABLE IF NOT EXISTS fp_recommendations (
+      id TEXT PRIMARY KEY,
+      week_start TEXT NOT NULL,
+      category TEXT NOT NULL,
+      title TEXT NOT NULL,
+      reasoning TEXT NOT NULL,
+      estimated_impact TEXT DEFAULT '',
+      status TEXT DEFAULT 'proposed',     -- proposed | approved | dismissed
+      assigned_to TEXT DEFAULT '',        -- staff role string
+      assigned_note TEXT DEFAULT '',
+      approved_by TEXT DEFAULT '',        -- user_id of approver
+      approved_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    -- User feedback on individual AI insight cards (human oversight / responsible AI).
+    CREATE TABLE IF NOT EXISTS fp_insight_feedback (
+      id TEXT PRIMARY KEY,
+      insight_type TEXT NOT NULL,         -- anomaly | prediction | recommendation | summary
+      insight_ref TEXT NOT NULL,          -- e.g. "energy:Main Building:2026-06-10"
+      user_id TEXT,
+      reason TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    -- Cached AI plain-language summaries per week (generated once, re-served until stale).
+    CREATE TABLE IF NOT EXISTS fp_ai_summaries (
+      id TEXT PRIMARY KEY,
+      week_start TEXT NOT NULL UNIQUE,
+      summary TEXT NOT NULL,
+      is_mock INTEGER DEFAULT 0,
+      generated_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 }
 
@@ -334,6 +416,7 @@ function migrate() {
     ['trash_reports', 'derived_label', "TEXT DEFAULT ''"],
     ['consent_records', 'document_name', "TEXT DEFAULT ''"],
     ['consent_records', 'document_data', "TEXT DEFAULT ''"],
+    ['fp_recommendations', 'kg_co2e_per_year', 'REAL DEFAULT 0'],
   ];
   for (const [table, col, type] of adds) {
     try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); } catch (_) { /* exists */ }
@@ -369,6 +452,13 @@ function createIndexes() {
     CREATE INDEX IF NOT EXISTS idx_consent_board   ON consent_records(leaderboard_id, user_id);
     CREATE INDEX IF NOT EXISTS idx_audit_board     ON audit_log(leaderboard_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_audit_actor     ON audit_log(actor_user_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_fp_energy_date  ON fp_energy(date, building);
+    CREATE INDEX IF NOT EXISTS idx_fp_water_date   ON fp_water(date, building);
+    CREATE INDEX IF NOT EXISTS idx_fp_trash_date   ON fp_trash(date);
+    CREATE INDEX IF NOT EXISTS idx_fp_trans_date   ON fp_transportation(date);
+    CREATE INDEX IF NOT EXISTS idx_fp_caf_date     ON fp_cafeteria(date);
+    CREATE INDEX IF NOT EXISTS idx_fp_recs_week    ON fp_recommendations(week_start, status);
+    CREATE INDEX IF NOT EXISTS idx_fp_summary_week ON fp_ai_summaries(week_start);
   `);
 }
 

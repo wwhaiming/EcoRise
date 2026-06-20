@@ -16,8 +16,9 @@ const schemas = {
     email,
     password,
     name: z.string().trim().min(1, 'Name cannot be empty').max(60, 'Name must be under 60 characters').optional(),
+    rememberMe: z.boolean().optional(),
   }),
-  login: z.object({ email, password }),
+  login: z.object({ email, password, rememberMe: z.boolean().optional() }),
   createLeaderboard: z.object({
     name: z.string().trim().min(1).max(80),
     resetInterval: z.enum(['daily', 'weekly', 'monthly']).optional(),

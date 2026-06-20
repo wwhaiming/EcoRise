@@ -104,7 +104,7 @@ html, body, #root {
   scrollbar-width: none;
   /* Clear the FAB, which floats ~30px up into the scroll's bottom edge, so the
      last content row never hides under it. */
-  padding-bottom: 44px;
+  padding-bottom: 110px;
 }
 .scroll::-webkit-scrollbar { width: 0; height: 0; }
 
@@ -184,7 +184,7 @@ html, body, #root {
 
   .scroll {
     border-radius: inherit;
-    padding-top: 58px;
+    padding-top: 44px;
   }
 }
 

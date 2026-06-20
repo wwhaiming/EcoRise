@@ -13,25 +13,17 @@ const router = express.Router();
 // placeholder (e.g. zero-padded) makes bcrypt.compare short-circuit in microseconds,
 // which leaks account existence by timing — defeating the whole purpose.
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('ecorise-timing-equalizer-not-a-real-password', 12);
-const COOKIE = {
+const BASE_COOKIE = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
-const CLEAR_COOKIE = {
-  httpOnly: true,
-  secure: COOKIE.secure,
-  sameSite: COOKIE.sameSite,
-};
-const CLEAR_CSRF_COOKIE = {
-  httpOnly: false,
-  secure: COOKIE.secure,
-  sameSite: COOKIE.sameSite,
-};
+const PERSISTENT_COOKIE = { ...BASE_COOKIE, maxAge: 7 * 24 * 60 * 60 * 1000 };
+const CLEAR_COOKIE = { ...BASE_COOKIE };
+const CLEAR_CSRF_COOKIE = { httpOnly: false, secure: BASE_COOKIE.secure, sameSite: BASE_COOKIE.sameSite };
 
-function setSession(res, userId) {
-  res.cookie('token', signToken(userId), COOKIE);
+function setSession(res, userId, rememberMe = false) {
+  res.cookie('token', signToken(userId), rememberMe ? PERSISTENT_COOKIE : BASE_COOKIE);
   issueCsrf(res);
 }
 
@@ -49,7 +41,7 @@ router.post('/signup', body('signup'), async (req, res) => {
     if (existing) {
       const ok = await bcrypt.compare(password, existing.password_hash || DUMMY_PASSWORD_HASH);
       if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
-      setSession(res, existing.id);
+      setSession(res, existing.id, !!req.valid.rememberMe);
       return res.json({ user: { id: existing.id, email: existing.email, name: existing.name, handle: existing.handle, avatar: existing.avatar } });
     }
     const id = uuid();
@@ -62,7 +54,7 @@ router.post('/signup', body('signup'), async (req, res) => {
     db.prepare('INSERT INTO users (id, email, password_hash, name, handle) VALUES (?, ?, ?, ?, ?)')
       .run(id, email, passwordHash, displayName, handle);
 
-    setSession(res, id);
+    setSession(res, id, !!req.valid.rememberMe);
     res.json({ user: { id, email, name: displayName, handle, avatar: '' } });
   } catch (err) {
     console.error('Signup error:', err);
@@ -79,7 +71,7 @@ router.post('/login', body('login'), async (req, res) => {
     const ok = await bcrypt.compare(password, (user && user.password_hash) || DUMMY_PASSWORD_HASH);
     if (!user || !ok) return res.status(401).json({ error: 'Invalid email or password' });
 
-    setSession(res, user.id);
+    setSession(res, user.id, !!req.valid.rememberMe);
     res.json({ user: { id: user.id, email: user.email, name: user.name, handle: user.handle, avatar: user.avatar } });
   } catch (err) {
     console.error('Login error:', err);

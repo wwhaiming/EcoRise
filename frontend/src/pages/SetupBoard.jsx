@@ -136,7 +136,7 @@ export default function SetupBoard({ ctx, onComplete }) {
               <input
                 className="field"
                 type="text"
-                placeholder="e.g. $10 Campus Store Voucher"
+                placeholder="e.g. Gift Card"
                 value={prize}
                 onChange={e => setPrize(e.target.value)}
               />

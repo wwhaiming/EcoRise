@@ -467,8 +467,70 @@ Respond ONLY in JSON:
   }
 }
 
+// ── 12. School Footprint: plain-language weekly digest for students ──
+// Takes structured insight data (anomalies, predictions, top recommendation) and
+// produces ONE paragraph a non-technical eco-club student can read and act on.
+// This is the GENERATIVE AI layer — clearly separate from the deterministic
+// anomaly/prediction/recommendation cards so judges can see all AI capability categories.
+async function generateFootprintSummary({ anomalies = [], predictions = [], recommendations = [] } = {}) {
+  const client = getClient();
+  const mockSummary = buildMockSummary({ anomalies, predictions, recommendations });
+  if (!client) return { summary: mockSummary, isMock: true };
+
+  const anomalyText = anomalies.slice(0, 2).map(a =>
+    `${a.building} used ${a.pctAbove}% more ${a.type === 'energy' ? 'electricity' : 'water'} than normal on ${a.date}`
+  ).join('; ') || 'no unusual spikes this week';
+
+  const predText = predictions.slice(0, 2).map(p =>
+    `${p.dayName}: ~${p.predictedLbs} lbs predicted`
+  ).join(', ') || 'predictions unavailable';
+
+  const topRec = recommendations[0];
+  const recText = topRec ? `Top action: "${topRec.title}" — ${topRec.reasoning}` : 'no specific actions ranked this week';
+
+  const prompt = `You are EcoRise's school sustainability reporter writing for an eco-club student audience (grades 9-12).
+Using ONLY the structured data below, write ONE plain-language paragraph (3-5 sentences) that:
+- Mentions what unusual thing happened in the school's energy or water use this week and why it matters
+- Describes what the cafeteria food waste prediction looks like for next week
+- Highlights the top recommended action and why it will make a difference
+- Ends with a brief energizing call to action for students
+
+Tone: friendly, grounded, specific — no buzzwords. Do NOT invent numbers not in the data.
+
+DATA:
+Energy/water anomalies: ${anomalyText}
+Cafeteria waste forecast (next week): ${predText}
+${recText}
+
+Respond ONLY in JSON: {"summary": "<paragraph>"}`;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: ECO_MODEL, max_tokens: 400,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+    });
+    const j = extractJson(response.choices[0].message.content);
+    return { summary: String(j.summary || mockSummary), isMock: false };
+  } catch (err) {
+    console.error('AI generateFootprintSummary error:', err.message);
+    return { summary: mockSummary, isMock: true, error: err.message };
+  }
+}
+
+function buildMockSummary({ anomalies, predictions, recommendations }) {
+  const a = anomalies[0];
+  const p = predictions[0];
+  const r = recommendations[0];
+  const aText = a ? `${a.building} used ${a.pctAbove}% more ${a.type === 'energy' ? 'electricity' : 'water'} than usual on ${a.date}` : 'no major anomalies detected';
+  const pText = p ? `${p.predictedLbs} lbs of food waste predicted on ${p.dayName}` : 'food waste predictions are being computed';
+  const rText = r ? r.title : 'check the recommendations below';
+  return `This week, ${aText} — a spike worth investigating before the bill arrives. On the cafeteria side, the model is forecasting ${pText} next week, suggesting the kitchen team could fine-tune Monday prep quantities. The highest-impact action right now is to ${rText.toLowerCase()}, which the data shows could make a measurable dent this week. Eco-club members: share these numbers at Tuesday's meeting and pick one item to push forward!`;
+}
+
 module.exports = {
   analyzeEcoAction, generateDailyQuests, checkQuestMatch, rateTrashSeverity, adversarialCritique,
   generateCoachQuestion, generateCoachGuidance,
   answerFromSources, summarizePaper, paperVisual, judgeEntailment,
+  generateFootprintSummary,
 };

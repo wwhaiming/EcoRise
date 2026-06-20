@@ -204,7 +204,7 @@ export function TrashSpotter({ ctx }) {
 
               <div>
                 <label className="eyebrow" style={{ display: 'block', marginBottom: 8 }}><Icon name="pin" size={13} color="var(--coral)" style={{ verticalAlign: -2 }} /> Location tag</label>
-                <input className="field" placeholder="e.g. Riverside Park, north entrance" value={loc} onChange={e => setLoc(e.target.value)} />
+                <input className="field" placeholder="e.g. Riverside Park" value={loc} onChange={e => setLoc(e.target.value)} />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

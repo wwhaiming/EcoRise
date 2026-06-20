@@ -173,7 +173,7 @@ export function Feed({ ctx }) {
         <div className="h1" style={{ fontSize: 27 }}>Feed</div>
         <button className="btn btn-primary btn-sm" onClick={ctx.openLog}><Icon name="plus" size={18} color="#fff" strokeWidth={3} /> Post</button>
       </div>
-      <div style={{ padding: '8px 16px 100px', display: 'grid', gap: 16 }}>
+      <div style={{ padding: '8px 16px 16px', display: 'grid', gap: 16 }}>
         {(ctx.posts || []).length === 0 && (
           <div className="card" style={{ padding: 40, textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🌱</div>
@@ -317,7 +317,7 @@ export function Leaderboard({ ctx, isCombined }) {
         <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8 }}>
           <input
             className="field"
-            placeholder="Enter invite code to join board"
+            placeholder="Invite code…"
             value={joinCode}
             onChange={e => setJoinCode(e.target.value)}
             style={{ flex: 1 }}
@@ -399,7 +399,7 @@ export function Profile({ ctx }) {
           </div>
         )}
       </div>
-      <div style={{ padding: '18px 16px 100px', display: 'grid', gap: 12 }}>
+      <div style={{ padding: '18px 16px 16px', display: 'grid', gap: 12 }}>
         <button className="btn btn-primary btn-block" onClick={() => ctx.go('home')}><Icon name="trophy" size={18} color="#fff" /> View leaderboard</button>
         <button className="btn btn-purple btn-block" onClick={() => ctx.go('organizer')}><Icon name="plus" size={18} color="#fff" strokeWidth={3} /> Create a leaderboard</button>
         <button className="btn btn-secondary btn-block" onClick={() => ctx.go('privacy')}><Icon name="check" size={18} /> Privacy &amp; data</button>
@@ -423,7 +423,7 @@ export function Organizer({ ctx }) {
   const reports = (ctx.posts || []).filter(p => p.reported > 0);
 
   return (
-    <div className="screen-in" style={{ paddingBottom: 110 }}>
+    <div className="screen-in" style={{ paddingBottom: 16 }}>
       <div style={{ padding: '16px 18px 6px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Back" onClick={() => ctx.go('home')}><Icon name="chevL" size={20} /></button>
         <div>

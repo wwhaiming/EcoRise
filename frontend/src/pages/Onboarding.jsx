@@ -20,6 +20,7 @@ export default function Onboarding({ onAuth }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,7 +34,7 @@ export default function Onboarding({ onAuth }) {
     setError('');
     setLoading(true);
     try {
-      const body = mode === 'signup' ? { email, password, name } : { email, password };
+      const body = mode === 'signup' ? { email, password, name, rememberMe } : { email, password, rememberMe };
       const data = mode === 'signup' ? await api.signup(body) : await api.login(body);
       localStorage.setItem('ecorise_onboarded', '1'); // UI hint only (not auth)
       onAuth(data.user);
@@ -121,7 +122,7 @@ export default function Onboarding({ onAuth }) {
 
   /* ----- AUTH ----- */
   return (
-    <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: '52px 26px 30px' }}>
+    <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: '20px 26px 30px' }}>
       <Orbs />
       <button className="btn btn-ghost btn-sm" style={{ position: 'relative', alignSelf: 'flex-start', padding: '8px 6px' }} onClick={() => setStage('carousel')}>
         <Icon name="chevL" size={20} /> Back
@@ -179,6 +180,15 @@ export default function Onboarding({ onAuth }) {
               </div>
             </div>
           )}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none', marginTop: 2 }}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              style={{ width: 17, height: 17, accentColor: 'var(--green)', cursor: 'pointer', flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)' }}>Remember me</span>
+          </label>
           {error && <div style={{ color: 'var(--coral)', fontWeight: 700, fontSize: 14, textAlign: 'center' }}>{error}</div>}
           <button className="btn btn-primary btn-block btn-lg" type="submit" disabled={loading}>
             {loading ? 'Loading...' : mode === 'signup' ? 'Create account' : 'Log in'}

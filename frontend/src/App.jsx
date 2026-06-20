@@ -10,6 +10,7 @@ import Onboarding from './pages/Onboarding';
 import SetupBoard from './pages/SetupBoard';
 import Home from './pages/Home';
 import Learning from './pages/Learning';
+import FootprintDashboard from './pages/FootprintDashboard';
 import { Feed, Profile, Organizer } from './pages/Pages';
 import { LogAction, TrashSpotter } from './pages/Modals';
 import AIEvidence from './components/AIEvidence';
@@ -179,69 +180,6 @@ export default function App() {
     return () => cancelAnimationFrame(frame);
   }, [screen]);
 
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const teardowns = [];
-
-    const setup = () => {
-      teardowns.forEach(fn => fn());
-      teardowns.length = 0;
-
-      document.querySelectorAll('.field[placeholder]').forEach(el => {
-        const ph = el.getAttribute('placeholder');
-        if (!ph) return;
-        const s = window.getComputedStyle(el);
-        ctx.font = `${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
-        const padH = parseFloat(s.paddingLeft) + parseFloat(s.paddingRight);
-        const overflow = ctx.measureText(ph).width - (el.clientWidth - padH);
-        if (overflow <= 4) return;
-
-        const parent = el.parentElement;
-        if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
-
-        const overlay = document.createElement('div');
-        overlay.className = 'ph-marquee';
-        overlay.style.cssText = `top:${el.offsetTop}px;left:${el.offsetLeft}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;`;
-        const inner = document.createElement('span');
-        inner.textContent = ph;
-        inner.style.setProperty('--marquee-px', `-${Math.ceil(overflow) + 8}px`);
-        overlay.appendChild(inner);
-        parent.appendChild(overlay);
-        el.classList.add('field-no-ph');
-
-        const sync = () => {
-          const focused = document.activeElement === el;
-          const filled = !!el.value;
-          overlay.style.display = (focused || filled) ? 'none' : '';
-          el.classList.toggle('field-no-ph', !focused && !filled);
-        };
-        const hoverOn  = () => overlay.classList.add('hovered');
-        const hoverOff = () => overlay.classList.remove('hovered');
-        el.addEventListener('focus', sync);
-        el.addEventListener('blur', sync);
-        el.addEventListener('input', sync);
-        el.addEventListener('mouseenter', hoverOn);
-        el.addEventListener('mouseleave', hoverOff);
-
-        teardowns.push(() => {
-          overlay.remove();
-          el.classList.remove('field-no-ph');
-          el.removeEventListener('focus', sync);
-          el.removeEventListener('blur', sync);
-          el.removeEventListener('input', sync);
-          el.removeEventListener('mouseenter', hoverOn);
-          el.removeEventListener('mouseleave', hoverOff);
-        });
-      });
-    };
-
-    const frame = requestAnimationFrame(setup);
-    const ro = new ResizeObserver(setup);
-    ro.observe(document.body);
-    return () => { cancelAnimationFrame(frame); ro.disconnect(); teardowns.forEach(fn => fn()); };
-  }, [screen]);
-
   // ── Navigation ──
   const go = (s) => { setScreen(s); setModal(null); };
   // Stable identity so the AIEvidence dialog's focus effect doesn't re-run on every render.
@@ -394,7 +332,7 @@ export default function App() {
     user: user || { name: 'Eco Champion', handle: '@you', avatar: '' },
     members, posts, quests, leaderboard, leaderboardId,
     resetTarget, bump, podiumVariant,
-    go, showToast, openLog: () => setModal('log'), openTrash: () => setModal('trash'),
+    go, setScreen, showToast, openLog: () => setModal('log'), openTrash: () => setModal('trash'),
     closeModal: () => setModal(null), toggleLike, reportPost, keepPost, deletePost, onActionComplete,
     updateLeaderboard, incrementCommentCount, logout,
     joinBoardByCode, onBoardCreated,
@@ -411,6 +349,7 @@ export default function App() {
       case 'home': return <Home ctx={ctx} />;
       case 'feed': return <Feed ctx={ctx} />;
       case 'learning': return <Learning ctx={ctx} />;
+      case 'footprint': return <FootprintDashboard ctx={ctx} />;
       case 'profile': return <Profile ctx={ctx} />;
       case 'privacy': return <PrivacyCenter ctx={ctx} />;
       case 'organizer': return <Organizer ctx={ctx} />;

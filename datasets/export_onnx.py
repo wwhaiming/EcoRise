@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ONNX output: backend/utils/trash_detector.onnx (opset 13, softmax-wrapped, 0=not_trash 1=trash)
 """Export trained weights (best.pt) to ONNX without retraining."""
 import json, os, torch
 from train_trash_detector import build_model, WithSoftmax, IMG

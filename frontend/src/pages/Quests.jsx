@@ -107,8 +107,6 @@ export default function Quests({ ctx, isCombined }) {
           </div>
         ) : quests.map(q => <QuestCard key={q.id} q={q} ctx={ctx} />)}
       </div>
-
-      <div style={{ height: 110 }} />
     </>
   );
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ONNX output: backend/utils/trash_detector.onnx (opset 13, softmax-wrapped, 0=not_trash 1=trash)
 """Evaluate the trained detector on the held-out val split: precision/recall and
 false-positive rate at the deployed trash-probability threshold (0.6)."""
 import json, torch

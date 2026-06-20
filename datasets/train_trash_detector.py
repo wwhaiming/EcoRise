@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ONNX output: backend/utils/trash_detector.onnx (opset 13, softmax-wrapped, 0=not_trash 1=trash)
 """EcoRise — trash / not-trash detector training.
 
 Trains a compact CNN from scratch (no external pretrained weights, so it runs
