@@ -1,4 +1,5 @@
 /* EcoRise — Podium component (3 variants: Cards, Stand, Medals) */
+import { memo } from 'react';
 import Avatar from './Avatar';
 import { RankBadge } from './UI';
 import { METAL } from './constants';
@@ -9,7 +10,7 @@ const unitLong = (metric) => metric === 'co2' ? 'KG CO₂e' : 'POINTS';
 const unitShort = (metric) => metric === 'co2' ? 'KG' : 'PTS';
 
 /* ---------- Podium: CARDS ---------- */
-function PodiumCards({ top3, bump, metric }) {
+const PodiumCards = memo(function PodiumCards({ top3, bump, metric }) {
   const order = [top3[1], top3[0], top3[2]];
   const ranks = [2, 1, 3];
   return (
@@ -58,10 +59,10 @@ function PodiumCards({ top3, bump, metric }) {
       })}
     </div>
   );
-}
+});
 
 /* ---------- Podium: 3D STAND ---------- */
-function PodiumStand({ top3, bump, metric }) {
+const PodiumStand = memo(function PodiumStand({ top3, bump, metric }) {
   const order = [top3[1], top3[0], top3[2]];
   const ranks = [2, 1, 3];
   const heights = { 1: 118, 2: 84, 3: 66 };
@@ -106,10 +107,10 @@ function PodiumStand({ top3, bump, metric }) {
       })}
     </div>
   );
-}
+});
 
 /* ---------- Podium: MEDALS ---------- */
-function PodiumMedals({ top3, bump, metric }) {
+const PodiumMedals = memo(function PodiumMedals({ top3, bump, metric }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '6px 2px' }}>
       {top3.map((p, i) => {
@@ -168,12 +169,14 @@ function PodiumMedals({ top3, bump, metric }) {
       })}
     </div>
   );
-}
+});
 
-export default function Podium({ top3, variant = 'cards', bump, metric = 'points' }) {
+function Podium({ top3, variant = 'cards', bump, metric = 'points' }) {
   if (!top3) return null;
   const padded = [top3[0] || null, top3[1] || null, top3[2] || null];
   if (variant === 'stand') return <PodiumStand top3={padded} bump={bump} metric={metric} />;
   if (variant === 'medals') return <PodiumMedals top3={padded} bump={bump} metric={metric} />;
   return <PodiumCards top3={padded} bump={bump} metric={metric} />;
 }
+
+export default memo(Podium);

@@ -430,6 +430,7 @@ function createIndexes() {
     CREATE INDEX IF NOT EXISTS idx_posts_user_time ON posts(user_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_posts_hash    ON posts(user_id, image_hash);
     CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
     CREATE INDEX IF NOT EXISTS idx_likes_post    ON post_likes(post_id);
     CREATE INDEX IF NOT EXISTS idx_trash_user    ON trash_reports(user_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_trash_hash    ON trash_reports(user_id, image_hash);
@@ -449,6 +450,9 @@ function createIndexes() {
     CREATE INDEX IF NOT EXISTS idx_posts_co2        ON posts(user_id, leaderboard_id, status, co2_saved);
     CREATE INDEX IF NOT EXISTS idx_posts_expiry    ON posts(image_expires_at) WHERE image_expires_at IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_trash_expiry    ON trash_reports(image_expires_at) WHERE image_expires_at IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_trash_board     ON trash_reports(leaderboard_id);
+    CREATE INDEX IF NOT EXISTS idx_leaderboards_organizer ON leaderboards(organizer_id);
+    CREATE INDEX IF NOT EXISTS idx_consent_user    ON consent_records(user_id);
     CREATE INDEX IF NOT EXISTS idx_consent_board   ON consent_records(leaderboard_id, user_id);
     CREATE INDEX IF NOT EXISTS idx_audit_board     ON audit_log(leaderboard_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_audit_actor     ON audit_log(actor_user_id, created_at);

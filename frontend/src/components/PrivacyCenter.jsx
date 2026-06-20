@@ -27,6 +27,14 @@ function Section({ icon, title, children, tint = 'var(--green)' }) {
   );
 }
 
+function Select({ value, onChange, options }) {
+  return (
+    <select className="field" value={value} onChange={e => onChange(e.target.value)} style={{ marginTop: 6 }}>
+      {Object.entries(options).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+    </select>
+  );
+}
+
 export default function PrivacyCenter({ ctx }) {
   const { leaderboardId, leaderboard, user, showToast } = ctx;
   const isOrganizer = leaderboard && user && leaderboard.organizer_id === user.id;
@@ -135,12 +143,6 @@ export default function PrivacyCenter({ ctx }) {
     try { await api.deleteAccount(); showToast('Account deleted'); ctx.logout?.(); }
     catch (e) { showToast(e.message || 'Delete failed'); setBusy(false); }
   };
-
-  const Select = ({ value, onChange, options }) => (
-    <select className="field" value={value} onChange={e => onChange(e.target.value)} style={{ marginTop: 6 }}>
-      {Object.entries(options).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-    </select>
-  );
 
   return (
     <div className="screen-in" style={{ paddingBottom: 110 }}>

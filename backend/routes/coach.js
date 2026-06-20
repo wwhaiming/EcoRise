@@ -55,11 +55,16 @@ const PROVENANCE = ['upload', 'open_access', 'agency', 'synthetic_demo'];
 
 // ── Status (also the opportunistic daily-tip trigger) ──
 router.get('/status', authMiddleware, async (req, res) => {
-  const db = getDb();
-  const role = db.prepare('SELECT role FROM users WHERE id = ?').get(req.userId)?.role || 'user';
-  const approved = db.prepare("SELECT COUNT(*) c FROM eco_sources WHERE status = 'approved'").get().c;
-  await runDueCoachTips(db, req.userId).catch(() => {}); // fail open; never block status
-  res.json({ enabled: true, role, approvedSources: approved, awardsPoints: true });
+  try {
+    const db = getDb();
+    const role = db.prepare('SELECT role FROM users WHERE id = ?').get(req.userId)?.role || 'user';
+    const approved = db.prepare("SELECT COUNT(*) c FROM eco_sources WHERE status = 'approved'").get().c;
+    await runDueCoachTips(db, req.userId).catch(() => {}); // fail open; never block status
+    res.json({ enabled: true, role, approvedSources: approved, awardsPoints: true });
+  } catch (err) {
+    console.error('coach /status error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ── AI report card: serves the latest REAL eval-harness output (never hardcoded). ──
@@ -102,14 +107,19 @@ router.post('/sources', authMiddleware, requireRole('teacher', 'admin'), (req, r
 
 // Approving a source embeds its chunks so they become retrievable.
 router.post('/sources/:id/approve', authMiddleware, requireRole('teacher', 'admin'), async (req, res) => {
-  const db = getDb();
-  const src = db.prepare('SELECT id FROM eco_sources WHERE id = ?').get(req.params.id);
-  if (!src) return res.status(404).json({ error: 'Source not found' });
-  const status = req.body && req.body.reject ? 'rejected' : 'approved';
-  db.prepare('UPDATE eco_sources SET status = ? WHERE id = ?').run(status, req.params.id);
-  let embedded = 0;
-  if (status === 'approved') embedded = await ingestSourceChunks(db, req.params.id).catch(() => 0);
-  res.json({ success: true, id: req.params.id, status, embedded });
+  try {
+    const db = getDb();
+    const src = db.prepare('SELECT id FROM eco_sources WHERE id = ?').get(req.params.id);
+    if (!src) return res.status(404).json({ error: 'Source not found' });
+    const status = req.body && req.body.reject ? 'rejected' : 'approved';
+    db.prepare('UPDATE eco_sources SET status = ? WHERE id = ?').run(status, req.params.id);
+    let embedded = 0;
+    if (status === 'approved') embedded = await ingestSourceChunks(db, req.params.id).catch(() => 0);
+    res.json({ success: true, id: req.params.id, status, embedded });
+  } catch (err) {
+    console.error('coach /approve error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ── Questions ──
@@ -370,33 +380,38 @@ const FOOTPRINT_QUERY = {
 
 // Save a teacher/organizer baseline for the board (only board members/organizers).
 router.post('/school-footprint', authMiddleware, async (req, res) => {
-  const db = getDb();
-  const lb = boardForUser(db, req);
-  if (!lb) return res.status(403).json({ error: 'Join or organize this board to set its footprint baseline.' });
-  if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) {
-    return res.status(403).json({ error: 'Only the board organizer can set its footprint baseline.' });
+  try {
+    const db = getDb();
+    const lb = boardForUser(db, req);
+    if (!lb) return res.status(403).json({ error: 'Join or organize this board to set its footprint baseline.' });
+    if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) {
+      return res.status(403).json({ error: 'Only the board organizer can set its footprint baseline.' });
+    }
+    ensureFootprintTable(db);
+    const b = req.body || {};
+    const bounds = {
+      students: 1e6,
+      monthlyKwh: 1e12,
+      monthlyGasTherms: 1e12,
+      busMilesPerWeek: 1e9,
+      pctDrivenStudents: 100,
+      dailyMealsServed: 1e7,
+      landfillBagsPerWeek: 1e7,
+      monthlyWaterM3: 1e12,
+    };
+    const baseline = {};
+    for (const [k, max] of Object.entries(bounds)) {
+      if (b[k] === undefined || b[k] === null || b[k] === '') continue;
+      const value = Number(b[k]);
+      if (!Number.isFinite(value) || value < 0 || value > max) return res.status(400).json({ error: `Invalid ${k}.` });
+      baseline[k] = value;
+    }
+    db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data = excluded.data, updated_at = datetime('now')").run(lb, JSON.stringify(baseline));
+    res.json({ success: true, footprint: estimateFootprint(baseline) });
+  } catch (err) {
+    console.error('coach /school-footprint error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  ensureFootprintTable(db);
-  const b = req.body || {};
-  const bounds = {
-    students: 1e6,
-    monthlyKwh: 1e12,
-    monthlyGasTherms: 1e12,
-    busMilesPerWeek: 1e9,
-    pctDrivenStudents: 100,
-    dailyMealsServed: 1e7,
-    landfillBagsPerWeek: 1e7,
-    monthlyWaterM3: 1e12,
-  };
-  const baseline = {};
-  for (const [k, max] of Object.entries(bounds)) {
-    if (b[k] === undefined || b[k] === null || b[k] === '') continue;
-    const value = Number(b[k]);
-    if (!Number.isFinite(value) || value < 0 || value > max) return res.status(400).json({ error: `Invalid ${k}.` });
-    baseline[k] = value;
-  }
-  db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data = excluded.data, updated_at = datetime('now')").run(lb, JSON.stringify(baseline));
-  res.json({ success: true, footprint: estimateFootprint(baseline) });
 });
 
 // The hidden-footprint digest: biggest institutional emitter + student action leverage +
@@ -450,9 +465,14 @@ function pickTopic(db, req) {
   return tags[answered % tags.length];
 }
 
+let _corpusTagsCache = { at: 0, tags: null };
 function corpusTags(db) {
+  const now = Date.now();
+  if (_corpusTagsCache.tags && now - _corpusTagsCache.at < 60000) return _corpusTagsCache.tags;
   const rows = db.prepare("SELECT topic_tags FROM eco_sources WHERE status = 'approved'").all();
-  return [...new Set(rows.flatMap(r => safeTags(r.topic_tags)))];
+  const tags = [...new Set(rows.flatMap(r => safeTags(r.topic_tags)))];
+  _corpusTagsCache = { at: now, tags };
+  return tags;
 }
 
 function pickWeakCategory(db, userId) {

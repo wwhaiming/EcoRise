@@ -1,4 +1,5 @@
 /* EcoRise — Bottom navigation bar with FAB */
+import React from 'react';
 import Icon from './Icon';
 
 const NAV = [
@@ -12,7 +13,7 @@ const NAV = [
 const LEFT = NAV.slice(0, 2);
 const RIGHT = NAV.slice(2);
 
-export default function BottomNav({ screen, go, onFab }) {
+function BottomNav({ screen, go, onFab }) {
   const renderItem = (n) => (
     <button
       key={n.key}
@@ -47,3 +48,5 @@ export default function BottomNav({ screen, go, onFab }) {
     </div>
   );
 }
+
+export default React.memo(BottomNav);

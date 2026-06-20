@@ -8,7 +8,7 @@ const email = z.string({ required_error: 'Email is required' })
   .max(254, 'Email must be under 254 characters');
 const password = z.string({ required_error: 'Password is required' })
   .min(8, 'Password must be at least 8 characters')
-  .max(200, 'Password must be under 200 characters');
+  .max(72, 'Password must be at most 72 characters');
 const uuidArr = z.array(z.string().uuid()).max(3);
 
 const schemas = {
@@ -33,7 +33,7 @@ const schemas = {
   }),
   join: z.object({ inviteCode: z.string().trim().max(16).optional() }),
   createPost: z.object({
-    image: z.string().startsWith('data:image/').max(9_000_000).optional(),
+    image: z.string().regex(/^data:image\/(jpeg|png|gif|webp);base64,/, 'image must be a jpeg/png/gif/webp data URI').max(9_000_000).optional(),
     caption: z.string().trim().max(500).optional(),
     leaderboardId: z.string().uuid().optional(),
     miles: z.coerce.number().min(0).max(500).optional(),
@@ -43,7 +43,7 @@ const schemas = {
   }),
   comment: z.object({ text: z.string().trim().min(1).max(500) }),
   trash: z.object({
-    image: z.string().startsWith('data:image/').max(9_000_000).optional(),
+    image: z.string().regex(/^data:image\/(jpeg|png|gif|webp);base64,/, 'image must be a jpeg/png/gif/webp data URI').max(9_000_000).optional(),
     location: z.string().trim().max(120).optional(),
     leaderboardId: z.string().uuid().optional(),
   }),

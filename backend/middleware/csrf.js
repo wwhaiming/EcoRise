@@ -17,13 +17,18 @@ function issueCsrf(res) {
 }
 
 function csrfGuard(req, res, next) {
-  if (req.path.startsWith('/api/auth/')) return next();
+  if (req.method === 'POST' && (req.path === '/api/auth/login' || req.path === '/api/auth/signup')) return next();
   const mutating = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
   const hasCookieSession = !!req.cookies?.token;
   if (mutating && hasCookieSession) {
     const header = req.headers['x-csrf-token'];
     const cookie = req.cookies?.csrf;
-    if (!header || !cookie || header !== cookie) {
+    if (!header || !cookie) {
+      return res.status(403).json({ error: 'CSRF token missing or invalid' });
+    }
+    const a = Buffer.from(header);
+    const b = Buffer.from(cookie);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       return res.status(403).json({ error: 'CSRF token missing or invalid' });
     }
   }

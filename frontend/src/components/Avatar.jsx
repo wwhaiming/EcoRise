@@ -14,7 +14,7 @@ export default function Avatar({ src, name = '?', size = 44, ring, glow, style }
       display: 'flex', alignItems: 'center', justifyContent: 'center', ...style,
     }}>
       {!err && src
-        ? <img src={src} alt="" onError={() => setErr(true)}
+        ? <img src={src} alt="" loading="lazy" onError={() => setErr(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         : <span style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: size * .38, color: 'var(--green-d)' }}>{initials}</span>}
     </div>

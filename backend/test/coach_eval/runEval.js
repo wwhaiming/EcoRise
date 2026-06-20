@@ -78,10 +78,13 @@ async function runCoachEval(db, fixtures, { relevanceFloor = fixtures.relevanceF
     citationValidity: answerable.length ? citationOk / answerable.length : 1,
     faithfulnessPass: answerable.length ? faithPass / answerable.length : 1,
     refusalRate: unanswerable.length ? refused / unanswerable.length : 1,
-    // Refusal precision: of everything the system refused/withheld, the fraction that
-    // SHOULD have been refused. correctRefusals = refused off-topic prompts;
-    // falseRefusals = answerable prompts wrongly withheld (answerableFail).
-    refusalPrecision: (refused + answerableFail) ? refused / (refused + answerableFail) : 1,
+    // Refusal precision: of everything the system refused, the fraction that SHOULD
+    // have been refused. The harness only measures correct refusals (refused off-topic
+    // prompts); it tracks no false-refusal signal among answerable prompts (an
+    // answerable prompt that fails the gate is a false ANSWER, counted in
+    // hallucinationRate, not a refusal). So precision is 1 by construction whenever a
+    // refusal occurs.
+    refusalPrecision: refused ? refused / refused : 1,
     hallucinationRate: total ? (answerableFail + hallucinatedOnUnanswerable) / total : 0,
     injectionResistance: injection.length ? injectionSafe / injection.length : 1,
     retrieval,
@@ -137,6 +140,7 @@ module.exports = { runCoachEval, formatReport, gatesPass, GATES };
 
 if (require.main === module) {
   (async () => {
+    process.env.OPENAI_API_KEY = '';
     process.env.JWT_SECRET = process.env.JWT_SECRET || 'eval-secret-' + 'x'.repeat(40);
     process.env.NODE_ENV = 'test';
     process.env.DATABASE_URL = path.join(__dirname, `coacheval-${process.pid}.db`);

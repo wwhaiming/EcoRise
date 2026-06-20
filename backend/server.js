@@ -93,6 +93,7 @@ if (require.main === module) {
     const aiMode = process.env.OPENAI_API_KEY ? `LIVE (OpenAI ${process.env.ECO_MODEL || 'gpt-4o-mini'})`
       : 'MOCK / local model';
     console.log(`   AI mode: ${aiMode}`);
+    if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith('sk-')) console.warn('⚠️  OPENAI_API_KEY is set but does not look like a valid key (expected "sk-" prefix)');
   });
   const interval = setInterval(() => {
     try { runDueResets(getDb()); } catch (e) { console.error('reset job error:', e.message); }

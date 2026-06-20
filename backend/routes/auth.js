@@ -57,7 +57,7 @@ router.post('/signup', body('signup'), async (req, res) => {
     setSession(res, id, !!req.valid.rememberMe);
     res.json({ user: { id, email, name: displayName, handle, avatar: '' } });
   } catch (err) {
-    console.error('Signup error:', err);
+    console.error('Signup error:', err && err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -74,7 +74,7 @@ router.post('/login', body('login'), async (req, res) => {
     setSession(res, user.id, !!req.valid.rememberMe);
     res.json({ user: { id: user.id, email: user.email, name: user.name, handle: user.handle, avatar: user.avatar } });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err && err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

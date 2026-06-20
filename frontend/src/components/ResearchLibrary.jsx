@@ -7,7 +7,7 @@
  *  3. AI visual — a structured infographic (metric / concept nodes / comparison bars /
  *     cause→effect flow) rendered client-side so a dense paper is easy to grasp.
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import Icon from './Icon';
 import api from '../utils/api';
 
@@ -82,7 +82,7 @@ function Visual({ v }) {
   );
 }
 
-function PaperCard({ p, showToast }) {
+const PaperCard = memo(function PaperCard({ p, showToast }) {
   const [busy, setBusy] = useState('');        // 'summary' | 'visual'
   const [summary, setSummary] = useState(null);
   const [visual, setVisual] = useState(null);
@@ -127,7 +127,7 @@ function PaperCard({ p, showToast }) {
       {visual && <Visual v={visual} />}
     </div>
   );
-}
+});
 
 export default function ResearchLibrary({ showToast }) {
   const [askQ, setAskQ] = useState('');

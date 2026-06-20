@@ -178,7 +178,7 @@ export default function AIEvidence({ data, onClose }) {
         {/* photo + verdict ribbon */}
         {data.photo && (
           <div style={{ position: 'relative', margin: '0 14px', height: 168, borderRadius: 18, overflow: 'hidden' }}>
-            <img src={data.photo} alt="Submitted" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={data.photo} alt="Submitted" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 45%,rgba(0,0,0,.6))' }} />
             <div style={{ position: 'absolute', left: 12, bottom: 12, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,.5)', padding: '7px 13px', borderRadius: 9999, backdropFilter: 'blur(6px)' }}>
               <span style={{ width: 22, height: 22, borderRadius: '50%', background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

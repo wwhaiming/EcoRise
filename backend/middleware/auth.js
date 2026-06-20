@@ -40,7 +40,8 @@ function authMiddleware(req, res, next) {
 function optionalAuth(req, res, next) {
   const { token, via } = getToken(req);
   if (token) {
-    try { req.userId = jwt.verify(token, JWT_SECRET).userId; req.authVia = via; } catch (_) { /* ignore */ }
+    try { req.userId = jwt.verify(token, JWT_SECRET).userId; req.authVia = via; }
+    catch (err) { if (err.name !== 'TokenExpiredError') console.warn('optionalAuth: ' + err.message); }
   }
   next();
 }

@@ -53,8 +53,20 @@ function deterministicEmbed(text) {
 let OpenAI = null;
 try { OpenAI = require('openai'); } catch (_) { /* optional — falls back to lexical */ }
 
+let _embedClient = null;
+function getEmbedClient() {
+  if (!_embedClient) {
+    _embedClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      timeout: Number(process.env.OPENAI_TIMEOUT_MS || 30000),
+      maxRetries: Number(process.env.OPENAI_MAX_RETRIES || 2),
+    });
+  }
+  return _embedClient;
+}
+
 async function openaiEmbed(text) {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const client = getEmbedClient();
   const model = process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-small';
   const r = await client.embeddings.create({ model, input: String(text || '').slice(0, 8000) });
   const values = r && r.data && r.data[0] && r.data[0].embedding;

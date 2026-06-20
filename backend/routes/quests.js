@@ -31,13 +31,19 @@ router.get('/', authMiddleware, async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
       `);
       const insertMany = db.transaction((items) => {
+        // Re-check inside the txn: a concurrent request may have already inserted
+        // today's quests during our `await` above. better-sqlite3 serializes this
+        // synchronous txn, so the second caller sees the first's committed rows
+        // and bails instead of minting a duplicate batch.
+        const existing = db.prepare('SELECT * FROM quests WHERE user_id = ? AND date = ?').all(req.userId, today);
+        if (existing.length > 0) return existing;
         for (const q of items) {
           const goal = Math.min(5, Math.max(1, Number(q.goal) || 1)); // respect multi-step quests (e.g. "refill 3x")
           insert.run(uuid(), req.userId, q.title, q.description, q.actionType, q.targetDetails || '', q.pointsBase || 50, goal, today);
         }
+        return db.prepare('SELECT * FROM quests WHERE user_id = ? AND date = ?').all(req.userId, today);
       });
-      insertMany(generated.slice(0, 5));
-      quests = db.prepare('SELECT * FROM quests WHERE user_id = ? AND date = ?').all(req.userId, today);
+      quests = insertMany(generated.slice(0, 5));
     }
     res.json({ quests });
   } catch (err) {
