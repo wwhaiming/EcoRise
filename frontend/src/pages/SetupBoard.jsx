@@ -78,7 +78,7 @@ export default function SetupBoard({ ctx, onComplete }) {
             <button key={k} onClick={() => { setTab(k); setError(''); }} className="btn btn-sm" style={{
               flex: 1, fontFamily: 'var(--display)', fontWeight: 600, fontSize: 13.5,
               background: tab === k ? 'linear-gradient(180deg,var(--navy-600),var(--navy-700))' : 'transparent',
-              color: tab === k ? '#fff' : 'var(--text-dim)', boxShadow: tab === k ? '0 4px 12px rgba(0,0,0,.3)' : 'none',
+              color: 'var(--green-d)', boxShadow: tab === k ? '0 4px 12px rgba(0,0,0,.3)' : 'none',
               padding: '10px 4px',
             }}>{l}</button>
           ))}
