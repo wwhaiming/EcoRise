@@ -4,6 +4,8 @@ dist/
 .env
 .DS_Store
 
+EcoRise-other/
+
 # SQLite runtime artifacts (any db, incl. old georise.db + new ecorise.db + test dbs)
 *.db
 *.db-shm

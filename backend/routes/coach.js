@@ -373,12 +373,28 @@ router.post('/school-footprint', authMiddleware, async (req, res) => {
   const db = getDb();
   const lb = boardForUser(db, req);
   if (!lb) return res.status(403).json({ error: 'Join or organize this board to set its footprint baseline.' });
+  if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) {
+    return res.status(403).json({ error: 'Only the board organizer can set its footprint baseline.' });
+  }
   ensureFootprintTable(db);
   const b = req.body || {};
-  // Whitelist numeric inputs; everything else falls back to labeled defaults.
-  const keys = ['students', 'monthlyKwh', 'monthlyGasTherms', 'busMilesPerWeek', 'pctDrivenStudents', 'dailyMealsServed', 'landfillBagsPerWeek', 'monthlyWaterM3'];
+  const bounds = {
+    students: 1e6,
+    monthlyKwh: 1e12,
+    monthlyGasTherms: 1e12,
+    busMilesPerWeek: 1e9,
+    pctDrivenStudents: 100,
+    dailyMealsServed: 1e7,
+    landfillBagsPerWeek: 1e7,
+    monthlyWaterM3: 1e12,
+  };
   const baseline = {};
-  for (const k of keys) if (Number.isFinite(+b[k])) baseline[k] = +b[k];
+  for (const [k, max] of Object.entries(bounds)) {
+    if (b[k] === undefined || b[k] === null || b[k] === '') continue;
+    const value = Number(b[k]);
+    if (!Number.isFinite(value) || value < 0 || value > max) return res.status(400).json({ error: `Invalid ${k}.` });
+    baseline[k] = value;
+  }
   db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data = excluded.data, updated_at = datetime('now')").run(lb, JSON.stringify(baseline));
   res.json({ success: true, footprint: estimateFootprint(baseline) });
 });
@@ -394,10 +410,6 @@ router.get('/school-insight', authMiddleware, async (req, res) => {
     if (lb) {
       const row = db.prepare('SELECT data FROM school_baselines WHERE leaderboard_id = ?').get(lb);
       if (row) { try { baseline = JSON.parse(row.data) || {}; } catch { baseline = {}; } }
-      if (baseline.students == null) {
-        const m = db.prepare('SELECT COUNT(*) c FROM leaderboard_members WHERE leaderboard_id = ?').get(lb).c;
-        if (m > 0) baseline.students = m;
-      }
     }
     const footprint = estimateFootprint(baseline);
     // Student action savings this week on the board (the offsetting side).
@@ -641,7 +653,7 @@ router.get('/insights', authMiddleware, (req, res) => {
     const pipeline = [
       { step: 'Input', detail: 'Utility bills (electricity, gas, water), school calendar, local weather (degree-days), waste + transport logs.' },
       { step: 'AI reasoning', detail: 'Learn a weather-and-occupancy-adjusted expected baseline per utility (OLS), flag residual anomalies, forecast next month, rank interventions under cost/effort/confidence constraints.' },
-      { step: 'Insight', detail: top ? `${top.category === 'gas' ? 'Heating gas' : top.category} in ${top.month} ran ~${top.percentAboveExpected}% above expected (~${top.excessKgCO2ePerMonth} kg CO2e likely avoidable).` : 'No utility anomalies above threshold this period.' },
+      { step: 'Insight', detail: top ? `${top.category === 'gas' ? 'Heating gas' : top.category} in ${top.month} ran ${top.percentAboveExpected != null ? `~${top.percentAboveExpected}%` : 'measurably'} above expected (~${top.excessKgCO2ePerMonth} kg CO2e likely avoidable).` : 'No utility anomalies above threshold this period.' },
       { step: 'Action', detail: topRec ? `${topRec.cta}: ${topRec.label} (~${topRec.expectedKgPerMonth} kg/mo), pending ${topRec.approver} approval.` : 'No action required right now.' },
     ];
     const scope = sample ? LINCOLN.context.scope : {
@@ -704,7 +716,7 @@ router.post('/insights/load-demo', authMiddleware, (req, res) => {
     if (!db.prepare('SELECT 1 FROM leaderboards WHERE id = ? AND organizer_id = ?').get(lb, req.userId)) return res.status(403).json({ error: 'Only the board organizer can load demo data.' });
     ensureFootprintTable(db); ensureInsightTables(db);
     db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(lb, JSON.stringify(LINCOLN.baseline));
-    db.prepare("INSERT INTO school_utility (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(lb, JSON.stringify(LINCOLN.series));
+    db.prepare("INSERT INTO school_utility (leaderboard_id, data, source, updated_at) VALUES (?, ?, 'demo', datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, source='demo', updated_at=datetime('now')").run(lb, JSON.stringify(LINCOLN.series));
     auditLog(db, { actorUserId: req.userId, action: 'insights.load_demo', targetType: 'leaderboard', targetId: lb, leaderboardId: lb, detail: { school: LINCOLN.profile.name } });
     res.json({ success: true, school: LINCOLN.profile.name });
   } catch (err) { console.error('coach /insights/load-demo error:', err.message); res.status(500).json({ error: 'Internal server error' }); }
