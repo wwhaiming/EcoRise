@@ -69,7 +69,7 @@ export default function App() {
   const [members, setMembers] = useState(MOCK_MEMBERS);
   const [posts, setPosts] = useState(MOCK_POSTS);
   const [quests, setQuests] = useState(MOCK_QUESTS);
-  const [leaderboard, setLeaderboard] = useState({ name: 'Greenfield High', prize: '$250 campus store + a tree planted', invite_code: 'GRNFLD-7K2', reset_interval: 'weekly' });
+  const [leaderboard, setLeaderboard] = useState({ name: 'Garfield High School', prize: '$250 campus store + a tree planted', invite_code: 'GRNFLD-7K2', reset_interval: 'weekly' });
   const [leaderboardId, setLeaderboardId] = useState(null);
   const [podiumVariant] = useState('stand');
   const [notifications, setNotifications] = useState([]);

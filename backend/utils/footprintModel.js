@@ -142,7 +142,7 @@ function estimateFootprint(baseline = {}) {
     isEstimate: true,
     disclaimer: providedCount === 0
       ? 'Coarse national-average estimate from student count only. Enter real utility bills, bus miles, and meals served to make this your school\'s actual footprint.'
-      : `${providedCount}/6 categories use your real inputs; the rest are labeled estimates.`,
+      : `${providedCount}/6 categories use your real inputs; the rest are labeled estimates. Garfield High School electricity and natural gas figures from Seattle Public Schools Energy & Utility Dashboard (https://www.seattleschools.org/departments/resource-conservation/utility-data-dashboard/).`,
     biggestEmitter: cats[0] || null,
     categories: cats,
   };

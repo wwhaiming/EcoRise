@@ -19,10 +19,23 @@ cd backend && COACH_ENABLED=true npm run seed:coach   # enable + seed the coach 
 ```
 
 Open http://localhost:5173 and log in as `demo@ecorise.app` (password printed by seed).
-Board: **Greenfield High**. Navigate to **School Footprint** and leave it open.
+Board: **Garfield High School**. Navigate to **School Footprint** and leave it open.
 
 With `OPENAI_API_KEY` set you get live AI; without it the app uses the deterministic mock
 and labels itself "DEMO — no model." Either path is valid; call it out if asked.
+
+> **Data sources for Garfield High School**
+>
+> | Field | Value | Source |
+> |---|---|---|
+> | Electricity (kWh/mo) | 143,083 | **Real** — Seattle Public Schools Energy & Utility Dashboard, CY 2023 (1,716,998 kWh ÷ 12). [seattleschools.org](https://www.seattleschools.org/departments/resource-conservation/utility-data-dashboard/) |
+> | Natural gas (therms/mo) | 4,766 | **Real** — same dashboard, CY 2023 (57,189 therms ÷ 12) |
+> | Enrollment | 1,507 students | **Real** — NCES CCD 2024-25 (ID 530771001171) |
+> | Bus miles/week | — | **Estimated** — national average per-student factor (EPA) |
+> | % students driven | — | **Estimated** — national average |
+> | Daily meals served | — | **Estimated** — national average |
+> | Monthly water (m³) | — | **Estimated** — national average |
+> | Landfill bags/week | — | **Estimated** — national average |
 
 ---
 
@@ -31,7 +44,7 @@ and labels itself "DEMO — no model." Either path is valid; call it out if aske
 **What's on screen:** School Footprint card. Nothing else.
 
 > *"Most eco apps track student behavior. They count the bike rides and the recycled bottles.
-> But Greenfield High emits 47 tonnes of CO₂ every month from its energy bill alone — and
+> But Garfield High School emits 47 tonnes of CO₂ every month from its energy bill alone — and
 > nobody was showing students that number. We built EcoRise because the problem was never the
 > students. It was the school."*
 
