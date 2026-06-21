@@ -70,6 +70,24 @@ if (process.env.DEMO_MODE === 'true') {
   } catch (e) { console.error('demo seed error:', e.message); }
 }
 
+// Research Library corpus: ingest the 1,000-paper dataset on boot if absent, so Browse /
+// Ask are populated on a fresh ephemeral deploy without a manual `npm run seed:research`.
+// Offline-safe: inserts rows + deterministic lexical embeddings when no OpenAI key is set,
+// so Browse (which only needs the rows) always works. Idempotent: skipped once present.
+if (process.env.NODE_ENV !== 'test') {
+  (async () => {
+    try {
+      const db = getDb();
+      const have = db.prepare("SELECT COUNT(*) c FROM eco_sources WHERE provenance = 'research_dataset'").get().c;
+      if (!have) {
+        const { ingest } = require('./scripts/ingestResearchCorpus');
+        const r = await ingest(db);
+        console.log(`✅ Research corpus ingested on startup: ${r.sources} papers, ${r.chunks} chunks, ${r.embedded} embedded`);
+      }
+    } catch (e) { console.error('research corpus seed-on-boot error:', e.message); }
+  })();
+}
+
 // Startup self-check: when the coach is enabled, log (loudly) whether its corpus is
 // actually retrievable, so a misconfigured deploy is visible in the boot logs instead
 // of failing silently per request. Non-fatal by design — the coach surface 404s
