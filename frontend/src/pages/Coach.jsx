@@ -371,8 +371,24 @@ export default function Coach({ ctx, isCombined }) {
                 <div style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15.5 }}>{guidance.recommendation}</div>
                 <div className="muted" style={{ fontSize: 13.5, fontWeight: 600, marginTop: 6, lineHeight: 1.4 }}>{guidance.explanation}</div>
                 <Sources sources={guidance.sources} />
-                <button className="btn btn-secondary btn-block btn-sm" style={{ marginTop: 12 }} onClick={openLog}>
-                  <Icon name="camera" size={16} /> {guidance.action || 'Log a verified action'}
+                <button
+                  className="btn btn-secondary btn-block btn-sm"
+                  style={{ marginTop: 12, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', gap: 0, padding: 0, paddingLeft: 12, paddingRight: 12, minHeight: 34 }}
+                  onClick={openLog}
+                >
+                  <span style={{
+                    display: 'flex',
+                    whiteSpace: 'nowrap',
+                    animation: 'ticker-scroll 12s linear infinite',
+                    gap: '3em',
+                  }}>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <Icon name="camera" size={14} />
+                        {guidance.action || 'Log a verified action'}
+                      </span>
+                    ))}
+                  </span>
                 </button>
               </div>
             </div>
