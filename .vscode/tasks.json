@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "demo",
+      "type": "shell",
+      "command": "DEMO_PASSWORD=demo1234 npm run demo",
+      "isBackground": true,
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
