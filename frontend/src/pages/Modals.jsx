@@ -10,6 +10,7 @@ export function LogAction({ ctx }) {
   const [phase, setPhase] = useState('capture');
   const [aiResult, setAiResult] = useState(null);
   const [miles, setMiles] = useState(6);
+  const [servings, setServings] = useState(1);
   const [caption, setCaption] = useState('');
   const [imageData, setImageData] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,7 +54,8 @@ export function LogAction({ ctx }) {
       const data = await api.createPost({
         image: imageData,
         leaderboardId: ctx.leaderboardId,
-        miles: aiResult?.requiresFollowUp ? miles : undefined,
+        miles: (aiResult?.requiresFollowUp && !isFood) ? miles : undefined,
+        servings: (aiResult?.requiresFollowUp && isFood) ? servings : undefined,
         caption,
       });
       ctx.onActionComplete(data, imageData);
@@ -64,7 +66,13 @@ export function LogAction({ ctx }) {
     setLoading(false);
   };
 
-  const co2 = aiResult ? (aiResult.requiresFollowUp ? +(miles * 0.4).toFixed(1) : aiResult.estimatedCO2Saved || 0) : 0;
+  const isTransport = aiResult?.actionType === 'transportation' || aiResult?.actionType === 'transport';
+  const isFood = aiResult?.actionType === 'food';
+  const co2 = aiResult
+    ? (aiResult.requiresFollowUp
+        ? isTransport ? +(miles * 0.4).toFixed(1) : isFood ? +(servings * 2.5).toFixed(1) : 0
+        : aiResult.estimatedCO2Saved || 0)
+    : 0;
   const pts = aiResult ? (aiResult.requiresFollowUp ? Math.max(10, Math.round(co2 * 25)) : Math.round((aiResult.estimatedCO2Saved || 1) * 25)) : 0;
 
   if (ctx.isDemo) return (
@@ -130,12 +138,23 @@ export function LogAction({ ctx }) {
               {aiResult.requiresFollowUp && (
                 <div className="card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 16 }}>{aiResult.followUpQuestion || 'How many miles?'}</span>
-                    <span style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 20, color: 'var(--green)' }}>{miles} mi</span>
+                    <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 16 }}>
+                      {aiResult.followUpQuestion || (isFood ? 'How many servings?' : 'How many miles?')}
+                    </span>
+                    <span style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 20, color: 'var(--green)' }}>
+                      {isFood ? `${servings} serving${servings !== 1 ? 's' : ''}` : `${miles} mi`}
+                    </span>
                   </div>
-                  <input type="range" min="1" max="20" value={miles} onChange={e => setMiles(+e.target.value)}
-                    style={{ width: '100%', accentColor: 'var(--green)' }} />
-                  <div className="dim" style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>Drag to match your trip distance</div>
+                  {isFood ? (
+                    <input type="range" min="1" max="10" value={servings} onChange={e => setServings(+e.target.value)}
+                      style={{ width: '100%', accentColor: 'var(--green)' }} />
+                  ) : (
+                    <input type="range" min="1" max="20" value={miles} onChange={e => setMiles(+e.target.value)}
+                      style={{ width: '100%', accentColor: 'var(--green)' }} />
+                  )}
+                  <div className="dim" style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>
+                    {isFood ? 'Drag to match number of servings' : 'Drag to match your trip distance'}
+                  </div>
                 </div>
               )}
 

@@ -127,7 +127,10 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     }
 
     const miles = v.miles || 0;
-    if (aiResult.requiresFollowUp && !miles) {
+    const servings = v.servings || 0;
+    const isTransportAction = aiResult.actionType === 'transportation' || aiResult.actionType === 'transport';
+    const followUpSatisfied = isTransportAction ? miles > 0 : (aiResult.actionType === 'food' ? servings > 0 : miles > 0);
+    if (aiResult.requiresFollowUp && !followUpSatisfied) {
       return res.json({ needsFollowUp: true, aiResult, integrity: buildIntegrity(aiResult, { lbId }), followUpQuestion: aiResult.followUpQuestion });
     }
 
@@ -136,6 +139,7 @@ router.post('/', authMiddleware, upload.single('image'), aiRateLimit, body('crea
     //    cited emission factors. User-entered miles override the model's distance.
     const attrs = { ...(aiResult.attributes || {}) };
     if (miles) attrs.distanceMiles = miles;
+    if (servings) attrs.servings = servings;
     const carbon = computeCarbon(aiResult.actionType, attrs);
 
     // 2) Adversarial fraud screen (skipped offline -> benign). Hard fakes are

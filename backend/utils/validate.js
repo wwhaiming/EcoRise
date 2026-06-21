@@ -37,6 +37,7 @@ const schemas = {
     caption: z.string().trim().max(500).optional(),
     leaderboardId: z.string().uuid().optional(),
     miles: z.coerce.number().min(0).max(500).optional(),
+    servings: z.coerce.number().min(1).max(10).optional(),
     tags: z.union([uuidArr, z.string()]).optional(), // string tolerated, parsed in route
     actionType: z.enum(['transportation', 'transport', 'waste', 'energy', 'food', 'nature', 'cleanup', 'community']).optional(),
     actionDesc: z.string().trim().max(120).optional(),

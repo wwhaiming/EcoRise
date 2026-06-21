@@ -57,7 +57,7 @@ export default function SetupBoard({ ctx, onComplete }) {
   };
 
   return (
-    <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: '52px 26px 30px' }}>
+    <div className="screen-in" style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: '5px 26px 30px' }}>
       <Orbs />
 
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
