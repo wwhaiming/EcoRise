@@ -1,178 +1,178 @@
 date,building,kwh
-2026-03-24,Main Building,804.2
-2026-03-24,Gym,280.1
-2026-03-24,Science Wing,428.2
-2026-03-25,Main Building,885.3
-2026-03-25,Gym,284.7
-2026-03-25,Science Wing,431.5
-2026-03-26,Main Building,829.5
-2026-03-26,Gym,276.2
-2026-03-26,Science Wing,423.7
-2026-03-27,Main Building,921.7
-2026-03-27,Gym,263.6
-2026-03-27,Science Wing,443
-2026-03-28,Main Building,940.2
-2026-03-28,Gym,264.9
-2026-03-28,Science Wing,498.2
-2026-03-31,Main Building,839.4
-2026-03-31,Gym,301
-2026-03-31,Science Wing,518.4
-2026-04-01,Main Building,933.2
-2026-04-01,Gym,261.2
-2026-04-01,Science Wing,519.8
-2026-04-02,Main Building,837.8
-2026-04-02,Gym,273.5
-2026-04-02,Science Wing,446.6
-2026-04-03,Main Building,894.6
-2026-04-03,Gym,283.2
-2026-04-03,Science Wing,468.1
-2026-04-04,Main Building,831.8
-2026-04-04,Gym,253.9
-2026-04-04,Science Wing,430.5
-2026-04-11,Main Building,984.1
-2026-04-11,Gym,262.6
-2026-04-11,Science Wing,502.1
+2026-03-24,Main Building,872.1
+2026-03-24,Gym,301.6
+2026-03-24,Science Wing,439.1
+2026-03-25,Main Building,975.4
+2026-03-25,Gym,306.2
+2026-03-25,Science Wing,440.7
+2026-03-26,Main Building,914.9
+2026-03-26,Gym,258.6
+2026-03-26,Science Wing,447.2
+2026-03-27,Main Building,818
+2026-03-27,Gym,266.2
+2026-03-27,Science Wing,434.6
+2026-03-28,Main Building,802.3
+2026-03-28,Gym,267.2
+2026-03-28,Science Wing,475.2
+2026-03-31,Main Building,873.5
+2026-03-31,Gym,261
+2026-03-31,Science Wing,499.3
+2026-04-01,Main Building,974.8
+2026-04-01,Gym,302.4
+2026-04-01,Science Wing,428.7
+2026-04-02,Main Building,855.4
+2026-04-02,Gym,306.6
+2026-04-02,Science Wing,509.4
+2026-04-03,Main Building,821.6
+2026-04-03,Gym,259.3
+2026-04-03,Science Wing,532.2
+2026-04-04,Main Building,966.9
+2026-04-04,Gym,296.8
+2026-04-04,Science Wing,473.5
+2026-04-11,Main Building,880.9
+2026-04-11,Gym,307.7
+2026-04-11,Science Wing,507.3
 2026-04-14,Main Building,1900
-2026-04-14,Gym,253.1
-2026-04-14,Science Wing,470
-2026-04-15,Main Building,868.2
-2026-04-15,Gym,309.4
-2026-04-15,Science Wing,423.2
-2026-04-16,Main Building,870.8
-2026-04-16,Gym,288.7
-2026-04-16,Science Wing,435.5
-2026-04-17,Main Building,808.3
-2026-04-17,Gym,262
-2026-04-17,Science Wing,438.6
-2026-04-18,Main Building,812.3
-2026-04-18,Gym,298.7
-2026-04-18,Science Wing,533.4
-2026-04-21,Main Building,894.1
-2026-04-21,Gym,254
-2026-04-21,Science Wing,518.4
-2026-04-22,Main Building,971.1
-2026-04-22,Gym,304
-2026-04-22,Science Wing,526.7
-2026-04-23,Main Building,815.3
-2026-04-23,Gym,279
-2026-04-23,Science Wing,471.7
-2026-04-24,Main Building,962.7
-2026-04-24,Gym,263.7
-2026-04-24,Science Wing,456.9
-2026-04-25,Main Building,871.9
-2026-04-25,Gym,270.9
-2026-04-25,Science Wing,525.1
-2026-04-28,Main Building,920
-2026-04-28,Gym,309.9
-2026-04-28,Science Wing,448.4
-2026-04-29,Main Building,830.6
-2026-04-29,Gym,293.2
-2026-04-29,Science Wing,433.7
-2026-04-30,Main Building,885.7
-2026-04-30,Gym,276.7
-2026-04-30,Science Wing,463.4
-2026-05-01,Main Building,953.2
-2026-05-01,Gym,304.7
-2026-05-01,Science Wing,504.1
-2026-05-02,Main Building,893.1
-2026-05-02,Gym,290.8
-2026-05-02,Science Wing,500.4
-2026-05-05,Main Building,988.3
-2026-05-05,Gym,309.9
-2026-05-05,Science Wing,456.1
-2026-05-06,Main Building,793.7
-2026-05-06,Gym,283.2
-2026-05-06,Science Wing,462.7
-2026-05-07,Main Building,955
-2026-05-07,Gym,263.7
-2026-05-07,Science Wing,436.1
-2026-05-08,Main Building,835.5
-2026-05-08,Gym,263.6
-2026-05-08,Science Wing,488.9
-2026-05-09,Main Building,980
-2026-05-09,Gym,298.4
-2026-05-09,Science Wing,459.1
-2026-05-12,Main Building,996.4
-2026-05-12,Gym,289.3
-2026-05-12,Science Wing,533
-2026-05-13,Main Building,978.7
-2026-05-13,Gym,260.3
-2026-05-13,Science Wing,472.4
-2026-05-14,Main Building,838.4
-2026-05-14,Gym,270.4
-2026-05-14,Science Wing,518.4
-2026-05-15,Main Building,885.9
-2026-05-15,Gym,294
+2026-04-14,Gym,256.1
+2026-04-14,Science Wing,489.5
+2026-04-15,Main Building,926.9
+2026-04-15,Gym,294.6
+2026-04-15,Science Wing,509.3
+2026-04-16,Main Building,933.3
+2026-04-16,Gym,311.2
+2026-04-16,Science Wing,447.3
+2026-04-17,Main Building,943.9
+2026-04-17,Gym,291.7
+2026-04-17,Science Wing,435.4
+2026-04-18,Main Building,836.2
+2026-04-18,Gym,252.4
+2026-04-18,Science Wing,474.5
+2026-04-21,Main Building,1001.4
+2026-04-21,Gym,249.2
+2026-04-21,Science Wing,460.3
+2026-04-22,Main Building,831.4
+2026-04-22,Gym,297.7
+2026-04-22,Science Wing,479.9
+2026-04-23,Main Building,842
+2026-04-23,Gym,275.3
+2026-04-23,Science Wing,489.3
+2026-04-24,Main Building,868.9
+2026-04-24,Gym,265.5
+2026-04-24,Science Wing,507.6
+2026-04-25,Main Building,949.3
+2026-04-25,Gym,289.2
+2026-04-25,Science Wing,457.3
+2026-04-28,Main Building,849.3
+2026-04-28,Gym,299.6
+2026-04-28,Science Wing,489.1
+2026-04-29,Main Building,811.5
+2026-04-29,Gym,262.5
+2026-04-29,Science Wing,530.4
+2026-04-30,Main Building,902.3
+2026-04-30,Gym,248.3
+2026-04-30,Science Wing,537.2
+2026-05-01,Main Building,972.9
+2026-05-01,Gym,289.5
+2026-05-01,Science Wing,451.2
+2026-05-02,Main Building,962.3
+2026-05-02,Gym,295.7
+2026-05-02,Science Wing,470
+2026-05-05,Main Building,882.9
+2026-05-05,Gym,259
+2026-05-05,Science Wing,456.2
+2026-05-06,Main Building,993.2
+2026-05-06,Gym,308.3
+2026-05-06,Science Wing,443.4
+2026-05-07,Main Building,933.1
+2026-05-07,Gym,267.8
+2026-05-07,Science Wing,458.9
+2026-05-08,Main Building,946.8
+2026-05-08,Gym,262.8
+2026-05-08,Science Wing,470.1
+2026-05-09,Main Building,844.6
+2026-05-09,Gym,299.9
+2026-05-09,Science Wing,429.3
+2026-05-12,Main Building,991.8
+2026-05-12,Gym,281.3
+2026-05-12,Science Wing,504.8
+2026-05-13,Main Building,951.8
+2026-05-13,Gym,248.1
+2026-05-13,Science Wing,466.7
+2026-05-14,Main Building,834.7
+2026-05-14,Gym,265.8
+2026-05-14,Science Wing,456.3
+2026-05-15,Main Building,859.7
+2026-05-15,Gym,251.9
 2026-05-15,Science Wing,1250
-2026-05-16,Main Building,922.1
-2026-05-16,Gym,255.2
-2026-05-16,Science Wing,451.6
-2026-05-19,Main Building,978.4
-2026-05-19,Gym,272.6
-2026-05-19,Science Wing,468.6
-2026-05-20,Main Building,941.7
-2026-05-20,Gym,306.5
-2026-05-20,Science Wing,525.6
-2026-05-21,Main Building,843.6
-2026-05-21,Gym,295.9
-2026-05-21,Science Wing,428.5
-2026-05-22,Main Building,977.8
-2026-05-22,Gym,266
-2026-05-22,Science Wing,448.5
-2026-05-23,Main Building,837.9
-2026-05-23,Gym,300.2
-2026-05-23,Science Wing,485.8
-2026-05-26,Main Building,879.5
-2026-05-26,Gym,270.8
-2026-05-26,Science Wing,444.2
-2026-05-27,Main Building,932.7
-2026-05-27,Gym,269.1
-2026-05-27,Science Wing,429.7
-2026-05-28,Main Building,893.8
-2026-05-28,Gym,249.8
-2026-05-28,Science Wing,498.1
-2026-05-29,Main Building,887.9
-2026-05-29,Gym,310
-2026-05-29,Science Wing,502.8
-2026-05-30,Main Building,889.5
-2026-05-30,Gym,302.7
-2026-05-30,Science Wing,482.7
-2026-06-02,Main Building,883.6
-2026-06-02,Gym,267.2
-2026-06-02,Science Wing,492.8
-2026-06-03,Main Building,796.1
-2026-06-03,Gym,253.6
-2026-06-03,Science Wing,463.8
-2026-06-04,Main Building,923.9
-2026-06-04,Gym,272.9
-2026-06-04,Science Wing,481
-2026-06-05,Main Building,835.3
-2026-06-05,Gym,297
-2026-06-05,Science Wing,455.8
-2026-06-06,Main Building,934.7
-2026-06-06,Gym,253.5
-2026-06-06,Science Wing,494.6
-2026-06-09,Main Building,940.1
-2026-06-09,Gym,254.4
-2026-06-09,Science Wing,437.9
+2026-05-16,Main Building,920.5
+2026-05-16,Gym,257.9
+2026-05-16,Science Wing,432.6
+2026-05-19,Main Building,915.1
+2026-05-19,Gym,251.9
+2026-05-19,Science Wing,465.3
+2026-05-20,Main Building,804.3
+2026-05-20,Gym,306.2
+2026-05-20,Science Wing,447.7
+2026-05-21,Main Building,792.1
+2026-05-21,Gym,252.5
+2026-05-21,Science Wing,492.2
+2026-05-22,Main Building,882.6
+2026-05-22,Gym,313.4
+2026-05-22,Science Wing,533.7
+2026-05-23,Main Building,931.6
+2026-05-23,Gym,264.9
+2026-05-23,Science Wing,457.8
+2026-05-26,Main Building,873.2
+2026-05-26,Gym,281.6
+2026-05-26,Science Wing,501.3
+2026-05-27,Main Building,978.8
+2026-05-27,Gym,307.3
+2026-05-27,Science Wing,459
+2026-05-28,Main Building,858.7
+2026-05-28,Gym,253.1
+2026-05-28,Science Wing,493
+2026-05-29,Main Building,854.6
+2026-05-29,Gym,262.9
+2026-05-29,Science Wing,528
+2026-05-30,Main Building,952.1
+2026-05-30,Gym,250.8
+2026-05-30,Science Wing,445.4
+2026-06-02,Main Building,886.4
+2026-06-02,Gym,303.7
+2026-06-02,Science Wing,428.8
+2026-06-03,Main Building,915
+2026-06-03,Gym,308.9
+2026-06-03,Science Wing,527.9
+2026-06-04,Main Building,899.8
+2026-06-04,Gym,286
+2026-06-04,Science Wing,479.4
+2026-06-05,Main Building,887.8
+2026-06-05,Gym,249.5
+2026-06-05,Science Wing,518.4
+2026-06-06,Main Building,914.6
+2026-06-06,Gym,313.3
+2026-06-06,Science Wing,513.5
+2026-06-09,Main Building,826.5
+2026-06-09,Gym,285.9
+2026-06-09,Science Wing,505.9
 2026-06-10,Main Building,1700
-2026-06-10,Gym,287
-2026-06-10,Science Wing,503.3
-2026-06-11,Main Building,948.1
-2026-06-11,Gym,297.3
-2026-06-11,Science Wing,449.4
-2026-06-12,Main Building,851.9
-2026-06-12,Gym,302.1
-2026-06-12,Science Wing,487.1
-2026-06-13,Main Building,894.5
-2026-06-13,Gym,294.5
-2026-06-13,Science Wing,499.3
-2026-06-16,Main Building,941
-2026-06-16,Gym,249.2
-2026-06-16,Science Wing,447.9
-2026-06-17,Main Building,967.9
-2026-06-17,Gym,280.2
-2026-06-17,Science Wing,535.7
-2026-06-18,Main Building,828
-2026-06-18,Gym,270.1
-2026-06-18,Science Wing,481.5
+2026-06-10,Gym,277.6
+2026-06-10,Science Wing,505.9
+2026-06-11,Main Building,1006.5
+2026-06-11,Gym,305.4
+2026-06-11,Science Wing,443.5
+2026-06-12,Main Building,970.3
+2026-06-12,Gym,262.3
+2026-06-12,Science Wing,425.5
+2026-06-13,Main Building,875.1
+2026-06-13,Gym,247.4
+2026-06-13,Science Wing,482.5
+2026-06-16,Main Building,928.8
+2026-06-16,Gym,274.9
+2026-06-16,Science Wing,502.9
+2026-06-17,Main Building,890
+2026-06-17,Gym,267.9
+2026-06-17,Science Wing,484.5
+2026-06-18,Main Building,884.8
+2026-06-18,Gym,250.8
+2026-06-18,Science Wing,457.2
