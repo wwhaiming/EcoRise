@@ -159,7 +159,7 @@ COACH_ENABLED=true npm run demo
   probes, and the whole thing is re-runnable, so we can show the failures too, not only the wins."*
 - **ON-SCREEN TEXT:** `"The AI is allowed to say nothing."` · `measured on a re-runnable eval set`
 
-### Scene 6 · 3:30 – 4:00 · How it works (the pipeline) — *first to cut for a 3:30 edit*
+### Scene 6 · 3:30 – 4:00 · How it works (the pipeline), *first to cut for a 3:30 edit*
 - **SCREEN:** Frame the **AI pipeline · tools run** panel so most steps are visible at once (this is
   the same evidence panel from Scene 7; capture it there and place the clip here). Click each
   pipeline row in order, pausing after each, without scrolling.
