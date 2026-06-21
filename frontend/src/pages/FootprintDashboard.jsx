@@ -153,20 +153,10 @@ function PredictionCard({ prediction, model, onFlag }) {
 }
 
 // ── Recommendation card ────────────────────────────────────────────────────────
-const ROLE_OPTIONS = [
-  'Sustainability Coordinator',
-  'Cafeteria Manager',
-  'Facilities Director',
-  'Assistant Principal',
-];
 const CAT_COLOR = { cafeteria: '#8a6d2a', energy: 'var(--coral-d)', water: '#3a8fc5', transportation: 'var(--green-d)' };
 const CAT_ICON  = { cafeteria: 'leaf', energy: 'flame', water: 'leaf', transportation: 'home' };
 
-function RecommendationCard({ rec, onApprove, onUnapprove, onAssign, onFlag }) {
-  const [assignMode, setAssignMode] = useState(false);
-  const [assignedTo, setAssignedTo] = useState(rec.assigned_to || '');
-  const [note, setNote] = useState(rec.assigned_note || '');
-  const [saving, setSaving] = useState(false);
+function RecommendationCard({ rec, onApprove, onUnapprove, onFlag }) {
   const [approving, setApproving] = useState(false);
   const [unapproving, setUnapproving] = useState(false);
   const color = CAT_COLOR[rec.category] || 'var(--green)';
@@ -180,12 +170,6 @@ function RecommendationCard({ rec, onApprove, onUnapprove, onAssign, onFlag }) {
   const doUnapprove = async () => {
     setUnapproving(true);
     try { await onUnapprove(rec.id); } finally { setUnapproving(false); }
-  };
-
-  const doAssign = async () => {
-    if (!assignedTo) return;
-    setSaving(true);
-    try { await onAssign(rec.id, { assignedTo, note }); setAssignMode(false); } finally { setSaving(false); }
   };
 
   return (
@@ -234,40 +218,6 @@ function RecommendationCard({ rec, onApprove, onUnapprove, onAssign, onFlag }) {
         </div>
       )}
 
-      {/* Assign section */}
-      {rec.assigned_to && !assignMode && (
-        <div style={{ marginTop: 8, fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)' }}>
-          Assigned to: <strong style={{ color: 'var(--text)' }}>{rec.assigned_to}</strong>
-          {rec.assigned_note && <span style={{ marginLeft: 6 }}>— "{rec.assigned_note}"</span>}
-        </div>
-      )}
-
-      {assignMode && (
-        <div style={{ marginTop: 10, display: 'grid', gap: 7 }}>
-          <select
-            value={assignedTo}
-            onChange={e => setAssignedTo(e.target.value)}
-            style={{ fontSize: 13, padding: '8px 10px', borderRadius: 9, border: '1px solid var(--navy-500)', background: 'var(--glass)', fontFamily: 'var(--body)' }}
-          >
-            <option value="">Select staff role…</option>
-            {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            placeholder="Optional note for the assignee…"
-            rows={2}
-            style={{ fontSize: 12, padding: '7px 10px', borderRadius: 9, border: '1px solid var(--navy-500)', background: 'var(--glass)', resize: 'none', fontFamily: 'var(--body)' }}
-          />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary btn-sm" disabled={saving || !assignedTo} onClick={doAssign} style={{ flex: 1 }}>
-              {saving ? 'Saving…' : 'Assign'}
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => setAssignMode(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-
       {/* Action buttons */}
       <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {!isApproved ? (
@@ -283,11 +233,6 @@ function RecommendationCard({ rec, onApprove, onUnapprove, onAssign, onFlag }) {
               {unapproving ? 'Deactivating…' : 'Deactivate'}
             </button>
           </>
-        )}
-        {!assignMode && (
-          <button className="btn btn-secondary btn-sm" onClick={() => setAssignMode(v => !v)}>
-            <Icon name="user" size={13} /> Assign
-          </button>
         )}
       </div>
 
@@ -418,19 +363,6 @@ export default function FootprintDashboard({ ctx }) {
       showToast?.('Goal deactivated — removed from the leaderboard feed');
     } catch (e) {
       showToast?.(e.message || 'Could not deactivate');
-    }
-  };
-
-  const handleAssign = async (id, body) => {
-    try {
-      const result = await api.footprintAssign(id, body);
-      setData(prev => ({
-        ...prev,
-        recommendations: prev.recommendations.map(r => r.id === id ? result.recommendation : r),
-      }));
-      showToast?.(`Assigned to ${body.assignedTo}`);
-    } catch (e) {
-      showToast?.(e.message || 'Could not assign');
     }
   };
 
@@ -571,7 +503,7 @@ export default function FootprintDashboard({ ctx }) {
         ) : (
           <div style={{ display: 'grid', gap: 12 }}>
             {recommendations.map((r) => (
-              <RecommendationCard key={r.id} rec={r} onApprove={handleApprove} onUnapprove={handleUnapprove} onAssign={handleAssign} onFlag={() => showToast?.('Flag recorded')} />
+              <RecommendationCard key={r.id} rec={r} onApprove={handleApprove} onUnapprove={handleUnapprove} onFlag={() => showToast?.('Flag recorded')} />
             ))}
           </div>
         )}
