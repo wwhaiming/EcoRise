@@ -1,14 +1,21 @@
 # EcoRise: Demo Video Script (voiceover + screen recording, 5:00)
 
-**Format:** a *virtual* demo. Record silent screen clips per scene with **Screen Studio** (macOS),
-record the voiceover (VO) separately, then assemble in your editor. Timestamps are pacing targets,
-not hard cuts. **Target runtime:** **~5:00** (8 scenes). To cut to ~3:30, drop Scene 6 and thin
-Scene 7, but never cut Scene 4 or Scene 5. **Aspect:** mobile device frame, 1080×1920 portrait.
+**Built for the ecology / environmental-science classroom.** EcoRise is a tool an
+environmental-science class actually uses: students see their own school's real carbon
+footprint, learn from a bank of a thousand real research papers, and turn that into
+cited, teacher-approved action. This is the audience the whole script speaks to.
 
-> **The one line the video must land:** *A student biking to school saves about 1.2 kg of CO₂,
-> while Garfield High emits roughly 186 tonnes a month, the equivalent of over 150,000 bike rides.
-> EcoRise shows students that gap, ranks the institutional fixes that actually close it, and only
-> lets the AI speak when it can be grounded and a human approves it.*
+**Format:** a *virtual* demo. Record silent screen clips per scene with **Screen Studio**
+(macOS), record the voiceover (VO) separately, then assemble in your editor. Timestamps
+are pacing targets, not hard cuts. **Target runtime:** **~5:00** (8 scenes). To cut to
+~3:30, drop Scene 7 and thin Scene 4, but never cut Scene 5 or Scene 6. **Aspect:** mobile
+device frame, 1080×1920 portrait.
+
+> **The one line the video must land:** *A student biking to school saves about 1.2 kg of
+> CO₂, while their school emits roughly 186 tonnes a month, the equivalent of over 150,000
+> bike rides. EcoRise shows an environmental-science class that gap, grounds it in a thousand
+> real research papers, and only lets the AI speak when it can cite its source and a human
+> approves the action.*
 
 ---
 
@@ -53,47 +60,44 @@ capture around that instead of fighting it:
 
 Real energy is about **82 t** (electricity plus gas), from the Seattle Public Schools dashboard,
 Garfield HS CY2023 (143,083 kWh/mo; 4,766 therms/mo; enrollment 1,507, NCES CCD 530771001171).
-1.2 kg is roughly one 3-mile car trip avoided (EPA 0.40 kg/mi). Grounding threshold is **0.75**,
-example score around 0.82. The footprint headline reads in tonnes; category bars read in kg/mo. The
-eval report is a small **illustrative** set (a handful of answerable, unanswerable, and injection
-probes), not a large benchmark; say so on camera.
+1.2 kg is roughly one 3-mile car trip avoided (EPA 0.40 kg/mi). The **research paper bank holds
+1,000 real research papers** (OpenAlex). Grounding threshold is **0.75**, example score ~0.82.
+The footprint headline reads in tonnes; category bars read in kg/mo.
 
 ---
 
 ## Pre-record capture setup (do once, before filming)
 
 ```bash
-# Terminal 1: seed the coach corpus FIRST
-cd backend && COACH_ENABLED=true npm run seed:coach
+# Terminal 1: seed BOTH the coach corpus and the 1,000-paper research bank FIRST
+cd backend && COACH_ENABLED=true npm run seed:coach && npm run seed:research
 # Terminal 2: seed the board + login, run the app
 COACH_ENABLED=true npm run demo
 ```
 
 - Log in as `demo@ecorise.app` (password printed by the seed). Board: **Garfield High School**.
 - The footprint baseline is pre-seeded with real Seattle energy.
-- Open **Learning → AI Insights** and confirm the **ranked action plan** shows, per action, a kg/mo
-  impact, a **cost band · effort** line, and a **"Verify by"** metric, with an **Approve** control.
-  This panel runs on the synthetic utility CSVs (sample provided) and labels itself a synthetic
-  sandbox, not a pilot. If it is empty, re-run `npm run seed:footprint`.
-- Confirm the **Next step** card shows a real grounded recommendation, not the DEV "Demo fixture".
-- Pick your bike or LED photo into the file dialog *before* the Scene 7 take, so the file picker
-  never appears in the capture.
+- **Confirm the Research tab is full:** Browse should list real papers and refresh on each click;
+  Ask should return a cited answer. (If empty, re-run `npm run seed:research`.)
+- Open **Learning -> AI Insights** and confirm the ranked action plan shows, per action, a kg/mo
+  impact, a cost band + effort line, and a "Verify by" metric, with an Approve control.
+- Pick your bike or LED photo into the file dialog *before* the Scene 7 take.
 
 ---
 
 ## Shot list (8 scenes, ~5:00)
 
-### Scene 1 · 0:00 – 0:30 · Cold open: the contradiction
+### Scene 1 · 0:00 – 0:30 · Cold open: the contradiction every eco class hits
 - **SCREEN:** Start already on the School Footprint card. Click once directly on the `≈186 t CO₂e / mo`
   headline and hold 3 seconds while the zoom settles. Then click the top (coral) cafeteria food bar
   and hold 2 seconds. Do not scroll during the opening sentence.
-- **VO:** *"Most school sustainability apps focus on what students do, like the bike rides and the
-  recycled bottles. But the real story is a contradiction. When a student bikes to school instead of
-  taking a short car ride, they save a little over a kilogram of CO₂. Garfield High, meanwhile,
-  emits roughly 186 tonnes every single month, which works out to more than a hundred and fifty
-  thousand of those bike rides. Direction B asks us to find the school's hidden footprint, and this
-  is exactly what that looks like."*
-- **ON-SCREEN TEXT:** `1.2 kg  vs  186,000 kg / month`
+- **VO:** *"Every environmental-science class teaches students to shrink their footprint, with the
+  bike rides and the recycled bottles. But here is the contradiction those classes run into. When a
+  student bikes to school instead of taking a short car ride, they save a little over a kilogram of
+  CO₂. Their school, meanwhile, emits about 186 tonnes every single month, which works out to more
+  than a hundred and fifty thousand of those bike rides. EcoRise is built for that classroom, to
+  surface the school's hidden footprint and show students where their effort actually counts."*
+- **ON-SCREEN TEXT:** `1.2 kg  vs  186,000 kg / month`   ·   `built for the eco / env-science classroom`
 
 ### Scene 2 · 0:30 – 1:10 · Honest data, and a footprint that improves
 - **SCREEN:** Click the Electricity row, pause. Click the Heating (gas) row, pause. Click the **LOW**
@@ -101,14 +105,13 @@ COACH_ENABLED=true npm run demo
   per day, commute share, and water** (energy is already pre-seeded). **Save**, and hold on the
   overall confidence chip as it climbs from **LOW to MEDIUM**. *(The model needs at least four of six
   categories provided to reach MEDIUM, so enter all three, not just meals.)*
-- **VO:** *"We are honest about where these numbers come from. The electricity and gas figures, which
-  add up to about 82 tonnes, are real, pulled straight from Seattle Public Schools' public utility
+- **VO:** *"A class can trust this because it is honest about its data. The electricity and gas
+  figures, about 82 tonnes, are real, pulled straight from Seattle Public Schools' public utility
   dashboard. The other categories are national-average estimates from the EPA, and the app says so:
-  overall confidence reads low on purpose. But it is not stuck there. Now we add real local inputs
-  for meals, commute share, and water, on top of the measured electricity and gas. That moves four of
-  six categories from defaults to school-provided data, so the confidence moves from low to medium.
-  The footprint gets more trustworthy the moment the school feeds it real numbers, and it always
-  tells you which one to verify next."*
+  overall confidence reads low on purpose. But it is not stuck there. When the class adds real local
+  numbers for meals, commuting, and water, four of six categories move from defaults to school data,
+  and the confidence climbs from low to medium. It is a live lesson in measurement and uncertainty,
+  not a black box."*
 - **ON-SCREEN TEXT:** `Energy = measured public data` · `add real inputs → confidence LOW → MEDIUM`
 
 ### Scene 3 · 1:10 – 1:45 · The leverage ratio (the core idea)
@@ -116,69 +119,66 @@ COACH_ENABLED=true npm run demo
   hold through the first sentence. End centered on that computed comparison.
 - **VO:** *"This next idea is what the whole product is built around, and we call it the leverage
   ratio. Instead of asking students to guess what matters, EcoRise weighs one student's action
-  against the school's institutional emissions and computes the gap between them. Small actions still
-  matter, but the app shows students when their effort is best aimed at changing the system around
-  them, because the largest lever in a school is almost never individual. It is institutional. So the
-  obvious question is, what should the school actually do."*
+  against the school's institutional emissions and computes the gap. Small actions still matter, but
+  the class can see exactly when student effort is best aimed at changing the system around them,
+  because the largest lever in a school is almost never individual. It is institutional. So the
+  obvious question for the class becomes, what should the school actually do."*
 - **ON-SCREEN TEXT:** `Leverage: one student action  vs  the school's biggest line`
 
-### Scene 4 · 1:45 – 2:45 · From insight to decision (the decision engine + governance)
+### Scene 4 · 1:45 – 2:35 · From insight to decision (the decision engine + governance)
 - **SCREEN:** Go to the **Learning** tab and open the **AI Insights** action plan. On the top ranked
   action, click `~X kg/mo`, pause. Click its **cost band · effort** line, pause. Click **Verify by:
   <metric>**, pause. Click the **status chips** (proposed → approved → verified), pause. Click
   **Approve** on one action, then on the now-approved action click into the **record measured
-  before/after** row so the verification step is visible. (Optional second clip: the coach **Next
-  step** card, where the `?` reveals the grounding score and citation.)
+  before/after** row so the verification step is visible.
 - **VO:** *"This is where the leverage idea becomes a decision rather than a slogan. EcoRise ranks
   concrete institutional actions by how much carbon each one avoids per month, and for every action
-  it shows the cost band, the effort, the staff role that owns it, and the exact metric you would
-  check to confirm it worked. Once a fix is approved, staff can record the real before and after, so
-  the system tracks measured outcomes, not just predictions. And the wording is AI-drafted but not
-  AI-trusted: every recommendation is grounded against cited sources before it appears. To put it
-  plainly, the AI retrieves evidence and drafts language. It does not compute the emissions, it does
-  not award the points, it does not approve the action, and it does not publish anything. Each action
-  stays a proposal until a named staff member signs off."*
-- **ON-SCREEN TEXT:** `ranked by CO₂e/mo · cost · effort · verify-by · owner` · `grounded · human-approved · measured`
+  it shows the cost band, the effort, the staff role that owns it, and the exact metric the class
+  would check to confirm it worked. Once a fix is approved, staff record the real before and after,
+  so students see measured outcomes, not just predictions. And the wording is AI-drafted but not
+  AI-trusted. To put it plainly, the AI retrieves evidence and drafts language. It does not compute
+  the emissions, award the points, approve the action, or publish anything. Each action stays a
+  proposal until a named staff member signs off."*
+- **ON-SCREEN TEXT:** `ranked by CO₂e/mo · cost · effort · verify-by · owner` · `human-approved · measured`
 
-### Scene 5 · 2:45 – 3:30 · The proof: the AI says nothing (the money shot)
-- **SCREEN:** Be on the Research tab before recording. Click the **"Ask a question…"** box, type
-  **`Who won the 2022 World Cup?`**, and submit. When **"No grounded answer found in the corpus."**
-  appears, **do nothing for 4 full seconds.** Then, for the harder case, ask a plausible but
-  unsupported in-domain question such as **`What exact percent will meatless Mondays cut Garfield's emissions?`**
-  and show it refuse or hedge to cited sources rather than invent a number. *(Rehearse this second
-  prompt beforehand: if it ever answers instead of refusing, drop it and keep only the off-domain
-  one.)* Then click-zoom the eval report card: faithfulness, citation validity, refusal rate,
-  hallucination rate.
-- **VO:** *"This is the screen that matters most to me. When you ask the coach something outside its
-  evidence, it does not improvise an answer. It simply refuses, because the AI is allowed to say
-  nothing. That same gate, the one that just turned this question away, is what lets a recommendation
-  through only when it is properly grounded. And we do not just assert that it works, we measure it,
-  and we are honest about the scale. This is a small, illustrative eval set, not a giant benchmark.
-  The first question was the easy case, but you just saw a harder one too: a plausible, school-specific
-  question that it still refuses to answer with a made-up number. The set also includes prompt-injection
-  probes, and the whole thing is re-runnable, so we can show the failures too, not only the wins."*
+### Scene 5 · 2:35 – 3:25 · The research paper bank (the class's AI-powered library)
+- **SCREEN:** Open the **Research** tab. Click **Browse** and hold on the list of papers; click Browse
+  again so a fresh set loads. Click the **Ask a question…** box and ask an in-domain question such as
+  **`Does biking instead of driving meaningfully cut emissions?`**; hold on the cited answer. Then on
+  one paper click **Summarize** (hold on the plain-language key points), and **Visual** (hold on the
+  infographic the AI extracts).
+- **VO:** *"And the class is not learning in a vacuum. This is a research library of a thousand real
+  papers built right into the app. Students can browse it, or ask a question and get an answer drawn
+  only from those papers, always shown with its citation. They can have the AI summarize a dense
+  study into plain-language key points, or turn it into a diagram of cause and effect. For an
+  environmental-science class, that is a primary-source research bank with an AI tutor on top, so the
+  footprint they are looking at is backed by the actual literature."*
+- **ON-SCREEN TEXT:** `1,000 real research papers` · `ask · summarize · visualize` · `every answer cited`
+
+### Scene 6 · 3:25 – 4:00 · The proof: the AI says nothing (responsible AI for the classroom)
+- **SCREEN:** Still on the Research tab, click the **Ask a question…** box and ask a question outside
+  the corpus: **`Who won the 2022 World Cup?`**, submit, and when **"No grounded answer found in the
+  corpus."** appears, **do nothing for 4 full seconds.** *(Optional harder probe, rehearse first: ask
+  `What exact percent will meatless Mondays cut our school's emissions?` and show it refuse rather than
+  invent a number; if it ever answers, drop it.)* Then click-zoom the eval report card: faithfulness,
+  citation validity, refusal rate, hallucination rate.
+- **VO:** *"Here is what makes it safe to put in front of a class. Ask it something outside its
+  evidence and it does not improvise an answer. It refuses, because the AI is allowed to say nothing.
+  The same gate that just turned this question away is what keeps every grounded answer honest. And we
+  measure it. This is a small, illustrative eval set, not a giant benchmark, but it reports
+  faithfulness, citation validity, refusal rate, and hallucination rate, and the whole thing is
+  re-runnable, so a teacher can see the failures too, not just the wins."*
 - **ON-SCREEN TEXT:** `"The AI is allowed to say nothing."` · `measured on a re-runnable eval set`
-
-### Scene 6 · 3:30 – 4:00 · How it works (the pipeline), *first to cut for a 3:30 edit*
-- **SCREEN:** Frame the **AI pipeline · tools run** panel so most steps are visible at once (this is
-  the same evidence panel from Scene 7; capture it there and place the clip here). Click each
-  pipeline row in order, pausing after each, without scrolling.
-- **VO:** *"Underneath all of this is a pipeline rather than a chatbot. A deterministic engine reads
-  the school's data, flags unusual readings, forecasts the month ahead, and calculates every carbon
-  figure from a cited factor. Only then does retrieval pull supporting research, the model drafts a
-  recommendation, and a faithfulness check scores that draft against its sources. Pass, and a human
-  approves it. Fail, and it is quietly withheld. Five steps the model never gets to skip."*
-- **ON-SCREEN TEXT:** `deterministic math → retrieval → draft → faithfulness gate → human approval`
 
 ### Scene 7 · 4:00 – 4:35 · The student side closes the loop
 - **SCREEN:** Click **Log action**, pause. Click the upload control (photo pre-selected). After it
   submits, click-zoom two things only: the **AI-detected** label with the carbon math, and the
   **points awarded**. Then click **Quests** and click the top quest tied to the biggest emitter.
-- **VO:** *"Students still have a real role, and it has to be just as honest as everything else. When
+- **VO:** *"Students still take action, and it has to be just as honest as everything else. When
   someone logs an action, a vision model identifies the photo, but the kilograms come from the same
   cited factor, and the points are scored on the server. The AI can describe an action, but it can
-  never award itself a single point. And the quests students see are ranked by the school's biggest
-  emitter, so the footprint decides what we ask students to do, rather than the other way around."*
+  never award itself a single point. And the quests the class sees are ranked by the school's biggest
+  emitter, so the footprint decides what students are asked to do, rather than the other way around."*
 - **ON-SCREEN TEXT:** `vision detects · math is deterministic · points scored server-side`
 
 ### Scene 8 · 4:35 – 5:00 · Impact, scale, and the close
@@ -186,13 +186,13 @@ COACH_ENABLED=true npm run demo
   navigation click into the Privacy center, click its student-data headline, pause. Return to the
   Footprint card and click the `≈186 t CO₂e / mo` headline again for the final line. End with the
   number centered, not mid-transition.
-- **VO:** *"In the end, every group gets something they can actually rely on. Teachers get an
-  auditable, cited baseline. Students get quests ranked by real impact instead of engagement.
-  Administrators get a ranked action plan, an approval gate, an evaluation harness, and a privacy
-  center built around student data. It works for one school today, and a district is simply the same
-  pipeline repeated. One point two kilograms against 186 tonnes. EcoRise made the school see that
-  difference, and made the AI earn the right to recommend the fix."*
-- **ON-SCREEN TEXT:** `EcoRise: see the hidden footprint. Act on the real lever.`
+- **VO:** *"For an environmental-science class, EcoRise pulls it all together. Students get a real
+  footprint and a thousand-paper research bank. Teachers get an auditable, cited baseline and an
+  approval gate. And it is built around student-data privacy from the start. It works for one
+  classroom today, and a district is simply the same pipeline repeated. One point two kilograms
+  against 186 tonnes. EcoRise makes the class see that difference, and makes the AI cite its sources
+  before it ever recommends a fix."*
+- **ON-SCREEN TEXT:** `EcoRise: the hidden footprint, grounded in real research, for the eco classroom.`
 
 ---
 
@@ -204,7 +204,8 @@ COACH_ENABLED=true npm run demo
   edit holds the screen on them.
 - Record in a soft room. A closet or a space under a blanket kills echo. One clean take per scene is
   easier to fix than a single long take.
-- Keep your energy highest on Scene 1, Scene 4, and Scene 5, because those three carry the video.
+- Keep your energy highest on Scene 1, Scene 5, and Scene 6, because the hook, the research bank, and
+  the refusal are what carry the video for this audience.
 
 ## Edit / assembly notes
 
@@ -214,9 +215,9 @@ COACH_ENABLED=true npm run demo
   judges often scrub silently before turning the sound on. Let Screen Studio's zoom carry the rest.
 - Run light, neutral music at about 15 to 20 percent under the VO, and duck it during the two big
   numbers and the refusal line.
-- Export at 1080×1920 portrait, or 1080p landscape if the portal prefers it, and stay under the USAII
-  length cap.
-- For a tighter 3:30 cut, drop Scene 6 first, then thin Scene 7. Never cut Scene 4 or Scene 5.
+- Export at 1080×1920 portrait, or 1080p landscape if the portal prefers it, and stay under the length cap.
+- For a tighter 3:30 cut, drop Scene 7 first, then thin Scene 4. Keep Scene 5 (research bank) and
+  Scene 6 (refusal) since they define the product for this audience.
 - Upload it unlisted (YouTube or Loom) and paste the link into the README and the submission form.
 
 ## Honesty guardrails for the VO (do not overclaim)
@@ -225,12 +226,9 @@ COACH_ENABLED=true npm run demo
   "real." Cafeteria food is the biggest line, yet it is an estimate, so say "largest line," not
   "largest measured." When you raise confidence in Scene 2, say a category went from estimate to a
   real input, not that the whole footprint is now verified.
+- The research bank is 1,000 real papers; the Ask feature answers only from them and always shows the
+  citation. Do not claim it covers everything, and let it refuse off-corpus questions on camera.
 - The eval report is a small illustrative set, not a benchmark. Frame the metrics as "measured on our
-  test cases, and re-runnable," and offer the failures, not just the passing numbers. Do not headline
-  any single percentage as proof of perfect safety.
-- The AI Insights action plan is a labeled **synthetic sandbox** that imports sample utility CSVs to
-  demonstrate the ranked-action and measured-verification pathway. Present it as the pathway, not as
-  Garfield's live operating plan, and let its on-screen "synthetic sandbox" label stay visible.
+  test cases, and re-runnable," and offer the failures, not just the passing numbers.
 - The recommendation impact range and projected figures are estimates with a confidence range, plus a
   named owner. Present them as decision support for staff, not guarantees.
-- The corpus is a curated evidence set, not the open internet, and the on-screen citation backs it.
