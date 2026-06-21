@@ -308,8 +308,12 @@ router.get('/papers', authMiddleware, (req, res) => {
   if (topic) { where.push('topic_tags LIKE ?'); params.push(`%"${topic}"%`); }
   const sql = `FROM eco_sources WHERE ${where.join(' AND ')}`;
   const total = db.prepare(`SELECT COUNT(*) c ${sql}`).get(...params).c;
+  // random=1 re-samples the corpus on each Browse so repeated clicks surface new
+  // papers; default stays deterministic (newest first) for stable search/topic results.
+  const random = req.query.random === '1' || req.query.random === 'true';
+  const order = random ? 'ORDER BY RANDOM()' : 'ORDER BY pub_year DESC, title ASC';
   const rows = db.prepare(`SELECT id, title, authors, institution, url, pub_year, topic_tags
-    ${sql} ORDER BY pub_year DESC, title ASC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+    ${sql} ${order} LIMIT ? OFFSET ?`).all(...params, limit, offset);
   res.json({
     total, limit, offset,
     papers: rows.map(r => ({ id: r.id, title: r.title, authors: r.authors, year: r.pub_year,

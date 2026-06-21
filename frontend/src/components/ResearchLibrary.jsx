@@ -154,7 +154,8 @@ export default function ResearchLibrary({ showToast }) {
   const loadPapers = useCallback(async (nextTopic = topic, nextSearch = search) => {
     setLoadingPapers(true);
     try {
-      const r = await api.coachPapers({ q: nextSearch, topic: nextTopic, limit: 12 });
+      // random sample each call so clicking Browse again surfaces a fresh set of papers
+      const r = await api.coachPapers({ q: nextSearch, topic: nextTopic, limit: 12, random: true });
       setPapers(r.papers); setTotal(r.total);
     } catch (e) { showToast?.(e.message || 'Could not load papers'); }
     finally { setLoadingPapers(false); }

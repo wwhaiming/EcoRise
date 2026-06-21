@@ -78,8 +78,8 @@ export const api = {
 
   // Research library (1000-paper corpus)
   coachAsk: (q) => apiFetch(`/api/coach/ask?q=${encodeURIComponent(q)}`),
-  coachPapers: ({ q = '', topic = '', limit = 20, offset = 0 } = {}) =>
-    apiFetch(`/api/coach/papers?q=${encodeURIComponent(q)}&topic=${encodeURIComponent(topic)}&limit=${limit}&offset=${offset}`),
+  coachPapers: ({ q = '', topic = '', limit = 20, offset = 0, random = false } = {}) =>
+    apiFetch(`/api/coach/papers?q=${encodeURIComponent(q)}&topic=${encodeURIComponent(topic)}&limit=${limit}&offset=${offset}${random ? '&random=1' : ''}`),
   coachPaperSummary: (id) => apiFetch(`/api/coach/papers/${id}/summary`),
   coachPaperVisual: (id) => apiFetch(`/api/coach/papers/${id}/visual`),
   coachEvalReport: () => apiFetch('/api/coach/eval-report'),
