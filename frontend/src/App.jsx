@@ -332,6 +332,7 @@ export default function App() {
   const logout = async () => {
     try { await api.logout(); } catch { /* local logout still clears client state */ }
     localStorage.removeItem('ecorise_onboarded');
+    setModal(null);
     setUser(null);
     setAuthed(false);
     setScreen('onboarding');

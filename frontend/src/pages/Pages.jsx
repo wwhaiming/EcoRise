@@ -258,9 +258,11 @@ export function Leaderboard({ ctx, isCombined }) {
           <div className="eyebrow" style={{ color: 'var(--green)' }}>{leaderboard?.name || 'EcoRise'}</div>
           <div className="h1" style={{ fontSize: 27 }}>Leaderboard</div>
         </div>
-        <button className="btn btn-secondary btn-sm" aria-label="Board settings" onClick={() => ctx.go('organizer')} style={{ padding: 10 }}>
-          <Icon name="settings" size={20} />
-        </button>
+        {ctx.user?.id && ctx.leaderboard?.organizer_id === ctx.user.id && (
+          <button className="btn btn-secondary btn-sm" aria-label="Board settings" onClick={() => ctx.go('organizer')} style={{ padding: 10 }}>
+            <Icon name="settings" size={20} />
+          </button>
+        )}
       </div>
 
       {/* team impact: the board's total verified CO2e avoided — ties the leaderboard to the school's hidden footprint */}
@@ -502,6 +504,21 @@ export function Organizer({ ctx }) {
   const [tab, setTab] = useState('settings');
 
   const reports = (ctx.posts || []).filter(p => p.reported > 0);
+
+  const isOrganizer = ctx.user?.id && ctx.leaderboard?.organizer_id === ctx.user.id;
+  if (!isOrganizer) {
+    return (
+      <div className="screen-in" style={{ paddingBottom: 16 }}>
+        <div style={{ padding: '16px 18px 6px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button className="btn btn-secondary btn-sm" style={{ padding: 9 }} aria-label="Back" onClick={() => ctx.go('home')}><Icon name="chevL" size={20} /></button>
+          <div className="h1" style={{ fontSize: 24 }}>Manage board</div>
+        </div>
+        <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+          <div className="dim" style={{ fontWeight: 700, fontSize: 15 }}>Only the board organizer can manage settings.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="screen-in" style={{ paddingBottom: 16 }}>
