@@ -132,6 +132,27 @@ router.post('/recommendations/:id/approve', authMiddleware, (req, res) => {
   res.json({ ok: true, recommendation: updated });
 });
 
+// ── POST /api/footprint/recommendations/:id/unapprove ──
+// Reverse of approve: approved → proposed. Pulls the goal off the active
+// school leaderboard feed and clears the approval audit fields. Same gate as
+// approve — deactivating an institutional goal is as privileged as activating it.
+router.post('/recommendations/:id/unapprove', authMiddleware, (req, res) => {
+  const db = getDb();
+  if (!canManageRecommendations(db, req.userId)) {
+    return res.status(403).json({ error: 'Only a teacher/admin or board organizer can deactivate recommendations.' });
+  }
+  const rec = db.prepare('SELECT * FROM fp_recommendations WHERE id = ?').get(req.params.id);
+  if (!rec) return res.status(404).json({ error: 'Recommendation not found' });
+  if (rec.status !== 'approved') return res.json({ ok: true, alreadyProposed: true, recommendation: rec });
+
+  db.prepare(
+    'UPDATE fp_recommendations SET status = ?, approved_by = ?, approved_at = ? WHERE id = ?'
+  ).run('proposed', null, null, rec.id);
+
+  const updated = db.prepare('SELECT * FROM fp_recommendations WHERE id = ?').get(rec.id);
+  res.json({ ok: true, recommendation: updated });
+});
+
 // ── POST /api/footprint/recommendations/:id/assign ──
 // Assign a recommendation to a named staff role with an optional free-text note.
 router.post('/recommendations/:id/assign', authMiddleware, (req, res) => {

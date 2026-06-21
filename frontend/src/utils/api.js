@@ -102,6 +102,7 @@ export const api = {
   // School Footprint Insights — Direction B core (new dedicated route /api/footprint/*)
   footprintInsights: () => apiFetch('/api/footprint/insights'),
   footprintApprove: (id) => apiFetch(`/api/footprint/recommendations/${id}/approve`, { method: 'POST' }),
+  footprintUnapprove: (id) => apiFetch(`/api/footprint/recommendations/${id}/unapprove`, { method: 'POST' }),
   footprintAssign: (id, body) => apiFetch(`/api/footprint/recommendations/${id}/assign`, { method: 'POST', body: JSON.stringify(body) }),
   footprintFlag: (body) => apiFetch('/api/footprint/flag', { method: 'POST', body: JSON.stringify(body) }),
   footprintRefresh: () => apiFetch('/api/footprint/refresh', { method: 'POST' }),

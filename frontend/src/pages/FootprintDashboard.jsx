@@ -162,18 +162,24 @@ const ROLE_OPTIONS = [
 const CAT_COLOR = { cafeteria: '#8a6d2a', energy: 'var(--coral-d)', water: '#3a8fc5', transportation: 'var(--green-d)' };
 const CAT_ICON  = { cafeteria: 'leaf', energy: 'flame', water: 'leaf', transportation: 'home' };
 
-function RecommendationCard({ rec, onApprove, onAssign, onFlag }) {
+function RecommendationCard({ rec, onApprove, onUnapprove, onAssign, onFlag }) {
   const [assignMode, setAssignMode] = useState(false);
   const [assignedTo, setAssignedTo] = useState(rec.assigned_to || '');
   const [note, setNote] = useState(rec.assigned_note || '');
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [unapproving, setUnapproving] = useState(false);
   const color = CAT_COLOR[rec.category] || 'var(--green)';
   const isApproved = rec.status === 'approved';
 
   const doApprove = async () => {
     setApproving(true);
     try { await onApprove(rec.id); } finally { setApproving(false); }
+  };
+
+  const doUnapprove = async () => {
+    setUnapproving(true);
+    try { await onUnapprove(rec.id); } finally { setUnapproving(false); }
   };
 
   const doAssign = async () => {
@@ -269,9 +275,14 @@ function RecommendationCard({ rec, onApprove, onAssign, onFlag }) {
             {approving ? 'Approving…' : '✓ Approve — Make Active Goal'}
           </button>
         ) : (
-          <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: 'var(--green-d)', padding: '9px 15px', background: 'rgba(46,125,79,.08)', borderRadius: 9999, textAlign: 'center' }}>
-            Active — visible on school leaderboard feed
-          </div>
+          <>
+            <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: 'var(--green-d)', padding: '9px 15px', background: 'rgba(46,125,79,.08)', borderRadius: 9999, textAlign: 'center' }}>
+              Active — visible on school leaderboard feed
+            </div>
+            <button className="btn btn-secondary btn-sm" disabled={unapproving} onClick={doUnapprove} title="Revert to proposed and remove from the leaderboard feed">
+              {unapproving ? 'Deactivating…' : 'Deactivate'}
+            </button>
+          </>
         )}
         {!assignMode && (
           <button className="btn btn-secondary btn-sm" onClick={() => setAssignMode(v => !v)}>
@@ -394,6 +405,19 @@ export default function FootprintDashboard({ ctx }) {
       showToast?.('Recommendation approved — now an active school goal');
     } catch (e) {
       showToast?.(e.message || 'Could not approve');
+    }
+  };
+
+  const handleUnapprove = async (id) => {
+    try {
+      const result = await api.footprintUnapprove(id);
+      setData(prev => ({
+        ...prev,
+        recommendations: prev.recommendations.map(r => r.id === id ? result.recommendation : r),
+      }));
+      showToast?.('Goal deactivated — removed from the leaderboard feed');
+    } catch (e) {
+      showToast?.(e.message || 'Could not deactivate');
     }
   };
 
@@ -547,7 +571,7 @@ export default function FootprintDashboard({ ctx }) {
         ) : (
           <div style={{ display: 'grid', gap: 12 }}>
             {recommendations.map((r) => (
-              <RecommendationCard key={r.id} rec={r} onApprove={handleApprove} onAssign={handleAssign} onFlag={() => showToast?.('Flag recorded')} />
+              <RecommendationCard key={r.id} rec={r} onApprove={handleApprove} onUnapprove={handleUnapprove} onAssign={handleAssign} onFlag={() => showToast?.('Flag recorded')} />
             ))}
           </div>
         )}

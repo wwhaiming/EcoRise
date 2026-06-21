@@ -69,6 +69,32 @@ test('footprint approve: board organizer allowed, plain member blocked (403)', a
   assert.equal(ok.body.recommendation.status, 'approved');
 });
 
+test('footprint unapprove: approved -> proposed, organizer allowed, member blocked (403)', async () => {
+  const organizer = await signup('FpOrganizer3');
+  await makeBoard(organizer, 'Authz High 3');
+  const member = await signup('FpMember3');
+  const recId = seedRecommendation();
+
+  // Approve first so there is an active goal to deactivate.
+  const approved = await request(app)
+    .post(`/api/footprint/recommendations/${recId}/approve`)
+    .set(...auth(organizer.token)).send({});
+  assert.equal(approved.body.recommendation.status, 'approved');
+
+  const denied = await request(app)
+    .post(`/api/footprint/recommendations/${recId}/unapprove`)
+    .set(...auth(member.token)).send({});
+  assert.equal(denied.status, 403, 'member unapprove must be blocked: ' + JSON.stringify(denied.body));
+
+  const ok = await request(app)
+    .post(`/api/footprint/recommendations/${recId}/unapprove`)
+    .set(...auth(organizer.token)).send({});
+  assert.equal(ok.status, 200, 'organizer unapprove: ' + JSON.stringify(ok.body));
+  assert.equal(ok.body.recommendation.status, 'proposed');
+  assert.equal(ok.body.recommendation.approved_by, null, 'approved_by cleared');
+  assert.equal(ok.body.recommendation.approved_at, null, 'approved_at cleared');
+});
+
 test('footprint assign: board organizer allowed, plain member blocked (403)', async () => {
   const organizer = await signup('FpOrganizer2');
   await makeBoard(organizer, 'Authz High 2');
