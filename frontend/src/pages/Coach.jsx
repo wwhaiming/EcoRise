@@ -379,7 +379,7 @@ export default function Coach({ ctx, isCombined }) {
                   <span style={{
                     display: 'flex',
                     whiteSpace: 'nowrap',
-                    animation: 'ticker-scroll 12s linear infinite',
+                    animation: 'ticker-scroll 20s linear infinite',
                     gap: '3em',
                   }}>
                     {Array.from({ length: 6 }).map((_, i) => (
