@@ -147,7 +147,7 @@ export default function App() {
     if (didBootstrap.current) return;
     didBootstrap.current = true;
     let live = true;
-    api.me().then(async data => {
+    const enter = async data => {
       if (!live) return;
       setUser(data.user);
       setAuthed(true);
@@ -156,7 +156,17 @@ export default function App() {
       setPosts([]);
       await loadData();
       if (live) await consumePendingInvite();
-    }).catch(() => { /* not signed in — show onboarding */ });
+    };
+    api.me()
+      .then(enter)
+      .catch(() => {
+        // Hosted interactive demo: no session yet, so ask the server to sign us in as
+        // the seeded demo account, then load. Harmless on a normal deploy — demo-login
+        // 404s when the server is not in DEMO_MODE, and we fall through to onboarding.
+        api.demoLogin()
+          .then(() => api.me().then(enter))
+          .catch(() => { /* not a demo deploy / not signed in — show onboarding */ });
+      });
     return () => { live = false; };
   }, [loadData, consumePendingInvite]);
 

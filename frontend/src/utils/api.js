@@ -35,6 +35,9 @@ export const api = {
   login: (body) => apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   logout: () => apiFetch('/api/auth/logout', { method: 'POST' }),
   me: () => apiFetch('/api/auth/me'),
+  // Hosted demo only: server signs the visitor in as the seeded demo account.
+  // Returns 404 when the server is not in DEMO_MODE, so callers must handle failure.
+  demoLogin: () => apiFetch('/api/auth/demo-login', { method: 'POST' }),
 
   // Leaderboards
   createLeaderboard: (body) => apiFetch('/api/leaderboards', { method: 'POST', body: JSON.stringify(body) }),

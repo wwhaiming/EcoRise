@@ -45,9 +45,12 @@ const QUESTS = [
 ];
 
 function seed() {
-  // Never seed a known-credential account into a production database.
-  if ((process.env.NODE_ENV || '').toLowerCase() === 'production') {
-    throw new Error('Refusing to seed demo data with NODE_ENV=production.');
+  // Never seed demo data into a real production database by accident. A hosted
+  // interactive demo opts in explicitly with DEMO_MODE=true (the demo password is
+  // random per run and demo-login is itself gated on DEMO_MODE), so that combination
+  // is allowed; production without DEMO_MODE is still refused.
+  if ((process.env.NODE_ENV || '').toLowerCase() === 'production' && process.env.DEMO_MODE !== 'true') {
+    throw new Error('Refusing to seed demo data with NODE_ENV=production (set DEMO_MODE=true for an intentional hosted demo).');
   }
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
@@ -124,11 +127,18 @@ function seed() {
   console.log('   Open the app, log in, and you land on a populated board.\n');
 }
 
-try {
-  seed();
-  process.exit(0);
-} catch (err) {
-  console.error('Seed failed:', err.message);
-  process.exit(1);
+// Exported so the server can seed on boot (hosted demo) in-process, without
+// spawning a child that calls process.exit and tears the server down.
+module.exports = { seed, DEMO_EMAIL };
+
+// Only exit the process when run directly as a CLI script (npm run seed).
+if (require.main === module) {
+  try {
+    seed();
+    process.exit(0);
+  } catch (err) {
+    console.error('Seed failed:', err.message);
+    process.exit(1);
+  }
 }
 

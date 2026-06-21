@@ -17,7 +17,7 @@ function issueCsrf(res) {
 }
 
 function csrfGuard(req, res, next) {
-  if (req.method === 'POST' && (req.path === '/api/auth/login' || req.path === '/api/auth/signup')) return next();
+  if (req.method === 'POST' && (req.path === '/api/auth/login' || req.path === '/api/auth/signup' || req.path === '/api/auth/demo-login')) return next();
   const mutating = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
   const hasCookieSession = !!req.cookies?.token;
   if (mutating && hasCookieSession) {

@@ -1,0 +1,19 @@
+# Keep the build context small and the image clean.
+node_modules
+**/node_modules
+frontend/dist
+backend/ecorise.db
+backend/*.db
+*.db
+.git
+.gitignore
+.env
+.env.*
+.claude
+.codanna
+.codannaignore
+.fastembed_cache
+.serena
+GEORISE_*.txt
+**/*.log
+.DS_Store

@@ -93,4 +93,24 @@ router.get('/me', authMiddleware, (req, res) => {
   res.json({ user });
 });
 
+// Hosted interactive demo: sign the visitor in as the seeded demo account with no
+// password, so a judge lands on a populated board automatically. This is a deliberate,
+// tightly-scoped auth bypass — it ONLY works when DEMO_MODE=true, it ONLY ever logs in
+// the single seeded demo account (which holds no real data), and it can never select
+// any other user. On any non-demo deploy the route returns 404, as if it did not exist.
+router.post('/demo-login', (req, res) => {
+  if (process.env.DEMO_MODE !== 'true') return res.status(404).json({ error: 'Not found' });
+  try {
+    const { DEMO_EMAIL } = require('../scripts/seedDemo');
+    const db = getDb();
+    const demo = db.prepare('SELECT id, email, name, handle, avatar FROM users WHERE email = ?').get(DEMO_EMAIL);
+    if (!demo) return res.status(503).json({ error: 'Demo is still warming up — try again in a moment.' });
+    setSession(res, demo.id, true);
+    res.json({ user: demo, demo: true });
+  } catch (err) {
+    console.error('Demo-login error:', err && err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

@@ -1,0 +1,40 @@
+# Render Blueprint — one-click deploy of the EcoRise interactive demo.
+#
+# In the Render dashboard: New + -> Blueprint -> connect this GitHub repo. Render reads
+# this file, builds the Dockerfile, generates JWT_SECRET, and gives you a public https
+# URL. The server seeds the demo board + account + coach corpus on boot (DEMO_MODE), so
+# the URL works immediately, and a visiting judge is auto-signed-in to the demo account.
+#
+# Free plan note: free web services have an EPHEMERAL filesystem and no disk, so the
+# SQLite DB is re-seeded fresh on each cold start (fine for a demo). For persistence
+# across restarts, move to a paid plan and uncomment the disk + DATABASE_URL below.
+
+services:
+  - type: web
+    name: ecorise-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: COACH_ENABLED
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true       # Render generates a strong random value
+      # Optional: set your own OpenAI key for live AI instead of the offline mock.
+      # - key: OPENAI_API_KEY
+      #   sync: false
+
+    # Optional persistence (paid plans support disks). Uncomment to keep judge edits
+    # across restarts instead of re-seeding fresh on each cold start, and add the
+    # DATABASE_URL env var above pointing at the mounted path.
+    # disk:
+    #   name: ecorise-data
+    #   mountPath: /data
+    #   sizeGB: 1
+    #   (then add env var) DATABASE_URL=/data/ecorise.db
