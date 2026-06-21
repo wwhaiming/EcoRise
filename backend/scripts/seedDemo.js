@@ -18,6 +18,25 @@ const LINCOLN = require('../data/lincolnHigh');
 const INVITE = 'DEMOECO';
 const DEMO_EMAIL = 'demo@ecorise.app';
 const DEMO_DOMAIN = '@demo.ecorise.app';
+
+// Garfield HS real baseline (Seattle Public Schools Energy & Utility Dashboard, CY2023:
+// electricity 1,716,998 kWh/yr ÷12 = 143,083 kWh/mo; gas 57,189 therms/yr ÷12 = 4,766/mo;
+// enrollment 1,507 from NCES CCD 530771001171). Energy is the real/measured part (honest
+// LOW confidence); the model's student-count defaults fill cafeteria/commuting/landfill/water,
+// so the School Footprint card reads ~186.2 t CO2e/mo on boot instead of 0.0 t.
+const GARFIELD_BASELINE = { students: 1507, monthlyKwh: 143083, monthlyGasTherms: 4766 };
+
+// Re-assert the demo board's footprint baseline, idempotently. seed() only runs when the
+// demo account is absent, so on a warm container — or after a judge edits/clears the
+// baseline via the wizard — the School Footprint would otherwise drift back to 0.0 t.
+// Called on every boot (DEMO_MODE) so the card is always populated and consistent.
+function ensureGarfieldBaseline(db = getDb()) {
+  const board = db.prepare('SELECT id FROM leaderboards WHERE invite_code = ?').get(INVITE);
+  if (!board) return false;
+  db.prepare("CREATE TABLE IF NOT EXISTS school_baselines (leaderboard_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT DEFAULT (datetime('now')))").run();
+  db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(board.id, JSON.stringify(GARFIELD_BASELINE));
+  return true;
+}
 // Random per run (override with DEMO_PASSWORD) — never ship a hardcoded login.
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD || ('demo-' + crypto.randomBytes(4).toString('hex'));
 
@@ -106,11 +125,6 @@ function seed() {
     // Garfield HS, calendar year 2023: electricity 1,716,998 kWh annual (÷12 = 143,083 kWh/month);
     // natural gas 57,189 therms annual (÷12 = 4,766 therms/month).
     // Enrollment (2024-25) from NCES CCD ID 530771001171.
-    const GARFIELD_BASELINE = {
-      students: 1507,
-      monthlyKwh: 143083,
-      monthlyGasTherms: 4766,
-    };
     db.prepare("CREATE TABLE IF NOT EXISTS school_baselines (leaderboard_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT DEFAULT (datetime('now')))").run();
     db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(boardId, JSON.stringify(GARFIELD_BASELINE));
 
@@ -147,7 +161,7 @@ function seed() {
 
 // Exported so the server can seed on boot (hosted demo) in-process, without
 // spawning a child that calls process.exit and tears the server down.
-module.exports = { seed, DEMO_EMAIL };
+module.exports = { seed, DEMO_EMAIL, INVITE, GARFIELD_BASELINE, ensureGarfieldBaseline };
 
 // Only exit the process when run directly as a CLI script (npm run seed).
 if (require.main === module) {

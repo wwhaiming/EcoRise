@@ -58,12 +58,15 @@ try {
 // when the demo account is absent.
 if (process.env.DEMO_MODE === 'true') {
   try {
-    const { seed: seedDemo, DEMO_EMAIL } = require('./scripts/seedDemo');
+    const { seed: seedDemo, DEMO_EMAIL, ensureGarfieldBaseline } = require('./scripts/seedDemo');
     const exists = getDb().prepare('SELECT 1 FROM users WHERE email = ?').get(DEMO_EMAIL);
     if (!exists) {
       seedDemo();
       console.log('✅ Demo board + account seeded on startup (DEMO_MODE)');
     }
+    // Always re-assert the school footprint baseline so the card never shows 0.0 t,
+    // even on a warm restart or after a judge edits/clears it via the wizard.
+    if (ensureGarfieldBaseline(getDb())) console.log('✅ Garfield footprint baseline ensured on startup (≈186.2 t)');
   } catch (e) { console.error('demo seed error:', e.message); }
 }
 
