@@ -77,8 +77,12 @@ function Sources({ sources }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
       {sources.map((s, i) => (
-        <span key={i} className="chip chip-dim" title={s.snippet || ''} style={{ fontSize: 11 }}>
-          <Icon name="leaf" size={11} color="var(--green)" /> {s.title}{s.pubYear ? ` (${s.pubYear})` : ''}
+        <span key={i} className="chip chip-dim" title={s.title || s.snippet || ''}
+          style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', overflow: 'hidden' }}>
+          <Icon name="leaf" size={11} color="var(--green)" style={{ flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+            {s.title}{s.pubYear ? ` (${s.pubYear})` : ''}
+          </span>
         </span>
       ))}
     </div>
