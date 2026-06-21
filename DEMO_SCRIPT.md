@@ -1,207 +1,181 @@
-# EcoRise — Judge demo script (4:30 frame)
+# EcoRise — Demo Video Script (4:30)
 
-**Core thesis:** Institutional emissions dwarf student behavior. Student action only becomes
-meaningful when it targets the school's biggest emitter — and that requires knowing what the
-biggest emitter is. EcoRise surfaces that, grounds the recommendation in cited evidence, and
-makes the leverage ratio visible.
-
-> **Separate artifact**: [`PITCH_VIDEO_SCRIPT.md`](PITCH_VIDEO_SCRIPT.md) covers the
-> pre-recorded 5-minute submission video. This file is the live judge walkthrough only.
+**Format:** screen recording + voiceover. Timestamps are cues, not hard cuts.
 
 ---
 
-## Navigation map (read this first)
-
-The app has **no top-level "Footprint" tab.** There are two distinct footprint surfaces — don't
-confuse them:
-
-| Surface | How to reach it | What it is |
-|---|---|---|
-| **School footprint card** | Bottom nav **Learning** → **AI Coach** sub-tab → card sits at the top, above the coach quiz | The `Xt CO₂e / mo` headline, category bars (flame = biggest emitter), **Action leverage**, **Next step** recommendation, **Update school data** / **Save baseline**. This is the Hook + Solution screen. |
-| **Weekly Insights dashboard** | Bottom nav **Home** → tap the **"School Hidden Footprint"** card (green, "Direction B · AI Insights") | The full pipeline: ① Input data → ② Anomaly Detection → ③ Cafeteria Forecast → ④ Recommendations + **Human Approval Gate** → ⑤ Generative summary. This is the approval-gate screen. |
-
-**Bottom nav (4 tabs + center FAB):** `Home` · `Learning` · `Feed` · `Profile`. The green **+**
-FAB in the center = **Log action**.
-
-**Learning sub-tabs (pill toggle at top):** `AI Coach` · `Research Library` · `AI Insights`.
-- *AI Coach* — School footprint card + coach quiz.
-- *Research Library* — the responsible-AI **eval report card** (faithfulness, refusal, hallucination, injection resistance, Recall@k, MRR).
-- *AI Insights* — anomaly/forecast insights widget.
-
----
-
-## Setup (once, ~30s before judging)
+## Pre-roll setup (not recorded)
 
 ```bash
-npm run install:all
-npm run demo            # seeds a populated board + login, starts frontend + backend
-cd backend && COACH_ENABLED=true npm run seed:coach   # enable + seed the coach corpus
+npm run demo
+cd backend && COACH_ENABLED=true npm run seed:coach
 ```
 
-Open http://localhost:5173 and log in as `demo@ecorise.app` (password printed by seed).
-Board: **Garfield High School**. In the bottom nav tap **Learning**, make sure the **AI Coach**
-sub-tab is selected, and leave it on the **School footprint card** (top of that tab).
+Log in as `demo@ecorise.app`. Open **Learning → AI Coach**. School footprint card visible at top.
+Browser at 100% zoom, mobile frame if possible.
 
-With `OPENAI_API_KEY` set you get live AI; without it the app uses the deterministic mock
-and labels itself "DEMO — no model." Either path is valid; call it out if asked.
+---
 
-> **Data sources for Garfield High School**
+## [0:00 – 0:30] The problem
+
+**SCREEN:** Learning tab, AI Coach sub-tab. School footprint card fills the frame.
+The `~186t CO₂e / mo` headline and category bars are visible. Don't interact yet.
+
+**VO:**
+> "Most sustainability apps track what students do. Bike rides. Recycled bottles.
+> But Garfield High School emits 186 tonnes of CO₂ every month — from its cafeteria,
+> its energy bills, its buses — and nobody was showing students that number.
+> We built EcoRise because the problem was never the students. It was the school."
+
+**SCREEN:** Slowly scroll the category bars. Pause on the 🔥 flame icon marking Cafeteria food.
+
+**VO:**
+> "The flame marks the biggest single emitter. Right now that's cafeteria food —
+> roughly 60 tonnes a month. Below it: electricity and natural gas, both from
+> Garfield's real utility bills on Seattle Public Schools' public dashboard."
+
+---
+
+## [0:30 – 1:00] Real data, honest confidence
+
+**SCREEN:** Zoom into the confidence chip (top-right of card). It reads `low confidence`.
+
+**VO:**
+> "Two of six categories use Garfield's actual numbers — 143,000 kilowatt-hours
+> of electricity and 4,766 therms of gas per month, straight from the district's
+> published utility data. The other four fall back to EPA national averages.
+> The chip says low confidence, because that's the truth."
+
+**SCREEN:** Tap **Update school data**. Wizard slides open showing labeled fields.
+Fields for Electricity and Gas already show the pre-loaded values.
+
+**VO:**
+> "A teacher opens the wizard, enters the school's meal counts, bus routes,
+> water bills. Every field the model fills in from real inputs it tags as medium confidence.
+> Every field still on a national average stays labeled estimate.
+> No guessing. No hidden assumptions."
+
+**SCREEN:** Close the wizard without saving.
+
+---
+
+## [1:00 – 1:30] The leverage ratio
+
+**SCREEN:** Scroll to the green **Action leverage** block on the card.
+
+**VO:**
+> "Here's the core insight. This week, five students logged actions that saved
+> about 7.8 kilograms of CO₂ combined. Garfield's cafeteria emits roughly
+> 13,900 kilograms in the same week. Student action is 0.06% of the institutional load.
+> It's real — but it's a rounding error until someone changes the menu or
+> renegotiates the energy contract. That's what this panel makes visible."
+
+---
+
+## [1:30 – 2:00] AI recommendation + faithfulness gate
+
+**SCREEN:** Scroll to the **Next step** block (sparkle icon, dark navy background).
+Hover the ⓘ tip to show the grounding score.
+
+**VO:**
+> "The AI generated a recommendation for the biggest emitter.
+> It only appears here because it scored above 0.75 on a faithfulness gate —
+> a similarity check against a corpus of 1,000 cited research papers.
+> The score is shown. The citation is shown. The LLM did not invent a number —
+> a deterministic engine computed it from an EPA factor.
+> Below the threshold, the coach withholds the answer rather than guess."
+
+**SCREEN:** Click a green leaf source chip. Paper opens in new tab. Cut back.
+
+---
+
+## [2:00 – 2:30] Log an action → Evidence Panel
+
+**SCREEN:** Tap the green **+ FAB**. Log action sheet opens. Upload or select a photo.
+Tap submit. Evidence Panel opens automatically.
+
+**VO:**
+> "A student logs a bike commute. The vision model identifies the action.
+> The carbon math comes from a cited EPA factor — not the AI.
+> The points are scored server-side. The LLM cannot award a point."
+
+**SCREEN:** Scroll the Evidence Panel: AI detected → Carbon math (formula + factor + range)
+→ Points awarded → AI pipeline tools → Integrity checks.
+
+---
+
+## [2:30 – 3:00] Human-in-the-loop approval gate
+
+**SCREEN:** Bottom nav **Home**. Tap the green **"School Hidden Footprint"** card.
+Weekly Insights dashboard opens. Scroll to section **④ AI Recommendations + Human Approval Gate**.
+
+**VO:**
+> "Every recommendation the AI makes requires a named staff member to approve it
+> before it becomes an active school goal. That's a hard constraint, not a UX choice —
+> because wrong decisions here affect 1,500 students."
+
+**SCREEN:** Point at the **Flag as inaccurate** control on a prediction card (section ③).
+
+**VO:**
+> "Staff can flag a prediction wrong. Repeated flags surface as a model-review signal.
+> They don't just consume AI outputs — they correct the model."
+
+---
+
+## [3:00 – 3:30] AI report card
+
+**SCREEN:** Bottom nav **Learning** → pill toggle to **Research Library** sub-tab.
+Scroll to the responsible-AI eval report card.
+
+**VO:**
+> "These are live numbers from our eval harness. Faithfulness pass rate.
+> Refusal precision — the coach withholds rather than guesses when a question
+> can't be grounded. Hallucination rate. Injection resistance.
+> Retrieval Recall at k and MRR. Re-run anytime with npm run test:coach-eval."
+
+---
+
+## [3:30 – 4:00] Quests driven by footprint analysis
+
+**SCREEN:** Bottom nav **Home**. Scroll past the leaderboard to the **Quests** section.
+
+**VO:**
+> "Quest categories are ranked by the school's top emitter.
+> When cafeteria food is the biggest source, food-reduction quests surface first.
+> The footprint analysis drives what students are asked to do —
+> not the other way around."
+
+---
+
+## [4:00 – 4:30] Who benefits
+
+**SCREEN:** Return to **Learning → AI Coach**, school footprint card.
+
+**VO:**
+> "Three groups benefit directly.
+> Teachers get an auditable, cited baseline they can hand to a facilities manager —
+> not an AI guess.
+> Students get quests ranked by actual impact, not engagement optimization.
+> Administrators get an approval gate and an eval harness they can point to
+> when a parent asks how the AI makes decisions.
 >
-> | Field | Value | Source |
-> |---|---|---|
-> | Electricity (kWh/mo) | 143,083 | **Real** — Seattle Public Schools Energy & Utility Dashboard, CY 2023 (1,716,998 kWh ÷ 12). [seattleschools.org](https://www.seattleschools.org/departments/resource-conservation/utility-data-dashboard/) |
-> | Natural gas (therms/mo) | 4,766 | **Real** — same dashboard, CY 2023 (57,189 therms ÷ 12) |
-> | Enrollment | 1,507 students | **Real** — NCES CCD 2024-25 (ID 530771001171) |
-> | Bus miles/week | — | **Estimated** — national average per-student factor (EPA) |
-> | % students driven | — | **Estimated** — national average |
-> | Daily meals served | — | **Estimated** — national average |
-> | Monthly water (m³) | — | **Estimated** — national average |
-> | Landfill bags/week | — | **Estimated** — national average |
+> This is Garfield High School in Seattle. The same model runs for any school
+> that enters its utility data. The hidden footprint becomes visible.
+> The leverage ratio becomes actionable."
+
+**SCREEN:** Fade out on the footprint card headline: `~186t CO₂e / mo`.
 
 ---
 
-## Hook · 0:00 – 0:30 · The problem
+## Data sources
 
-**Where:** Bottom nav **Learning** → **AI Coach** sub-tab. Top of the screen = the **School
-footprint card** (`eyebrow: "School footprint"`, big `Xt CO₂e / mo` number). Don't scroll past it.
-
-> *"Most eco apps track student behavior. They count the bike rides and the recycled bottles.
-> But Garfield High School emits 47 tonnes of CO₂ every month from its energy bill alone — and
-> nobody was showing students that number. We built EcoRise because the problem was never the
-> students. It was the school."*
-
-**Beats:**
-1. Let the `Xt CO₂e / mo` headline (top-left of the card) sit for 3 seconds. Don't click anything.
-2. Sweep down the category bars below it. Point at the 🔥 **flame icon** on the top (coral) bar:
-   *"That's the biggest emitter."* The flame only ever marks the #1 category.
-
----
-
-## Solution · 0:30 – 2:00 · The AI approach
-
-**Where:** Stay on the **School footprint card** (Learning → AI Coach). Click the **Update school
-data** button (bottom of the card) to open the baseline wizard, enter real numbers, **Save baseline**.
-Then read the **Action leverage** block and the **Next step** card just below it.
-
-### 0:30 – 1:00 · The data → confident footprint
-
-> *"A teacher pulls up last month's utility bill. 42,000 kWh. 310 therms. 1,400 meals a day.
-> Fill in what you know — the model fills the rest from national EPA averages. Watch the
-> confidence jump from low to high."*
-
-**Enter these demo values** (wizard field labels are exact — leave the rest on `est.`):
-| Field | Value |
-|---|---|
-| Electricity (kWh/mo) | `42000` |
-| Gas (therms/mo) | `310` |
-| Bus miles/week | `620` |
-| Meals served/day | `1400` |
-
-Click **Save baseline** → toast **"Footprint baseline updated"** fires → card reloads and the
-small **confidence chip** (top-right, next to the ⓘ) climbs toward `high confidence`.
-
-### 1:00 – 1:30 · The leverage ratio
-
-> *"Here's the insight that drives Direction B. Every student biking one day saves about
-> 1.2 kg. The school's energy bill emits 38 tonnes a month. Student action is real — but
-> it's a rounding error until someone fixes the HVAC schedule. That's what the leverage
-> panel shows."*
-
-Point at the green **Action leverage** block on the card. Read its kg-vs-tonnes ratio aloud.
-
-### 1:30 – 2:00 · The AI recommendation + faithfulness gate
-
-On the same card, drop to the **Next step** block (sparkle icon, dark navy background, directly
-below Action leverage).
-
-> *"The AI generated a recommendation. But it only appeared here because it scored 0.82 on
-> our faithfulness gate — a check against the source corpus. Below the recommendation: the
-> grounding score and the actual citation. The LLM did not invent a number. A deterministic
-> engine computed it from an EPA factor."*
-
-Point in order: recommendation headline → explanation → green leaf **source chip(s)** (click one,
-it opens the cited paper) → the **ⓘ help tip** at the top-right of the block (hover = the grounding
-score, e.g. "Grounding score: 0.82 (passes faithfulness gate)").
-
-> **Dev note:** without `COACH_ENABLED=true` + a seeded corpus, this block renders the labeled
-> **"Demo fixture"** version (dashed coral border, LED-retrofit example, score 0.82). Say so if asked —
-> the live path is identical minus the badge.
-
-> **AI layer note for judges:** `COACH_ENABLED=true` activates RAG retrieval over a
-> 1,000-paper corpus using sqlite-vec embeddings, then scores every candidate answer against
-> retrieved sources. Threshold is 0.75 — below that the coach withholds rather than guesses.
-> Run `npm run test:coach-eval` to re-generate the live eval metrics.
-
----
-
-## Demo · 2:00 – 4:00 · Show it working
-
-### 2:00 – 2:30 · Log an action → Evidence Panel
-
-- Tap the green **+ FAB** in the center of the bottom nav (opens **Log action**). Add a photo
-  (bike or LED swap). The Evidence Panel opens automatically on submit.
-- Walk the Evidence Panel: **AI detected** + confidence ring → **Carbon math** (formula +
-  cited factor + range) → **Points awarded** → **AI pipeline · tools run** → **Integrity checks**.
-
-> *"The vision model perceived the action. The kilograms came from a cited EPA factor.
-> The points were scored server-side. The LLM cannot award a point."*
-
-### 2:30 – 3:00 · Human-in-the-loop approval gate
-
-**Where:** Bottom nav **Home** → tap the green **"School Hidden Footprint"** card (eyebrow
-"Direction B · AI Insights"). This opens the **Weekly Insights dashboard**. Scroll to **④ AI
-Recommendations + Human Approval Gate** — each card shows a **✓ Approve — Make Active Goal** button
-and the status chip `0/N recs approved` at the top.
-
-> *"Every recommendation requires a named staff member to approve it before it becomes
-> active. That is a hard constraint, not a UX choice — because wrong cafeteria orders
-> affect 1,400 lunches."*
-
-Then point at the **Flag as inaccurate** control on a prediction (③) or recommendation (④) card.
-
-> *"Staff can flag predictions wrong. Repeated flags surface as a model-review signal.
-> They don't just consume outputs — they correct the model."*
-
-### 3:00 – 3:30 · AI report card (Research tab)
-
-**Where:** Bottom nav **Learning** → switch the pill toggle to the **Research Library** sub-tab →
-scroll to the responsible-AI **eval report card**.
-
-> *"These are live numbers from our eval harness — re-run with `npm run test:coach-eval`.
-> Not hardcoded. Faithfulness pass, unanswerable-refusal rate, refusal precision,
-> hallucination rate, injection resistance, retrieval Recall@k and MRR. The refusal row:
-> if a question can't be grounded, the coach withholds rather than guesses."*
-
-> **Dev note:** without the live harness, this card shows a clearly labeled **"Demo fixture"**
-> with the same layout. Point at the label if asked.
-
-### 3:30 – 4:00 · Quests driven by footprint analysis
-
-**Where:** Bottom nav **Home** → scroll past the board and the "School Hidden Footprint" card to
-the **Quests** section (below the dashed divider).
-
-> *"Quest categories are ranked by the school's top emitter. When energy is the biggest
-> source, energy quests surface first. The footprint analysis drives what students are
-> asked to do — not the other way around."*
-
----
-
-## Impact · 4:00 – 4:30 · Who benefits
-
-**Stay on Home (Quests section) or return to the School footprint card (Learning → AI Coach).**
-
-> *"Three groups benefit directly. Teachers get an auditable, cited baseline they can
-> hand to a facilities manager — not an AI guess. Students get quests ranked by actual
-> impact, not engagement optimization. And administrators get an approval gate and an
-> eval harness they can point to when a parent asks how the AI makes decisions.*
->
-> *This is one school. The same model runs for any school that enters its utility data.
-> The hidden footprint becomes visible. The leverage ratio becomes actionable."*
-
----
-
-## If the live demo fails
-
-- No network / no key → app already runs offline; point at the "DEMO — no model" badge.
-  Nothing is faked.
-- Total failure → play the recorded fallback video (see [`DEPLOY.md`](DEPLOY.md)).
+| Field | Value | Source |
+|---|---|---|
+| Electricity (kWh/mo) | 143,083 | Seattle Public Schools Energy & Utility Dashboard, CY 2023 (1,716,998 kWh ÷ 12) |
+| Natural gas (therms/mo) | 4,766 | Same dashboard, CY 2023 (57,189 therms ÷ 12) |
+| Enrollment | 1,507 | NCES CCD 2024-25, ID 530771001171 |
+| Cafeteria food | ~60t (default) | 1 meal/student/day × 2.0 kg CO₂e (OWID/Poore & Nemecek 2018) |
+| Commuting | ~42t (default) | 40% driven × 8 mi round-trip (EPA vehicle factor) |
+| Natural gas | ~25t | 4,766 therms × 5.3 kg CO₂e/therm (EPA GHG Factors Hub) |
+| Electricity | ~57t | 143,083 kWh × 0.40 kg CO₂e/kWh (EPA eGRID US avg) |
+| **Total** | **~186t CO₂e/mo** | |

@@ -13,6 +13,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuid } = require('uuid');
 const { getDb } = require('../db');
 const { calcNextReset } = require('../utils/seasons');
+const LINCOLN = require('../data/lincolnHigh');
 
 const INVITE = 'DEMOECO';
 const DEMO_EMAIL = 'demo@ecorise.app';
@@ -78,7 +79,7 @@ function seed() {
     // here. A real class board defaults to requiring recorded consent.
     db.prepare(`INSERT INTO leaderboards (id, name, reset_interval, prize, include_self, invite_code, organizer_id, next_reset, consent_mode)
       VALUES (?, ?, 'weekly', ?, 1, ?, ?, ?, 'demo')`)
-      .run(boardId, 'Greenfield High', '$250 campus store + a tree planted', INVITE, demo.id, calcNextReset('weekly'));
+      .run(boardId, 'Garfield High School', '$250 campus store + a tree planted', INVITE, demo.id, calcNextReset('weekly'));
 
     // Demo user as an organizer-member with their own standing.
     db.prepare("INSERT INTO leaderboard_members (leaderboard_id, user_id, role, points, streak, last_action_date) VALUES (?, ?, 'organizer', ?, ?, ?)")
@@ -97,6 +98,19 @@ function seed() {
       insPost.run(uuid(), uid, boardId, p.action_type, p.action_desc, p.co2, p.points, p.caption);
     });
 
+    // Seed Garfield HS real baseline so School Footprint card shows real numbers.
+    // Source: Seattle Public Schools Energy & Utility Dashboard (Power BI public embed).
+    // Garfield HS, calendar year 2023: electricity 1,716,998 kWh annual (÷12 = 143,083 kWh/month);
+    // natural gas 57,189 therms annual (÷12 = 4,766 therms/month).
+    // Enrollment (2024-25) from NCES CCD ID 530771001171.
+    const GARFIELD_BASELINE = {
+      students: 1507,
+      monthlyKwh: 143083,
+      monthlyGasTherms: 4766,
+    };
+    db.prepare("CREATE TABLE IF NOT EXISTS school_baselines (leaderboard_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT DEFAULT (datetime('now')))").run();
+    db.prepare("INSERT INTO school_baselines (leaderboard_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(leaderboard_id) DO UPDATE SET data=excluded.data, updated_at=datetime('now')").run(boardId, JSON.stringify(GARFIELD_BASELINE));
+
     // Today's quests for the demo user (so the Quests tab is populated).
     const insQuest = db.prepare(`INSERT INTO quests (id, user_id, title, description, action_type, target_details, points_base, goal, progress, date)
       VALUES (?, ?, ?, ?, ?, '', ?, ?, ?, ?)`);
@@ -106,7 +120,7 @@ function seed() {
 
   console.log('\n🌱 EcoRise demo seeded.');
   console.log('   Login:  ' + DEMO_EMAIL + '  /  ' + DEMO_PASSWORD);
-  console.log('   Board:  Greenfield High   Invite code: ' + INVITE);
+  console.log('   Board:  Garfield High School   Invite code: ' + INVITE);
   console.log('   Open the app, log in, and you land on a populated board.\n');
 }
 
