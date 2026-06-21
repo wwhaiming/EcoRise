@@ -48,6 +48,10 @@
 
 .btn-sm { padding: 9px 15px; font-size: 14px; }
 .btn-lg { padding: 16px 28px; font-size: 17px; }
+/* Opt-in multiline label for buttons bound to dynamic/AI text (e.g. coach action).
+   Overrides the .btn nowrap default so long labels wrap instead of overflowing the frame. */
+.btn-wrap { white-space: normal; text-align: center; line-height: 1.3; word-break: break-word; }
+.btn-wrap > svg { flex-shrink: 0; }
 
 /* ============================================================
    Cards — matte glass, neutral edge, quiet shadow

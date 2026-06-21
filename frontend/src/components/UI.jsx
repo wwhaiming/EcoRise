@@ -69,17 +69,21 @@ export function Toast({ toast }) {
   if (!toast) return null;
   return (
     <div role="status" aria-live="polite" aria-atomic="true" style={{
-      position: 'absolute', left: '50%', bottom: 96, transform: 'translateX(-50%)',
+      /* Center with auto-margins, NOT translateX(-50%): the popIn keyframe animates
+         `transform`, which would clobber a centering transform and shove the toast
+         off the right frame edge. Auto-margins leave transform free for the animation. */
+      position: 'absolute', left: 16, right: 16, bottom: 96,
+      marginInline: 'auto', width: 'fit-content', maxWidth: 'calc(100% - 32px)',
       zIndex: 80, display: 'flex', alignItems: 'center', gap: 10,
       background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(14px) saturate(140%)',
       border: '1px solid rgba(45,91,57,.16)', boxShadow: '0 14px 34px rgba(30,91,57,.20)',
-      borderRadius: 9999, padding: '12px 20px', whiteSpace: 'nowrap',
-      animation: 'popIn .4s cubic-bezier(.2,.8,.2,1.2) both', maxWidth: '88%',
+      borderRadius: 18, padding: '12px 20px', textAlign: 'center',
+      animation: 'popIn .4s cubic-bezier(.2,.8,.2,1.2) both',
     }}>
-      <span style={{ display: 'inline-flex', width: 26, height: 26, borderRadius: '50%', background: 'var(--green)', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ display: 'inline-flex', width: 26, height: 26, borderRadius: '50%', background: 'var(--green)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Icon name="check" size={16} color="#fff" strokeWidth={3} />
       </span>
-      <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15 }}>{toast}</span>
+      <span style={{ fontFamily: 'var(--display)', fontWeight: 600, fontSize: 15, wordBreak: 'break-word' }}>{toast}</span>
     </div>
   );
 }
